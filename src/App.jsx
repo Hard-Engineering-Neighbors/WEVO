@@ -1,6 +1,8 @@
 import "./App.css";
 import "./index.css";
 import React from "react";
+import { Link } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
 
 function App() {
   return (
@@ -9,7 +11,7 @@ function App() {
       <div className="flex-grow flex flex-col items-center justify-center space-y-4">
         {/* Logo */}
         <img
-          src="public\wevoLogoPng.png"
+          src="/wevoLogoPng.png"
           alt="Wevo Logo"
           className="w-auto max-h-40 mb-4"
         />
@@ -28,12 +30,18 @@ function App() {
 
         {/* Buttons */}
         <div className="flex space-x-4 mt-4">
-          <button className="bg-blue-600 text-white px-10 py-2 rounded-full hover:bg-blue-700 transition">
-            Get Started &#10148;
-          </button>
-          <button className="border border-blue-600 text-blue-600 px-10 py-2 rounded-full hover:bg-blue-50 transition">
-            Explore
-          </button>
+          <div className="flex space-x-4 mt-4">
+            <Link
+              to="/login"
+              className="bg-blue-600 text-white px-10 py-2 rounded-full hover:bg-blue-700 transition flex items-center gap-2"
+            >
+              Get Started <ChevronRight size={18} />
+            </Link>
+
+            <button className="border border-blue-600 text-blue-600 px-10 py-2 rounded-full hover:bg-blue-50 transition">
+              Explore
+            </button>
+          </div>
         </div>
       </div>
 
