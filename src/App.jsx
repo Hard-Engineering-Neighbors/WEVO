@@ -51,7 +51,7 @@ function App() {
           All Rights Reserved: Hard Engineering Neighbors{" "}
         </p>
         <p>
-          WEVO is an an interactive web application designed to simplify venue
+          WEVO is an interactive web application designed to simplify venue
           reservations and provide a real-time monitoring of events.
         </p>
       </footer>

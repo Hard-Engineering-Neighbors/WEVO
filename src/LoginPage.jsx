@@ -1,15 +1,44 @@
 import React, { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, ChevronRight } from "lucide-react";
+import { auth } from "./firebase/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { useNavigate } from "react-router-dom"; 
+import { db } from "./firebase/firebase";
+import { collection, getDocs, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { useAuth } from "./contexts/AuthContext";
+import { useEffect } from "react";
+import { useRef } from "react";
 
 function LoginPage() {
   const [glow, setGlow] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
+  const [errorMessage, setErrorMessage] = useState(""); // State for error message
+  const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const [userData, setUserData] = useState(null);
+  const usersCollectionRef = collection(db, "users"); 
   const handleGetStarted = () => {
     setGlow(true);
     setTimeout(() => setGlow(false), 500);
   };
 
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Redirect to the home page after successful login
+      navigate("/");
+    } catch (error) {
+      console.error("Error signing in:", error);
+      setErrorMessage("Invalid email or password. Please try again.");
+    }
+  };
+  
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex flex-1 flex-col lg:flex-row">
@@ -59,7 +88,13 @@ function LoginPage() {
               </a>
             </p>
 
-            <form className="space-y-4">
+            {errorMessage && ( // Error popup
+              <div className="bg-red-100 text-red-600 p-3 rounded-md mb-4">
+                {errorMessage}
+              </div>
+            )}
+
+            <form className="space-y-4" onSubmit={handleLogin}>
               {/* Email Field with Icon */}
               <div className="relative">
                 <Mail
@@ -68,6 +103,7 @@ function LoginPage() {
                 />
                 <input
                   type="email"
+                  name="email"
                   className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
                   placeholder="email@wvsu.edu.ph"
                 />
@@ -81,6 +117,7 @@ function LoginPage() {
                 />
                 <input
                   type={showPassword ? "text" : "password"}
+                  name="password"
                   className="w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
                   placeholder="Password"
                 />
