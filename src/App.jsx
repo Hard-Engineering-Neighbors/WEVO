@@ -2,6 +2,7 @@ import "./App.css";
 import React from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
+import DashboardPage from "./pages/DashboardPage";
 
 function App() {
   return (

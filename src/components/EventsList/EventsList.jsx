@@ -15,7 +15,6 @@ const eventData = [
 
 // Helper to get all unique event dates for the month
 function getEventDatesWithEvents(year, month, events) {
-  // Only return unique dates from eventData that match the year and month
   const filtered = events.filter((e) => {
     const d = new Date(e.date);
     return d.getFullYear() === year && d.getMonth() === month;

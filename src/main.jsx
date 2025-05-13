@@ -3,7 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App";
 import LoginPage from "./LoginPage";
-import Dashboard from "./Dashboard"; //dashboard component
+import DashboardPage from "./pages/DashboardPage";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -21,10 +21,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             }
           />
           <Route
-            path="/Dashboard"
+            path="/dashboard"
             element={
               <PrivateRoute>
-                <Dashboard />
+                <DashboardPage />
               </PrivateRoute>
             }
           />
