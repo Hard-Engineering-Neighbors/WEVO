@@ -1,5 +1,4 @@
 import "./App.css";
-import "./index.css";
 import React from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
@@ -17,7 +16,7 @@ function App() {
         />
 
         {/* Tagline */}
-        <div className="text-4xl text-blue-600 font-semibold">
+        <div className="text-4xl text-[#0458A9] font-semibold">
           Smart Scheduling for a Smarter Campus
         </div>
 
@@ -33,12 +32,12 @@ function App() {
           <div className="flex space-x-4 mt-4">
             <Link
               to="/login"
-              className="bg-blue-600 text-white px-10 py-2 rounded-full hover:bg-blue-700 transition flex items-center gap-2"
+              className="bg-[#0458A9] text-white px-10 py-2 rounded-full hover:bg-[#0458A9] transition flex items-center gap-2"
             >
               Get Started <ChevronRight size={18} />
             </Link>
 
-            <button className="border border-blue-600 text-blue-600 px-10 py-2 rounded-full hover:bg-blue-50 transition">
+            <button className="border border-[#0458A9] text-[#0458A9] px-10 py-2 rounded-full hover:bg-[#0458A9] transition">
               Explore
             </button>
           </div>
