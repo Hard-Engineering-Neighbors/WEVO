@@ -8,7 +8,9 @@ function TwoFactorPage() {
   const [code, setCode] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const navigate = useNavigate();
+  const cooldownRef = React.useRef();
 
   const handleGetStarted = () => {
     setGlow(true);
@@ -19,18 +21,81 @@ function TwoFactorPage() {
     e.preventDefault();
     setLoading(true);
     setErrorMessage("");
-    // TODO: Add actual verification logic here
+    const email = localStorage.getItem("2fa_email");
+    if (!email) {
+      setErrorMessage("No email found. Please login again.");
+      setLoading(false);
+      return;
+    }
     if (!code || code.length < 4) {
       setErrorMessage("Please enter the code sent to your email.");
       setLoading(false);
       return;
     }
-    // Simulate success for now
-    setTimeout(() => {
+    // Verify OTP with Supabase
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: code,
+      type: 'email',
+    });
+    if (error) {
+      setErrorMessage("Invalid or expired code. Please try again.");
       setLoading(false);
-      navigate("/dashboard");
+      return;
+    }
+    // Success: clear email and redirect
+    localStorage.removeItem("2fa_email");
+    setLoading(false);
+    navigate("/dashboard");
+  };
+
+  // Start cooldown timer
+  const startCooldown = () => {
+    setCooldown(60);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(cooldownRef.current);
+          cooldownRef.current = null;
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
   };
+
+  // Resend OTP handler
+  const handleResend = async (e) => {
+    e.preventDefault();
+    if (cooldown > 0) return;
+    const email = localStorage.getItem("2fa_email");
+    if (!email) {
+      setErrorMessage("No email found. Please login again.");
+      return;
+    }
+    setLoading(true);
+    setErrorMessage("");
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { shouldCreateUser: true, type: 'otp' }
+    });
+    setLoading(false);
+    if (error) {
+      setErrorMessage(error.message || "Failed to resend code. Please try again.");
+      return;
+    }
+    startCooldown();
+  };
+
+  // Start cooldown on mount
+  React.useEffect(() => {
+    startCooldown();
+    return () => {
+      if (cooldownRef.current) clearInterval(cooldownRef.current);
+    };
+    // eslint-disable-next-line
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
@@ -68,6 +133,7 @@ function TwoFactorPage() {
                 maxLength={6}
                 required
                 autoFocus
+                autoComplete="off"
               />
             </div>
             <button
@@ -79,9 +145,13 @@ function TwoFactorPage() {
             </button>
           </form>
           <p className="text-xs text-gray-400 text-center mt-6">
-            Didn&apos;t receive a code?{" "}
-            <a href="#" className="text-[#0458A9] hover:underline">
-              Resend
+            Didn&apos;t receive a code?{' '}
+            <a
+              href="#"
+              className={`text-[#0458A9] hover:underline ${cooldown > 0 ? 'pointer-events-none opacity-50' : ''}`}
+              onClick={handleResend}
+            >
+              {cooldown > 0 ? `Resend (${cooldown}s)` : 'Resend'}
             </a>
           </p>
         </div>

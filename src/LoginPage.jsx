@@ -20,19 +20,17 @@ function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     const email = e.target.email.value;
-    const password = e.target.password.value;
-
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithOtp({
         email,
-        password,
+        options: { shouldCreateUser: true, type: 'otp' }
       });
       if (error) throw error;
-      // ✅ Redirect to dashboard after successful login
-      navigate("/dashboard");
+      localStorage.setItem("2fa_email", email);
+      navigate("/2fa");
     } catch (error) {
-      console.error("Error signing in:", error);
-      setErrorMessage("Invalid email or password. Please try again.");
+      console.error("Error sending OTP:", error);
+      setErrorMessage("Failed to send verification code. Please try again.");
     }
   };
 
