@@ -1,22 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Mail, Lock, Eye, EyeOff, ChevronRight } from "lucide-react";
 import { auth } from "./firebase/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import { db } from "./firebase/firebase";
-import { collection, getDocs, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  doc,
+  setDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { useAuth } from "./contexts/AuthContext";
-import { useEffect } from "react";
 import { useRef } from "react";
 
 function LoginPage() {
   const [glow, setGlow] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(""); // State for error message
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [userData, setUserData] = useState(null);
-  const usersCollectionRef = collection(db, "users"); 
+  const usersCollectionRef = collection(db, "users");
+
   const handleGetStarted = () => {
     setGlow(true);
     setTimeout(() => setGlow(false), 500);
@@ -28,17 +34,28 @@ function LoginPage() {
     const password = e.target.password.value;
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
-      // Redirect to the home page after successful login
-      navigate("/");
+      // ✅ Redirect to dashboard after successful login
+      navigate("/dashboard");
     } catch (error) {
       console.error("Error signing in:", error);
       setErrorMessage("Invalid email or password. Please try again.");
     }
   };
-  
+
+  // // ✅ Redirect already logged-in user to dashboard
+  // useEffect(() => {
+  //   if (currentUser) {
+  //     navigate("/dashboard");
+  //   }
+  // }, [currentUser, navigate]);
+
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex flex-1 flex-col lg:flex-row">
@@ -49,7 +66,7 @@ function LoginPage() {
             alt="Wevo Logo"
             className="w-auto max-h-32 md:max-h-40"
           />
-          <div className="text-3xl md:text-4xl text-blue-600 font-semibold">
+          <div className="text-3xl md:text-4xl text-[#0458A9] font-semibold">
             Smart Scheduling for a Smarter Campus
           </div>
           <p className="text-base max-w-3xl text-gray-500">
@@ -60,12 +77,12 @@ function LoginPage() {
           <div className="flex flex-col sm:flex-row gap-4">
             <button
               onClick={handleGetStarted}
-              className="bg-blue-600 text-white px-10 py-2 rounded-full hover:bg-blue-700 transition flex items-center gap-2"
+              className="bg-[#0458A9] text-white px-10 py-2 rounded-full hover:bg-[#0458A9] transition flex items-center gap-2"
             >
               Get Started <ChevronRight size={18} />
             </button>
 
-            <button className="border border-blue-600 text-blue-600 px-10 py-2 rounded-full hover:bg-blue-50 transition">
+            <button className="border border-[#0458A9] text-[#0458A9] px-10 py-2 rounded-full hover:bg-[#0458A9] transition">
               Explore
             </button>
           </div>
@@ -78,17 +95,17 @@ function LoginPage() {
               glow ? "animate-glow" : ""
             }`}
           >
-            <h2 className="text-2xl md:text-3xl text-blue-600 font-bold mb-2">
+            <h2 className="text-2xl md:text-3xl text-[#0458A9] font-bold mb-2">
               Login Credentials
             </h2>
             <p className="text-sm text-gray-500 mb-4">
               Don&apos;t have an account?{" "}
-              <a href="/register" className="text-blue-600 hover:underline">
+              <a href="/register" className="text-[#0458A9] hover:underline">
                 Register
               </a>
             </p>
 
-            {errorMessage && ( // Error popup
+            {errorMessage && (
               <div className="bg-red-100 text-red-600 p-3 rounded-md mb-4">
                 {errorMessage}
               </div>
@@ -104,8 +121,9 @@ function LoginPage() {
                 <input
                   type="email"
                   name="email"
-                  className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#0458A9]"
                   placeholder="email@wvsu.edu.ph"
+                  required
                 />
               </div>
 
@@ -118,13 +136,14 @@ function LoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  className="w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full pl-10 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#0458A9]"
                   placeholder="Password"
+                  required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-600"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#0458A9]"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -133,7 +152,7 @@ function LoginPage() {
 
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
+                className="w-full bg-[#0458A9] text-white py-2 rounded-md hover:bg-[#0458A9] transition"
               >
                 Continue
               </button>
@@ -150,15 +169,15 @@ function LoginPage() {
 
             <p className="text-xs text-gray-400 text-center mt-6">
               By logging in, you accept the{" "}
-              <a href="#" className="text-blue-600 hover:underline">
-                WEVO’s Terms and Service
+              <a href="#" className="text-[#0458A9] hover:underline">
+                WEVO's Terms and Service
               </a>
               ,{" "}
-              <a href="#" className="text-blue-600 hover:underline">
+              <a href="#" className="text-[#0458A9] hover:underline">
                 Information Protection Statement
               </a>{" "}
               and{" "}
-              <a href="#" className="text-blue-600 hover:underline">
+              <a href="#" className="text-[#0458A9] hover:underline">
                 Privacy Protection Statement
               </a>
               .
