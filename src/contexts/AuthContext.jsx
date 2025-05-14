@@ -1,7 +1,6 @@
 // src/contexts/AuthContext.jsx
 import { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebase/firebase";
+import { supabase } from "../supabase/supabaseClient";
 
 const AuthContext = createContext();
 
@@ -14,12 +13,19 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, user => {
-      setCurrentUser(user);
+    // Listen to auth state changes
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      setCurrentUser(session?.user || null);
       setLoading(false);
     });
-
-    return unsubscribe;
+    // Get initial user
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUser(data?.user || null);
+      setLoading(false);
+    });
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
   }, []);
 
   return (
@@ -28,5 +34,5 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   );
 }
-// The AuthProvider component uses the onAuthStateChanged function from Firebase Authentication to listen for changes in the user's authentication state.
+// The AuthProvider component uses Supabase to listen for changes in the user's authentication state.
 // When the component mounts, it sets up a listener that updates the currentUser state whenever the authentication state changes.

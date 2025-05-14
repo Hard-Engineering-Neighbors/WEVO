@@ -1,18 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, ChevronRight } from "lucide-react";
-import { auth } from "./firebase/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { db } from "./firebase/firebase";
-import {
-  collection,
-  getDocs,
-  doc,
-  setDoc,
-  serverTimestamp,
-} from "firebase/firestore";
 import { useAuth } from "./contexts/AuthContext";
-import { useRef } from "react";
+import { supabase } from "./supabase/supabaseClient";
 
 function LoginPage() {
   const [glow, setGlow] = useState(false);
@@ -21,7 +11,6 @@ function LoginPage() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [userData, setUserData] = useState(null);
-  const usersCollectionRef = collection(db, "users");
 
   const handleGetStarted = () => {
     setGlow(true);
@@ -34,13 +23,11 @@ function LoginPage() {
     const password = e.target.password.value;
 
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
-      );
-      const user = userCredential.user;
-
+        password,
+      });
+      if (error) throw error;
       // ✅ Redirect to dashboard after successful login
       navigate("/dashboard");
     } catch (error) {
@@ -48,13 +35,6 @@ function LoginPage() {
       setErrorMessage("Invalid email or password. Please try again.");
     }
   };
-
-  // // ✅ Redirect already logged-in user to dashboard
-  // useEffect(() => {
-  //   if (currentUser) {
-  //     navigate("/dashboard");
-  //   }
-  // }, [currentUser, navigate]);
 
   return (
     <div className="flex flex-col min-h-screen">
