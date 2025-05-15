@@ -3,7 +3,7 @@ import { CalendarDays, MapPin, RotateCcw } from "lucide-react";
 
 export default function LeftSidebar() {
   return (
-    <aside className="w-full lg:w-1/5 bg-white border-b lg:border-b-0 lg:border-r p-4 md:p-6 flex flex-col justify-start">
+    <aside className="w-full lg:w-1/5 bg-white lg:border-b-0 lg:border-r p-4 md:p-6 flex flex-col justify-start border-gray-400">
       <div className="w-full flex flex-col items-center lg:items-center">
         <img
           src="/wevoLogoPng.png"

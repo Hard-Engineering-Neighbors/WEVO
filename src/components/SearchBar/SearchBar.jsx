@@ -4,7 +4,7 @@ import { Search, Bookmark } from "lucide-react";
 export default function SearchBar() {
   return (
     <div className="flex justify-center">
-      <div className="relative w-full max-w-full sm:max-w-2xl md:max-w-3xl">
+      <div className="relative w-full max-w-full sm:max-w-2xl md:max-w-3xl border border-gray-400 rounded-full">
         {/* Left Icon */}
         <Search
           className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 text-[#0458A9]"

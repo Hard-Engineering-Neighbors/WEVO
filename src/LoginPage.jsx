@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Mail, Lock, Eye, EyeOff, ChevronRight } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ChevronRight, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { supabase } from "./supabase/supabaseClient";
@@ -8,6 +8,7 @@ function LoginPage() {
   const [glow, setGlow] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [userData, setUserData] = useState(null);
@@ -19,11 +20,12 @@ function LoginPage() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
     const email = e.target.email.value;
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { shouldCreateUser: true, type: 'otp' }
+        options: { shouldCreateUser: true, type: "otp" },
       });
       if (error) throw error;
       localStorage.setItem("2fa_email", email);
@@ -31,6 +33,8 @@ function LoginPage() {
     } catch (error) {
       console.error("Error sending OTP:", error);
       setErrorMessage("Failed to send verification code. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -130,9 +134,17 @@ function LoginPage() {
 
               <button
                 type="submit"
-                className="w-full bg-[#0458A9] text-white py-2 rounded-md hover:bg-[#0458A9] transition"
+                className="w-full bg-[#0458A9] text-white py-2 rounded-md hover:bg-[#0458A9] transition flex items-center justify-center"
+                disabled={loading}
               >
-                Continue
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2" size={18} />
+                    Sending Code...
+                  </>
+                ) : (
+                  "Continue"
+                )}
               </button>
 
               <div className="text-right">

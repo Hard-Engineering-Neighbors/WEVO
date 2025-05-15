@@ -3,7 +3,7 @@ import { User, Menu } from "lucide-react";
 
 export default function RightSidebar() {
   return (
-    <aside className="w-full lg:w-1/5 bg-white border-t lg:border-t-0 lg:border-l p-4 md:p-6 order-1 lg:order-none flex flex-col gap-4">
+    <aside className="w-full lg:w-1/5 bg-white lg:border-t-0 lg:border-l p-4 md:p-6 order-1 lg:order-none flex flex-col gap-4 border-gray-400">
       {/* Account Row */}
       <div className="flex items-center justify-between mb-2">
         <div className="text-base font-medium text-gray-700">Account Name</div>
@@ -82,12 +82,6 @@ export default function RightSidebar() {
             see all notifications
           </button>
         </div>
-      </div>
-
-      {/* Bottom Boxes (placeholder) */}
-      <div className="grid grid-cols-2 gap-4 mt-2">
-        <div className="h-28 rounded-2xl border border-[#C0C0C0]" />
-        <div className="h-28 rounded-2xl border border-[#C0C0C0]" />
       </div>
     </aside>
   );

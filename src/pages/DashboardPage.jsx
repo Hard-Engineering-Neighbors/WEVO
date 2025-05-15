@@ -66,9 +66,6 @@ export default function DashboardPage() {
         {/* Right Sidebar */}
         <RightSidebar />
       </div>
-
-      {/* Footer */}
-      <Footer />
     </div>
   );
 }

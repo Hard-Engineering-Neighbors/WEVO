@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabase/supabaseClient";
 import Footer from "../components/Footer/Footer";
+import { Loader2, ArrowLeft } from "lucide-react";
 
 function TwoFactorPage() {
   const [glow, setGlow] = useState(false);
@@ -36,7 +37,7 @@ function TwoFactorPage() {
     const { error } = await supabase.auth.verifyOtp({
       email,
       token: code,
-      type: 'email',
+      type: "email",
     });
     if (error) {
       setErrorMessage("Invalid or expired code. Please try again.");
@@ -78,11 +79,13 @@ function TwoFactorPage() {
     setErrorMessage("");
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true, type: 'otp' }
+      options: { shouldCreateUser: true, type: "otp" },
     });
     setLoading(false);
     if (error) {
-      setErrorMessage(error.message || "Failed to resend code. Please try again.");
+      setErrorMessage(
+        error.message || "Failed to resend code. Please try again."
+      );
       return;
     }
     startCooldown();
@@ -138,20 +141,37 @@ function TwoFactorPage() {
             </div>
             <button
               type="submit"
-              className="w-full bg-[#0458A9] text-white py-2 rounded-md hover:bg-[#0458A9] transition text-base sm:text-lg"
+              className="w-full bg-[#0458A9] text-white py-2 rounded-md hover:bg-[#0458A9] transition text-base sm:text-lg flex items-center justify-center"
               disabled={loading}
             >
-              {loading ? "Verifying..." : "Verify"}
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin mr-2" size={18} />
+                  Verifying...
+                </>
+              ) : (
+                "Verify"
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="w-full text-gray-500 py-2 rounded-md hover:bg-gray-100 transition text-sm flex items-center justify-center mt-2"
+            >
+              <ArrowLeft size={16} className="mr-1" />
+              Back to Login
             </button>
           </form>
           <p className="text-xs text-gray-400 text-center mt-6">
-            Didn&apos;t receive a code?{' '}
+            Didn&apos;t receive a code?{" "}
             <a
               href="#"
-              className={`text-[#0458A9] hover:underline ${cooldown > 0 ? 'pointer-events-none opacity-50' : ''}`}
+              className={`text-[#0458A9] hover:underline ${
+                cooldown > 0 ? "pointer-events-none opacity-50" : ""
+              }`}
               onClick={handleResend}
             >
-              {cooldown > 0 ? `Resend (${cooldown}s)` : 'Resend'}
+              {cooldown > 0 ? `Resend (${cooldown}s)` : "Resend"}
             </a>
           </p>
         </div>
