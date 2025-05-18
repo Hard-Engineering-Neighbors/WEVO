@@ -1,7 +1,13 @@
 import React from "react";
-import { User, Menu } from "lucide-react";
+import { User, Menu, LogOut } from "lucide-react";
 
 export default function RightSidebar() {
+  // TODO: Hook up logout logic here
+  const handleLogout = () => {
+    // Placeholder for logout functionality
+    alert("Logout clicked");
+  };
+
   return (
     <aside className="w-full lg:w-1/5 bg-white lg:border-t-0 lg:border-l p-4 md:p-6 order-1 lg:order-none flex flex-col gap-4 border-gray-400">
       {/* Account Row */}
@@ -12,9 +18,18 @@ export default function RightSidebar() {
             <User size={22} className="text-gray-600" />
           </span>
           <Menu size={22} className="text-gray-600" />
+          <button
+            onClick={handleLogout}
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-100 hover:text-red-600 transition-colors"
+            title="Logout"
+          >
+            <LogOut
+              size={22}
+              className="text-gray-600 group-hover:text-red-600"
+            />
+          </button>
         </div>
       </div>
-
       {/* Notifications Box */}
       <div className="rounded-2xl border border-[#C0C0C0] p-4 bg-white">
         <h2 className="text-2xl font-bold text-[#0458A9] mb-2">

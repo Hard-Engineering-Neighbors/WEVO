@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import LeftSidebar from "../components/Sidebar/LeftSidebar";
 import RightSidebar from "../components/Sidebar/RightSidebar";
 import SearchBar from "../components/SearchBar/SearchBar";
@@ -10,18 +10,9 @@ import {
   Clock,
   FileText,
 } from "lucide-react";
+import { fetchRequests } from "../api/requests";
 
 import venueSample from "../assets/cultural_center.webp";
-
-const requests = [
-  {
-    venue: "WVSU Cultural Center",
-    image: venueSample, // Replace with actual image path
-    event: "Himig at Hiwaga 2025",
-    type: "Seminar",
-    date: "April 10, 2021 7:30 AM - April 11, 2021 5:30 PM",
-  },
-];
 
 function RequestCard({ request }) {
   return (
@@ -51,6 +42,13 @@ function RequestCard({ request }) {
 }
 
 export default function RequestsPage() {
+  const [requests, setRequests] = useState([]);
+
+  useEffect(() => {
+    // TODO: Replace with real API call
+    fetchRequests().then(setRequests);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen font-sans">
       <div className="flex flex-col lg:flex-row flex-1">
@@ -61,7 +59,7 @@ export default function RequestsPage() {
           <SearchBar />
           {/* Title and Sort/Filter Row */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-2 mb-4 gap-2">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9]">
+            <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9] py-6">
               Your Requests
             </h2>
             <div className="flex gap-2">

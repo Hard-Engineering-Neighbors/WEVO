@@ -13,36 +13,38 @@ export default function LeftSidebar({ active = "calendar" }) {
           alt="Wevo Logo"
           className="h-10 md:h-12 mb-8 lg:mb-12"
         />
-        <nav className="space-y-0 lg:space-y-4 flex flex-row lg:flex-col gap-2 lg:gap-0 mt-0 lg:mt-0 w-full justify-center items-center">
+        <nav className="flex flex-col gap-4 w-full items-center justify-center">
           <button
-            className={`flex items-center gap-2 px-3 md:px-20 py-2 md:py-3 rounded-full w-full text-xs md:text-base ${
+            className={`flex items-center gap-2 px-3 md:px-20 py-2 md:py-3 rounded-full w-full justify-center text-xs md:text-base ${
               active === "calendar"
                 ? "bg-[#0458A9] text-white"
                 : "text-gray-500 hover:bg-[#0458A9]/10"
             }`}
             onClick={() => navigate("/dashboard")}
           >
-            <CalendarDays size={20} /> Calendar
+            <CalendarDays size={20} />{" "}
+            <span className="font-medium">Calendar</span>
           </button>
           <button
-            className={`flex items-center gap-2 px-3 md:px-20 py-2 md:py-3 rounded-full w-full text-xs md:text-base ${
+            className={`flex items-center gap-2 px-3 md:px-20 py-2 md:py-3 rounded-full w-full justify-center text-xs md:text-base ${
               active === "venues"
                 ? "bg-[#0458A9] text-white"
                 : "text-gray-500 hover:bg-[#0458A9]/10"
             }`}
             onClick={() => navigate("/venues")}
           >
-            <MapPin size={20} /> Venues
+            <MapPin size={20} /> <span className="font-medium">Venues</span>
           </button>
           <button
-            className={`flex items-center gap-2 px-3 md:px-20 py-2 md:py-3 rounded-full w-full text-xs md:text-base ${
+            className={`flex items-center gap-2 px-3 md:px-20 py-2 md:py-3 rounded-full w-full justify-center text-xs md:text-base ${
               active === "requests"
                 ? "bg-[#0458A9] text-white"
                 : "text-gray-500 hover:bg-[#0458A9]/10"
             }`}
             onClick={() => navigate("/requests")}
           >
-            <RotateCcw size={20} /> Requests
+            <RotateCcw size={20} />{" "}
+            <span className="font-medium">Requests</span>
           </button>
         </nav>
       </div>

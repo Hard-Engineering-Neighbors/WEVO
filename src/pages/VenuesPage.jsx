@@ -1,24 +1,17 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import LeftSidebar from "../components/Sidebar/LeftSidebar";
 import RightSidebar from "../components/Sidebar/RightSidebar";
 import SearchBar from "../components/SearchBar/SearchBar";
 import { Users, Info, MapPin, Filter, ListFilter } from "lucide-react";
+import { fetchVenues } from "../api/venues";
 
 import venueSample from "../assets/cultural_center.webp";
-
-const venues = Array(8).fill({
-  name: "WVSU Cultural Center",
-  description:
-    "A dynamic space on campus where students and communities connect through art, culture, and shared experiences.",
-  participants: 400,
-  image: "../assets/cultural_center.webp", // Replace with actual image path
-});
 
 function VenueCard({ venue }) {
   return (
     <div className="bg-white rounded-xl shadow border border-[#C0C0C0] flex flex-col overflow-hidden w-full max-w-xs mx-auto">
       <img
-        src={venueSample}
+        src={venue.image}
         alt={venue.name}
         className="w-full h-32 object-cover"
       />
@@ -45,6 +38,13 @@ function VenueCard({ venue }) {
 }
 
 export default function VenuesPage() {
+  const [venues, setVenues] = useState([]);
+
+  useEffect(() => {
+    // TODO: Replace with real API call
+    fetchVenues().then(setVenues);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen font-sans">
       <div className="flex flex-col lg:flex-row flex-1">
@@ -55,7 +55,7 @@ export default function VenuesPage() {
           <SearchBar />
           {/* Title and Sort/Filter Row */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-2 mb-2 gap-2">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9]">
+            <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9] py-6">
               List of Available Venues
             </h2>
             <div className="flex gap-2">
