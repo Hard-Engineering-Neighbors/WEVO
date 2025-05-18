@@ -5,9 +5,9 @@ This template provides a minimal setup to get React working in Vite with HMR and
 ## Project Features
 
 - **Authentication**: Uses Supabase for authentication with email/password and 2FA (OTP via email).
-- **Protected Routing**: Users cannot access dashboard, venues, or requests unless logged in. When logged in, users cannot access login, 2FA, or landing pages (even with browser navigation).
+- **Protected Routing**: Users cannot access dashboard, venues, or requests unless logged in.
 - **Session Security**: Logging out clears all session data and prevents access to protected pages until re-authenticated.
-- **Login Flow**: Credentials are checked before sending a 2FA code. Users are locked out for 1 minute after 7 failed login attempts.
+- **Login Flow**: Credentials are checked before sending a 2FA code. 
 - **Modern UI**: Built with React, Tailwind CSS, and Lucide icons.
 
 ## Routing and Navigation
