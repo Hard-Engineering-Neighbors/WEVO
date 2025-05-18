@@ -155,7 +155,7 @@ function TwoFactorPage() {
             </button>
             <button
               type="button"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/login")}
               className="w-full text-gray-500 py-2 rounded-md hover:bg-gray-100 transition text-sm flex items-center justify-center mt-2"
             >
               <ArrowLeft size={16} className="mr-1" />

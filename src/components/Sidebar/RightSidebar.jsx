@@ -1,18 +1,24 @@
 import React from "react";
 import { User, Menu, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function RightSidebar() {
-  // TODO: Hook up logout logic here
-  const handleLogout = () => {
-    // Placeholder for logout functionality
-    alert("Logout clicked");
+  const navigate = useNavigate();
+  const { currentUser, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
   };
 
   return (
     <aside className="w-full lg:w-1/5 bg-white lg:border-t-0 lg:border-l p-4 md:p-6 order-1 lg:order-none flex flex-col gap-4 border-gray-400">
       {/* Account Row */}
       <div className="flex items-center justify-between mb-2">
-        <div className="text-base font-medium text-gray-700">Account Name</div>
+        <div className="text-base font-medium text-gray-700">
+          {currentUser?.email || "Account Name"}
+        </div>
         <div className="flex items-center bg-gray-100 rounded-full px-3 py-1 gap-2">
           <span className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
             <User size={22} className="text-gray-600" />
@@ -93,7 +99,7 @@ export default function RightSidebar() {
           </li>
         </ul>
         <div className="flex justify-center mt-6 mb-2">
-          <button className="w-full h-9 p-2.5 bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-zinc-400 inline-flex justify-center items-center gap-2.5">
+          <button className="w-full h-9 p-2.5 bg-white rounded-2xl outline-offset-[-1px] outline-zinc-400 inline-flex justify-center items-center gap-2.5">
             see all notifications
           </button>
         </div>

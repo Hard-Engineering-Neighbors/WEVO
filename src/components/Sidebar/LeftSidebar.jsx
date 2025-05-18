@@ -1,9 +1,25 @@
 import React from "react";
 import { CalendarDays, MapPin, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function LeftSidebar({ active = "calendar" }) {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+
+  // Route guard: block navigation to login/2fa/landing if logged in
+  const handleNav = (path) => {
+    if (!currentUser && ["/dashboard", "/venues", "/requests"].includes(path)) {
+      navigate("/login", { replace: true });
+      return;
+    }
+    if (currentUser && ["/login", "/2fa", "/"].includes(path)) {
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+    navigate(path);
+  };
+
   return (
     <aside className="w-full lg:w-1/5 bg-white lg:border-b-0 lg:border-r p-4 md:p-6 flex flex-col justify-between border-gray-400 min-h-screen">
       {/* Centered nav section */}
@@ -20,7 +36,7 @@ export default function LeftSidebar({ active = "calendar" }) {
                 ? "bg-[#0458A9] text-white"
                 : "text-gray-500 hover:bg-[#0458A9]/10"
             }`}
-            onClick={() => navigate("/dashboard")}
+            onClick={() => handleNav("/dashboard")}
           >
             <CalendarDays size={20} />{" "}
             <span className="font-medium">Calendar</span>
@@ -31,7 +47,7 @@ export default function LeftSidebar({ active = "calendar" }) {
                 ? "bg-[#0458A9] text-white"
                 : "text-gray-500 hover:bg-[#0458A9]/10"
             }`}
-            onClick={() => navigate("/venues")}
+            onClick={() => handleNav("/venues")}
           >
             <MapPin size={20} /> <span className="font-medium">Venues</span>
           </button>
@@ -41,7 +57,7 @@ export default function LeftSidebar({ active = "calendar" }) {
                 ? "bg-[#0458A9] text-white"
                 : "text-gray-500 hover:bg-[#0458A9]/10"
             }`}
-            onClick={() => navigate("/requests")}
+            onClick={() => handleNav("/requests")}
           >
             <RotateCcw size={20} />{" "}
             <span className="font-medium">Requests</span>
