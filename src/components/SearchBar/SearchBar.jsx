@@ -21,7 +21,7 @@ export default function SearchBar() {
         <input
           type="text"
           placeholder="Search for event venues, locations, or keywords to get started..."
-          className="w-full pl-12 pr-9 py-4 border rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 text-xs md:text-base"
+          className="w-full pl-12 pr-9 py-4 border border-gray-400 rounded-full shadow-sm focus:outline-none focus:border-gray-400 text-xs md:text-base"
         />
       </div>
     </div>

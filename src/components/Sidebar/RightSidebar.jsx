@@ -78,7 +78,7 @@ export default function RightSidebar() {
           </li>
         </ul>
         <div className="flex justify-center mt-6 mb-2">
-          <button className="bg-gray-300 text-[#0458A9] font-bold text-2xl rounded w-full py-2">
+          <button className="w-full h-9 p-2.5 bg-white rounded-2xl outline outline-1 outline-offset-[-1px] outline-zinc-400 inline-flex justify-center items-center gap-2.5">
             see all notifications
           </button>
         </div>
