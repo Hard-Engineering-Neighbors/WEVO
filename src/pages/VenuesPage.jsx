@@ -4,12 +4,16 @@ import RightSidebar from "../components/Sidebar/RightSidebar";
 import SearchBar from "../components/SearchBar/SearchBar";
 import { Users, Info, MapPin, Filter, ListFilter } from "lucide-react";
 import { fetchVenues } from "../api/venues";
+import VenueDetailsModal from "../components/VenueDetailsModal";
 
 import venueSample from "../assets/cultural_center.webp";
 
-function VenueCard({ venue }) {
+function VenueCard({ venue, onClick }) {
   return (
-    <div className="bg-white rounded-xl shadow border border-[#C0C0C0] flex flex-col overflow-hidden w-full max-w-xs mx-auto">
+    <div
+      className="bg-white rounded-xl shadow border border-[#C0C0C0] flex flex-col overflow-hidden w-full max-w-xs mx-auto cursor-pointer hover:shadow-lg transition"
+      onClick={onClick}
+    >
       <img
         src={venue.image}
         alt={venue.name}
@@ -28,7 +32,10 @@ function VenueCard({ venue }) {
           <span className="text-[10px] italic text-gray-400">
             fees may apply
           </span>
-          <button className="text-[#0458A9] text-xs font-semibold hover:underline">
+          <button
+            className="text-[#0458A9] text-xs font-semibold hover:underline"
+            onClick={onClick}
+          >
             Details
           </button>
         </div>
@@ -39,11 +46,18 @@ function VenueCard({ venue }) {
 
 export default function VenuesPage() {
   const [venues, setVenues] = useState([]);
+  const [selectedVenue, setSelectedVenue] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     // TODO: Replace with real API call
     fetchVenues().then(setVenues);
   }, []);
+
+  const handleCardClick = (venue) => {
+    setSelectedVenue(venue);
+    setModalOpen(true);
+  };
 
   return (
     <div className="flex flex-col min-h-screen font-sans">
@@ -70,13 +84,23 @@ export default function VenuesPage() {
           {/* Venue Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
             {venues.map((venue, idx) => (
-              <VenueCard key={idx} venue={venue} />
+              <VenueCard
+                key={idx}
+                venue={venue}
+                onClick={() => handleCardClick(venue)}
+              />
             ))}
           </div>
         </main>
         {/* Right Sidebar */}
         <RightSidebar />
       </div>
+      {/* Venue Details Modal */}
+      <VenueDetailsModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        venue={selectedVenue}
+      />
     </div>
   );
 }
