@@ -1,14 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import ReserveStep2Modal from "./ReserveStep2Modal";
 
-// Dummy calendar for April 2025
-const daysInMonth = 30;
-const firstDayOfWeek = 2; // April 1, 2025 is a Tuesday (0=Sun)
-const days = Array.from({ length: 35 }, (_, i) => {
-  const day = i - firstDayOfWeek + 1;
-  return day > 0 && day <= daysInMonth ? day : null;
-});
+// Helper function to get days in month
+const getDaysInMonth = (year, month) => {
+  return new Date(year, month + 1, 0).getDate();
+};
+
+// Helper function to get first day of month
+const getFirstDayOfMonth = (year, month) => {
+  return new Date(year, month, 1).getDay();
+};
+
+// Helper function to format date for backend
+const formatDate = (year, month, day) => {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(
+    2,
+    "0"
+  )}`;
+};
+
+// Helper function to check if date is within booking window
+const isWithinBookingWindow = (date) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const twoWeeksFromNow = new Date(today);
+  twoWeeksFromNow.setDate(today.getDate() + 14);
+
+  return date >= twoWeeksFromNow;
+};
 
 export default function ReserveStep1Modal({
   open,
@@ -21,27 +42,120 @@ export default function ReserveStep1Modal({
   const [bookingType, setBookingType] = useState("multiple");
   const [selectedDays, setSelectedDays] = useState([]);
   const [step2Open, setStep2Open] = useState(false);
+  const [showVenueSelector, setShowVenueSelector] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [calendarDays, setCalendarDays] = useState([]);
+
+  // Update calendar when current date changes
+  useEffect(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
+
+    const days = Array.from({ length: 42 }, (_, i) => {
+      const day = i - firstDay + 1;
+      if (day > 0 && day <= daysInMonth) {
+        const date = new Date(year, month, day);
+        const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
+        const isWithinWindow = isWithinBookingWindow(date);
+
+        return {
+          day,
+          date,
+          isPast,
+          isWithinWindow,
+          formattedDate: formatDate(year, month, day),
+          disabled: isPast || !isWithinWindow,
+        };
+      }
+      return null;
+    });
+
+    setCalendarDays(days);
+  }, [currentDate]);
 
   if (!open || !venue) return null;
 
-  const handleDayClick = (day) => {
-    if (!day) return;
+  const handleDayClick = (dayData) => {
+    if (!dayData || dayData.disabled) return;
+
     if (bookingType === "one") {
-      setSelectedDays([day]);
+      setSelectedDays([dayData]);
     } else {
-      setSelectedDays((prev) =>
-        prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-      );
+      setSelectedDays((prev) => {
+        const exists = prev.some(
+          (d) => d.formattedDate === dayData.formattedDate
+        );
+        if (exists) {
+          return prev.filter((d) => d.formattedDate !== dayData.formattedDate);
+        }
+        return [...prev, dayData];
+      });
     }
   };
 
   const handleNext = () => {
+    // Prepare data for backend
+    const bookingData = {
+      venueId: venue.id,
+      venueName: venue.name,
+      bookingType,
+      selectedDates: selectedDays.map((day) => day.formattedDate),
+      rawSelectedDays: selectedDays,
+      venue: venue,
+    };
+
     setStep2Open(true);
   };
 
-  const handleStep2Close = () => {
-    setStep2Open(false);
+  const handleVenueSelect = (selectedVenue) => {
+    onChangeVenue(selectedVenue);
+    setShowVenueSelector(false);
   };
+
+  const handleMonthChange = (increment) => {
+    setCurrentDate((prev) => {
+      const newDate = new Date(prev);
+      newDate.setMonth(prev.getMonth() + increment);
+      return newDate;
+    });
+  };
+
+  // Venue Selector Modal
+  const VenueSelector = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full mx-4 p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-2xl font-bold text-[#0458A9]">Select a Venue</h3>
+          <button
+            onClick={() => setShowVenueSelector(false)}
+            className="text-gray-400 hover:text-gray-700"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {venues.map((v) => (
+            <button
+              key={v.id}
+              onClick={() => handleVenueSelect(v)}
+              className="flex flex-col items-center p-4 border rounded-xl hover:border-[#0458A9] transition"
+            >
+              <div className="w-full aspect-video rounded-lg overflow-hidden mb-2">
+                <img
+                  src={v.images ? v.images[0] : v.image}
+                  alt={v.name}
+                  className="object-cover w-full h-full"
+                />
+              </div>
+              <h4 className="font-semibold text-[#0458A9]">{v.name}</h4>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -90,7 +204,9 @@ export default function ReserveStep1Modal({
                 </div>
                 <button
                   className="bg-[#0458A9] text-white rounded-full px-6 py-2 font-semibold text-base w-full md:w-auto hover:bg-[#03407a] transition"
-                  onClick={onChangeVenue}
+                  onClick={() => {
+                    setShowVenueSelector(true);
+                  }}
                 >
                   Change Venue
                 </button>
@@ -136,8 +252,31 @@ export default function ReserveStep1Modal({
                   Preferred Day(s)
                 </h4>
                 <div className="rounded-2xl border border-gray-400 p-4 bg-white">
-                  <div className="font-bold text-[#0458A9] text-lg mb-2">
-                    April 2025
+                  <div className="flex justify-between items-center mb-4">
+                    <button
+                      onClick={() => handleMonthChange(-1)}
+                      className="text-gray-600 hover:text-[#0458A9]"
+                    >
+                      ←
+                    </button>
+                    <div className="font-bold text-[#0458A9] text-lg">
+                      {currentDate.toLocaleString("default", {
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </div>
+                    <button
+                      onClick={() => handleMonthChange(1)}
+                      className="text-gray-600 hover:text-[#0458A9]"
+                    >
+                      →
+                    </button>
+                  </div>
+                  <div className="text-sm text-gray-600 mb-2 text-center">
+                    Bookings available from{" "}
+                    {new Date(
+                      new Date().setDate(new Date().getDate() + 14)
+                    ).toLocaleDateString()}
                   </div>
                   <div className="grid grid-cols-7 gap-1 text-center text-gray-700 text-base mb-1">
                     {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
@@ -149,20 +288,29 @@ export default function ReserveStep1Modal({
                     )}
                   </div>
                   <div className="grid grid-cols-7 gap-1 text-center">
-                    {days.map((day, i) => (
+                    {calendarDays.map((dayData, i) => (
                       <button
                         key={i}
                         className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center text-base transition border-2 ${
-                          day === null
+                          !dayData
                             ? "bg-transparent border-transparent cursor-default"
-                            : selectedDays.includes(day)
+                            : dayData.disabled
+                            ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                            : selectedDays.some(
+                                (d) => d.formattedDate === dayData.formattedDate
+                              )
                             ? "bg-[#0458A9] text-white border-[#0458A9]"
                             : "bg-white text-gray-700 border-transparent hover:bg-blue-50"
                         }`}
-                        disabled={day === null}
-                        onClick={() => handleDayClick(day)}
+                        disabled={!dayData || dayData.disabled}
+                        onClick={() => handleDayClick(dayData)}
+                        title={
+                          dayData?.disabled
+                            ? "Bookings available from 2 weeks ahead"
+                            : ""
+                        }
                       >
-                        {day || ""}
+                        {dayData?.day || ""}
                       </button>
                     ))}
                   </div>
@@ -202,7 +350,15 @@ export default function ReserveStep1Modal({
         }}
         venues={venues}
         initialVenue={venue.name}
+        reservationData={{
+          venue: venue,
+          selectedDates: selectedDays.map((day) => day.formattedDate),
+          bookingType,
+          rawSelectedDays: selectedDays,
+        }}
       />
+      {/* Add Venue Selector Modal */}
+      {showVenueSelector && <VenueSelector />}
     </>
   );
 }

@@ -9,6 +9,7 @@ export default function ReserveStep2Modal({
   onNext,
   venues = [],
   initialVenue = "",
+  reservationData = {},
 }) {
   const [form, setForm] = useState({
     title: "",
@@ -48,6 +49,34 @@ export default function ReserveStep2Modal({
     return options;
   };
   const timeOptions = generateTimeOptions();
+
+  // Format time for display (24-hour to 12-hour with AM/PM)
+  const formatTimeForDisplay = (time24) => {
+    if (!time24) return "";
+    const [hour, minute] = time24.split(":");
+    const hourNum = parseInt(hour);
+    const suffix = hourNum >= 12 ? "PM" : "AM";
+    const hour12 = hourNum > 12 ? hourNum - 12 : hourNum === 0 ? 12 : hourNum;
+    return `${hour12}:${minute} ${suffix}`;
+  };
+
+  // Prepare combined data for Step 3
+  const prepareStep3Data = () => {
+    const venueObj = venues.find((v) => v.name === form.venue) || {
+      name: form.venue,
+    };
+
+    return {
+      ...reservationData,
+      eventTitle: form.title,
+      eventType: form.type,
+      eventPurpose: form.purpose,
+      startTime: formatTimeForDisplay(form.startTime),
+      endTime: formatTimeForDisplay(form.endTime),
+      venue: venueObj,
+      participants: `${form.participants} Participants`,
+    };
+  };
 
   return (
     <>
@@ -216,7 +245,8 @@ export default function ReserveStep2Modal({
               <button
                 className="bg-[#0458A9] text-white rounded-full px-10 py-2 font-semibold text-base hover:bg-[#03407a] transition"
                 onClick={() => {
-                  setStep2Data(form);
+                  const combinedData = prepareStep3Data();
+                  setStep2Data(combinedData);
                   setStep3Open(true);
                 }}
                 disabled={
@@ -245,10 +275,11 @@ export default function ReserveStep2Modal({
           }}
           onPrevious={() => setStep3Open(false)}
           onSubmit={(files) => {
-            // TODO: handle submit, pass form and files to parent or backend
+            // Pass all form data and files to parent
             setStep3Open(false);
             onNext && onNext({ ...step2Data, files });
           }}
+          reservationData={step2Data}
         />
       )}
     </>
