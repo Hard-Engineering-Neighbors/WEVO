@@ -18,20 +18,35 @@ function LoginPage() {
     setTimeout(() => setGlow(false), 500);
   };
 
+  // New: Check credentials before sending 2FA code
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage("");
     const email = e.target.email.value;
+    const password = e.target.password.value;
     try {
-      const { error } = await supabase.auth.signInWithOtp({
+      // Check credentials with Supabase
+      const { data, error: signInError } = await supabase.auth.signInWithPassword(
+        {
+          email,
+          password,
+        }
+      );
+      if (signInError) {
+        setErrorMessage("Incorrect email or password.");
+        setLoading(false);
+        return;
+      }
+      // If credentials are correct, send 2FA code
+      const { error: otpError } = await supabase.auth.signInWithOtp({
         email,
-        options: { shouldCreateUser: true, type: "otp" },
+        options: { shouldCreateUser: false, type: "otp" },
       });
-      if (error) throw error;
+      if (otpError) throw otpError;
       localStorage.setItem("2fa_email", email);
       navigate("/2fa");
     } catch (error) {
-      console.error("Error sending OTP:", error);
       setErrorMessage("Failed to send verification code. Please try again.");
     } finally {
       setLoading(false);

@@ -28,8 +28,14 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  // Add logout function
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setCurrentUser(null);
+  };
+
   return (
-    <AuthContext.Provider value={{ currentUser }}>
+    <AuthContext.Provider value={{ currentUser, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   );

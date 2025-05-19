@@ -2,11 +2,23 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Currently, two official plugins are available:
+## Project Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Authentication**: Uses Supabase for authentication with email/password and 2FA (OTP via email).
+- **Protected Routing**: Users cannot access dashboard, venues, or requests unless logged in.
+- **Session Security**: Logging out clears all session data and prevents access to protected pages until re-authenticated.
+- **Login Flow**: Credentials are checked before sending a 2FA code. 
+- **Modern UI**: Built with React, Tailwind CSS, and Lucide icons.
+
+## Routing and Navigation
+
+- All protected routes are wrapped in a `PrivateRoute` component.
+- Navigation is enforced using both React Router's `<Navigate replace />` and browser history manipulation to prevent back/forward access to restricted pages.
 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+---
+
+**For backend/API integration instructions, see `README_BACKEND.md`.**
