@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Mail, Lock, Eye, EyeOff, ChevronRight, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
@@ -9,14 +9,48 @@ function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownInterval = useRef(null);
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [userData, setUserData] = useState(null);
+  const formRef = useRef();
 
   const handleGetStarted = () => {
     setGlow(true);
     setTimeout(() => setGlow(false), 500);
   };
+
+  // Helper to get cooldown remaining for an email
+  const getCooldownRemaining = (email) => {
+    const cooldownKey = `2fa_cooldown_${email}`;
+    const expiresAt = localStorage.getItem(cooldownKey);
+    if (!expiresAt) return 0;
+    const diff = Math.floor((parseInt(expiresAt, 10) - Date.now()) / 1000);
+    return diff > 0 ? diff : 0;
+  };
+
+  // Start cooldown for an email
+  const startCooldown = (email) => {
+    const cooldownKey = `2fa_cooldown_${email}`;
+    const expiresAt = Date.now() + 60000; // 60 seconds
+    localStorage.setItem(cooldownKey, expiresAt);
+    setCooldown(60);
+    cooldownInterval.current = setInterval(() => {
+      const remaining = getCooldownRemaining(email);
+      setCooldown(remaining);
+      if (remaining <= 0) {
+        clearInterval(cooldownInterval.current);
+      }
+    }, 1000);
+  };
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (cooldownInterval.current) clearInterval(cooldownInterval.current);
+    };
+  }, []);
 
   // New: Check credentials before sending 2FA code
   const handleLogin = async (e) => {
@@ -25,6 +59,23 @@ function LoginPage() {
     setErrorMessage("");
     const email = e.target.email.value;
     const password = e.target.password.value;
+    // Check cooldown before proceeding
+    const cooldownLeft = getCooldownRemaining(email);
+    if (cooldownLeft > 0) {
+      setErrorMessage(`Please wait ${cooldownLeft}s before requesting another code.`);
+      setCooldown(cooldownLeft);
+      setLoading(false);
+      if (!cooldownInterval.current) {
+        cooldownInterval.current = setInterval(() => {
+          const remaining = getCooldownRemaining(email);
+          setCooldown(remaining);
+          if (remaining <= 0) {
+            clearInterval(cooldownInterval.current);
+          }
+        }, 1000);
+      }
+      return;
+    }
     try {
       // Check credentials with Supabase
       const { data, error: signInError } = await supabase.auth.signInWithPassword(
@@ -45,6 +96,7 @@ function LoginPage() {
       });
       if (otpError) throw otpError;
       localStorage.setItem("2fa_email", email);
+      startCooldown(email);
       navigate("/2fa");
     } catch (error) {
       setErrorMessage("Failed to send verification code. Please try again.");
@@ -52,6 +104,17 @@ function LoginPage() {
       setLoading(false);
     }
   };
+
+  // Prevent back/forward navigation from leaving login page or returning to 2fa
+  useEffect(() => {
+    // Instantly disable back/forward navigation by pushing a dummy state and locking the user in a navigation loop
+    window.history.pushState({ page: 'login' }, '', '/login');
+    const blockNav = () => {
+      window.history.pushState({ page: 'login' }, '', '/login');
+    };
+    window.addEventListener('popstate', blockNav);
+    return () => window.removeEventListener('popstate', blockNav);
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -108,7 +171,7 @@ function LoginPage() {
               </div>
             )}
 
-            <form className="space-y-4" onSubmit={handleLogin}>
+            <form ref={formRef} className="space-y-4" onSubmit={handleLogin}>
               {/* Email Field with Icon */}
               <div className="relative">
                 <Mail
@@ -150,13 +213,15 @@ function LoginPage() {
               <button
                 type="submit"
                 className="w-full bg-[#0458A9] text-white py-2 rounded-md hover:bg-[#0458A9] transition flex items-center justify-center"
-                disabled={loading}
+                disabled={loading || cooldown > 0}
               >
                 {loading ? (
                   <>
                     <Loader2 className="animate-spin mr-2" size={18} />
                     Sending Code...
                   </>
+                ) : cooldown > 0 ? (
+                  `Wait ${cooldown}s...`
                 ) : (
                   "Continue"
                 )}

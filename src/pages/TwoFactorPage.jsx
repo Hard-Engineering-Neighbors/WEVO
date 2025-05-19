@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../supabase/supabaseClient";
 import Footer from "../components/Footer/Footer";
@@ -100,6 +100,17 @@ function TwoFactorPage() {
     // eslint-disable-next-line
   }, []);
 
+  // Prevent back/forward navigation from leaving 2fa page or returning to login
+  useEffect(() => {
+    // Instantly disable back/forward navigation by pushing a dummy state and locking the user in a navigation loop
+    window.history.pushState({ page: '2fa' }, '', '/2fa');
+    const blockNav = () => {
+      window.history.pushState({ page: '2fa' }, '', '/2fa');
+    };
+    window.addEventListener('popstate', blockNav);
+    return () => window.removeEventListener('popstate', blockNav);
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <main className="flex flex-1 flex-col items-center justify-center px-4 py-8 sm:px-6 md:px-8">
@@ -155,7 +166,15 @@ function TwoFactorPage() {
             </button>
             <button
               type="button"
-              onClick={() => navigate("/login")}
+              onClick={() => {
+                // Instantly disable back/forward navigation on login as well
+                window.history.pushState({ page: 'login' }, '', '/login');
+                const blockNav = () => {
+                  window.history.pushState({ page: 'login' }, '', '/login');
+                };
+                window.addEventListener('popstate', blockNav);
+                window.location.assign('/login');
+              }}
               className="w-full text-gray-500 py-2 rounded-md hover:bg-gray-100 transition text-sm flex items-center justify-center mt-2"
             >
               <ArrowLeft size={16} className="mr-1" />

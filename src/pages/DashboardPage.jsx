@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   CalendarDays,
   MapPin,
@@ -17,8 +17,26 @@ import LeftSidebar from "../components/Sidebar/LeftSidebar";
 import RightSidebar from "../components/Sidebar/RightSidebar";
 import SearchBar from "../components/SearchBar/SearchBar";
 import Footer from "../components/Footer/Footer";
+import { useNavigate } from "react-router-dom";
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Trap user on dashboard: disable back/forward navigation
+    window.history.pushState({ page: "dashboard-lock" }, "", "/dashboard");
+    const blockNav = () => {
+      if (window.location.pathname !== "/dashboard") {
+        navigate("/dashboard", { replace: true });
+        window.history.pushState({ page: "dashboard-lock" }, "", "/dashboard");
+      } else {
+        window.history.pushState({ page: "dashboard-lock" }, "", "/dashboard");
+      }
+    };
+    window.addEventListener("popstate", blockNav);
+    return () => window.removeEventListener("popstate", blockNav);
+  }, [navigate]);
+
   return (
     <div className="flex flex-col min-h-screen font-sans">
       <div className="flex flex-col lg:flex-row flex-1">
