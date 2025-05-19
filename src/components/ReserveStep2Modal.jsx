@@ -14,7 +14,6 @@ export default function ReserveStep2Modal({
     title: "",
     type: "",
     purpose: "",
-    date: "",
     startTime: "07:00",
     endTime: "08:00",
     venue: initialVenue || (venues[0] ? venues[0].name : ""),
@@ -34,6 +33,21 @@ export default function ReserveStep2Modal({
     setForm((prev) => ({ ...prev, venue }));
     setVenueDropdown(false);
   };
+
+  // Helper to generate time options in 15-min increments from 7:00 to 19:00
+  const generateTimeOptions = () => {
+    const options = [];
+    for (let h = 7; h <= 19; h++) {
+      for (let m = 0; m < 60; m += 15) {
+        if (h === 19 && m > 0) break;
+        const hour = h.toString().padStart(2, "0");
+        const min = m.toString().padStart(2, "0");
+        options.push(`${hour}:${min}`);
+      }
+    }
+    return options;
+  };
+  const timeOptions = generateTimeOptions();
 
   return (
     <>
@@ -106,52 +120,43 @@ export default function ReserveStep2Modal({
                   required
                 />
               </div>
-              {/* Row 3: Date, Start Time, End Time, Venue, Participants */}
+              {/* Row 3: Start Time, End Time, Venue, Participants */}
               <div className="flex flex-col md:flex-row gap-6 w-full">
-                <div className="flex-1">
-                  <label className="font-semibold text-gray-800 mb-1 block">
-                    <span className="text-[#E53935]">*</span> Event Date
-                  </label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={form.date}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                    required
-                  />
-                </div>
                 <div className="flex-1">
                   <label className="font-semibold text-gray-800 mb-1 block">
                     <span className="text-[#E53935]">*</span> Start Time
                   </label>
-                  <input
-                    type="time"
+                  <select
                     name="startTime"
                     value={form.startTime}
                     onChange={handleChange}
-                    min="07:00"
-                    max="19:00"
-                    step="900"
                     className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
                     required
-                  />
+                  >
+                    {timeOptions.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="flex-1">
                   <label className="font-semibold text-gray-800 mb-1 block">
                     <span className="text-[#E53935]">*</span> End Time
                   </label>
-                  <input
-                    type="time"
+                  <select
                     name="endTime"
                     value={form.endTime}
                     onChange={handleChange}
-                    min="07:00"
-                    max="19:00"
-                    step="900"
                     className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
                     required
-                  />
+                  >
+                    {timeOptions.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               {/* Row 4: Venue, Participants */}
@@ -218,7 +223,6 @@ export default function ReserveStep2Modal({
                   !form.title ||
                   !form.type ||
                   !form.purpose ||
-                  !form.date ||
                   !form.startTime ||
                   !form.endTime ||
                   !form.venue ||
