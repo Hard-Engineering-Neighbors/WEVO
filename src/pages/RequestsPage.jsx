@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import LeftSidebar from "../components/Sidebar/LeftSidebar";
 import RightSidebar from "../components/Sidebar/RightSidebar";
 import SearchBar from "../components/SearchBar/SearchBar";
+import RequestDetailsModal from "../components/RequestDetailsModal";
 import {
   Calendar,
   Users,
@@ -14,7 +15,7 @@ import { fetchRequests } from "../api/requests";
 
 import venueSample from "../assets/cultural_center.webp";
 
-function RequestCard({ request }) {
+function RequestCard({ request, onDetails }) {
   return (
     <div className="flex bg-white rounded-xl shadow border border-[#C0C0C0] overflow-hidden max-w-2xl w-full">
       <img
@@ -32,7 +33,10 @@ function RequestCard({ request }) {
           <Clock size={14} /> {request.date}
         </div>
         <div className="flex justify-end mt-auto">
-          <button className="bg-[#0458A9] text-white rounded-full px-6 py-2 text-xs font-semibold hover:bg-[#03407a]">
+          <button
+            className="bg-[#0458A9] text-white rounded-full px-6 py-2 text-xs font-semibold hover:bg-[#03407a]"
+            onClick={() => onDetails(request)}
+          >
             Details
           </button>
         </div>
@@ -43,11 +47,18 @@ function RequestCard({ request }) {
 
 export default function RequestsPage() {
   const [requests, setRequests] = useState([]);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     // TODO: Replace with real API call
     fetchRequests().then(setRequests);
   }, []);
+
+  const handleDetails = (request) => {
+    setSelectedRequest(request);
+    setModalOpen(true);
+  };
 
   return (
     <div className="flex flex-col min-h-screen font-sans">
@@ -74,13 +85,24 @@ export default function RequestsPage() {
           {/* Requests List */}
           <div className="flex flex-col gap-4">
             {requests.map((request, idx) => (
-              <RequestCard key={idx} request={request} />
+              <RequestCard
+                key={idx}
+                request={request}
+                onDetails={handleDetails}
+              />
             ))}
           </div>
         </main>
         {/* Right Sidebar */}
         <RightSidebar />
       </div>
+
+      {/* Details Modal */}
+      <RequestDetailsModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        request={selectedRequest}
+      />
     </div>
   );
 }
