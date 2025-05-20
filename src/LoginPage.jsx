@@ -27,12 +27,11 @@ function LoginPage() {
     const password = e.target.password.value;
     try {
       // Check credentials with Supabase
-      const { data, error: signInError } = await supabase.auth.signInWithPassword(
-        {
+      const { data, error: signInError } =
+        await supabase.auth.signInWithPassword({
           email,
           password,
-        }
-      );
+        });
       if (signInError) {
         setErrorMessage("Incorrect email or password.");
         setLoading(false);
@@ -79,7 +78,7 @@ function LoginPage() {
               Get Started <ChevronRight size={18} />
             </button>
 
-            <button className="border border-[#0458A9] text-[#0458A9] px-10 py-2 rounded-full hover:bg-[#0458A9] transition">
+            <button className="border border-[#0458A9] text-[#0458A9] px-10 py-2 rounded-full hover:bg-[#0458A9] transition hover:text-white">
               Explore
             </button>
           </div>
