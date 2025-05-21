@@ -19,11 +19,13 @@ import venueSample from "../assets/cultural_center.webp";
 function RequestCard({ request, onDetails }) {
   return (
     <div className="flex bg-white rounded-xl shadow border border-[#C0C0C0] overflow-hidden max-w-2xl w-full">
-      <img
-        src={request.image}
-        alt={request.venue}
-        className="w-40 h-40 object-cover rounded-l-xl"
-      />
+      <div className="h-auto w-40 flex-shrink-0">
+        <img
+          src={request.image}
+          alt={request.venue}
+          className="w-full h-full object-cover rounded-l-xl"
+        />
+      </div>
       <div className="flex flex-col flex-1 p-4 gap-1">
         {/* Status Badge */}
         <div className="flex justify-end mb-1">
