@@ -11,6 +11,7 @@ import AdminLoginPage from "./pages/AdminLoginPage";
 import AdminTwoFactorPage from "./pages/AdminTwoFactorPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminReservationsPage from "./pages/AdminReservationsPage";
+import AdminManagementPage from "./pages/AdminManagementPage";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -70,6 +71,14 @@ ReactDOM.createRoot(document.getElementById("root")).render(
             element={
               <PrivateRoute>
                 <AdminReservationsPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/management"
+            element={
+              <PrivateRoute>
+                <AdminManagementPage />
               </PrivateRoute>
             }
           />

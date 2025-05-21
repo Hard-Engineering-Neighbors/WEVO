@@ -200,29 +200,29 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Table */}
-              <div className="overflow-x-auto">
+              <div className="">
                 <table className="w-full text-sm text-left">
                   <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-4 py-3">
+                      <th scope="col" className="px-3 py-3">
                         Organization Name
                       </th>
-                      <th scope="col" className="px-4 py-3">
+                      <th scope="col" className="px-3 py-3">
                         Location
                       </th>
-                      <th scope="col" className="px-4 py-3">
+                      <th scope="col" className="px-3 py-3">
                         Type
                       </th>
-                      <th scope="col" className="px-4 py-3">
+                      <th scope="col" className="px-3 py-3">
                         Event Name
                       </th>
-                      <th scope="col" className="px-4 py-3">
+                      <th scope="col" className="px-3 py-3 min-w-[8rem]">
                         Date and Time
                       </th>
-                      <th scope="col" className="px-4 py-3">
+                      <th scope="col" className="px-3 py-3">
                         Status
                       </th>
-                      <th scope="col" className="px-4 py-3 text-center">
+                      <th scope="col" className="px-3 py-3 text-center">
                         Action
                       </th>
                     </tr>
@@ -233,22 +233,22 @@ export default function AdminDashboardPage() {
                         key={req.id}
                         className="bg-white border-b hover:bg-gray-50"
                       >
-                        <td className="px-4 py-3 flex items-center gap-2">
+                        <td className="px-3 py-3 flex items-center gap-2">
                           <span className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
                             <User size={16} className="text-gray-500" />
                           </span>
                           {req.orgName}
                         </td>
-                        <td className="px-4 py-3">{req.location}</td>
-                        <td className="px-4 py-3">{req.type}</td>
-                        <td className="px-4 py-3">{req.eventName}</td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-3">{req.location}</td>
+                        <td className="px-3 py-3">{req.type}</td>
+                        <td className="px-3 py-3">{req.eventName}</td>
+                        <td className="px-3 py-3 min-w-[8rem]">
                           <div>{req.date}</div>
                           <div className="text-xs text-gray-500">
                             {req.time}
                           </div>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-3">
                           <span
                             className={`px-2 py-1 text-xs font-medium rounded-full ${
                               req.status === "Pending"
@@ -261,7 +261,7 @@ export default function AdminDashboardPage() {
                             {req.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-3 py-3 text-center">
                           <button
                             className="bg-[#56708A] text-white px-4 py-1.5 rounded-md text-xs font-medium hover:bg-[#455b74] transition-colors"
                             onClick={() => handleOpenReviewModal(req)}
