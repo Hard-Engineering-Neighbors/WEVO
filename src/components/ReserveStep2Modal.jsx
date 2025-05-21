@@ -10,6 +10,7 @@ export default function ReserveStep2Modal({
   venues = [],
   initialVenue = "",
   reservationData = {},
+  onReservationSubmitted, // <-- add this prop
 }) {
   const [form, setForm] = useState({
     title: "",
@@ -275,9 +276,9 @@ export default function ReserveStep2Modal({
           }}
           onPrevious={() => setStep3Open(false)}
           onSubmit={(files) => {
-            // Pass all form data and files to parent
             setStep3Open(false);
             onNext && onNext({ ...step2Data, files });
+            if (onReservationSubmitted) onReservationSubmitted(); // <-- refresh requests
           }}
           reservationData={step2Data}
         />

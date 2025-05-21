@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
+import { cancelReservation } from "../api/requests";
 
-export default function RequestDetailsModal({ open, onClose, request }) {
+export default function RequestDetailsModal({ open, onClose, request, onReservationUpdated }) {
   const [current, setCurrent] = useState(0);
+  const [errorMessage, setErrorMessage] = useState("");
 
   if (!open || !request) return null;
 
@@ -12,17 +14,24 @@ export default function RequestDetailsModal({ open, onClose, request }) {
   const next = () => setCurrent((c) => (c + 1) % images.length);
   const prev = () => setCurrent((c) => (c - 1 + images.length) % images.length);
 
+  // PDF files (from request.pdf_files)
+  const pdfFiles = request.pdf_files || [];
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+
   // Placeholder functions for button actions
   const handleViewDocuments = () => {
     // TODO: Implement viewing/downloading documents
     console.log("View documents for:", request);
   };
 
-  const handleCancelReservation = () => {
-    // TODO: Implement cancellation flow
-    console.log("Cancel reservation for:", request);
-    // Close the modal after cancellation is initiated
-    onClose();
+  const handleCancelReservation = async () => {
+    try {
+      await cancelReservation(request.id);
+      if (typeof onReservationUpdated === "function") onReservationUpdated();
+      onClose();
+    } catch (e) {
+      setErrorMessage("Failed to cancel reservation: " + (e.message || e));
+    }
   };
 
   return (
@@ -35,6 +44,13 @@ export default function RequestDetailsModal({ open, onClose, request }) {
         >
           <X size={28} />
         </button>
+
+        {/* Error Message */}
+        {errorMessage && (
+          <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-4">
+            {errorMessage}
+          </div>
+        )}
 
         {/* Left: Carousel */}
         <div className="md:w-1/2 w-full">
@@ -122,6 +138,47 @@ export default function RequestDetailsModal({ open, onClose, request }) {
             {request.description ||
               "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."}
           </div>
+
+          {/* PDF Documents Section */}
+          {pdfFiles.length > 0 && (
+            <div className="mt-4">
+              <div className="text-lg font-semibold mb-2">Uploaded Documents</div>
+              <ul className="space-y-2">
+                {pdfFiles.map((file, idx) => (
+                  <li key={file.id || idx} className="flex items-center gap-2">
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <rect width="24" height="24" rx="4" fill="#0458A9" />
+                      <path d="M7 7H17V17H7V7Z" fill="white" />
+                      <text
+                        x="12"
+                        y="16"
+                        textAnchor="middle"
+                        fontSize="8"
+                        fill="#0458A9"
+                        fontWeight="bold"
+                      >
+                        PDF
+                      </text>
+                    </svg>
+                    <a
+                      href={`${supabaseUrl}/storage/v1/object/public/pdfs/${file.file_url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-700 underline hover:text-blue-900 text-sm truncate max-w-[200px]"
+                    >
+                      {file.file_name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 mt-auto pt-4">

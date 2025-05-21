@@ -11,6 +11,7 @@ import {
   Clock,
   FileText,
 } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 import { fetchRequests } from "../api/requests";
 
 import venueSample from "../assets/cultural_center.webp";
@@ -24,6 +25,27 @@ function RequestCard({ request, onDetails }) {
         className="w-40 h-40 object-cover rounded-l-xl"
       />
       <div className="flex flex-col flex-1 p-4 gap-1">
+        {/* Status Badge */}
+        <div className="flex justify-end mb-1">
+          {request.status && (
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase shadow-sm 
+                ${
+                  request.status === "pending"
+                    ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
+                    : request.status === "approved"
+                    ? "bg-green-100 text-green-800 border border-green-300"
+                    : request.status === "rejected"
+                    ? "bg-red-100 text-red-800 border border-red-300"
+                    : "bg-gray-100 text-gray-700 border border-gray-300"
+                }
+              `}
+              style={{ minWidth: 70, textAlign: "center" }}
+            >
+              {request.status}
+            </span>
+          )}
+        </div>
         <h3 className="font-bold text-base md:text-lg mb-1">{request.venue}</h3>
         <div className="flex items-center text-xs text-gray-700 gap-2 mb-1">
           <Calendar size={14} /> {request.event}
@@ -46,18 +68,30 @@ function RequestCard({ request, onDetails }) {
 }
 
 export default function RequestsPage() {
+  const { currentUser } = useAuth();
   const [requests, setRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
+  const loadRequests = async () => {
+    if (!currentUser) return;
+    const reqs = await fetchRequests(currentUser.id);
+    setRequests(reqs);
+  };
+
   useEffect(() => {
-    // TODO: Replace with real API call
-    fetchRequests().then(setRequests);
-  }, []);
+    loadRequests();
+    // eslint-disable-next-line
+  }, [currentUser]);
 
   const handleDetails = (request) => {
     setSelectedRequest(request);
     setModalOpen(true);
+  };
+
+  // Handler to refresh requests after reservation
+  const handleReservationSubmitted = () => {
+    loadRequests();
   };
 
   return (
@@ -84,9 +118,9 @@ export default function RequestsPage() {
           </div>
           {/* Requests List */}
           <div className="flex flex-col gap-4">
-            {requests.map((request, idx) => (
+            {requests.map((request) => (
               <RequestCard
-                key={idx}
+                key={request.id}
                 request={request}
                 onDetails={handleDetails}
               />
@@ -102,6 +136,7 @@ export default function RequestsPage() {
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         request={selectedRequest}
+        onReservationUpdated={handleReservationSubmitted}
       />
     </div>
   );

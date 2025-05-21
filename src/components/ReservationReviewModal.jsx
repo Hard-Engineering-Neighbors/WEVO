@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { X } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { createReservation } from "../api/requests";
 
 export default function ReservationReviewModal({
   open,
@@ -9,6 +11,10 @@ export default function ReservationReviewModal({
   reservationData = {},
   uploadedFiles = {},
 }) {
+  const { currentUser } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   if (!open) return null;
 
   // Format date from ISO string to readable format
@@ -35,6 +41,23 @@ export default function ReservationReviewModal({
     eventPurpose = "Team-building and skill development",
     participants = "50 Participants",
   } = reservationData;
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      await createReservation({
+        form: reservationData,
+        files: Object.values(uploadedFiles),
+        user: currentUser,
+      });
+      setLoading(false);
+      onSubmit && onSubmit();
+    } catch (e) {
+      setError(e.message || "Failed to submit reservation");
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
@@ -231,21 +254,26 @@ export default function ReservationReviewModal({
           </div>
         </div>
 
+        {/* Error Message */}
+        {error && <div className="text-red-600 font-semibold">{error}</div>}
+
         {/* Footer: Edit/Submit */}
         <div className="flex justify-between items-center mt-6 w-full">
           <button
             type="button"
             className="text-gray-400 font-semibold text-base px-6 py-2 rounded-full cursor-pointer hover:text-[#0458A9] hover:bg-gray-100 transition"
             onClick={onEdit}
+            disabled={loading}
           >
             Edit Forms
           </button>
           <button
             type="button"
             className="bg-[#0458A9] text-white rounded-full px-10 py-2 font-semibold text-base hover:bg-[#03407a] transition"
-            onClick={onSubmit}
+            onClick={handleSubmit}
+            disabled={loading}
           >
-            Submit
+            {loading ? "Submitting..." : "Submit"}
           </button>
         </div>
       </div>

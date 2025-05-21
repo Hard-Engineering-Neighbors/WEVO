@@ -17,8 +17,9 @@ export default function ReserveStep3Modal({
   onClose,
   onPrevious,
   onSubmit,
-  uploadedFiles = {},
   reservationData = {},
+  uploadedFiles = {},
+  onReservationSubmitted, // <-- add this prop
 }) {
   const [files, setFiles] = useState(uploadedFiles);
   const fileInputs = useRef([]);
@@ -42,7 +43,8 @@ export default function ReserveStep3Modal({
 
   const handleFinalSubmit = () => {
     // This function will be called after review to submit the final data
-    onSubmit && onSubmit(files);
+    if (onSubmit) onSubmit(files);
+    if (onReservationSubmitted) onReservationSubmitted(); // <-- notify parent
     setShowReviewModal(false);
   };
 
