@@ -38,7 +38,7 @@ function App() {
               Get Started <ChevronRight size={18} />
             </Link>
 
-            <button className="border border-[#0458A9] text-[#0458A9] px-10 py-2 rounded-full hover:bg-[#0458A9] transition">
+            <button className="border border-[#0458A9] text-[#0458A9] px-10 py-2 rounded-full hover:bg-[#0458A9] transition hover:text-white">
               Explore
             </button>
           </div>
