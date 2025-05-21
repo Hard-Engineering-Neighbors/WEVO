@@ -3,7 +3,8 @@ import { User, Menu, LogOut, X, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
-function LogoutConfirmModal({ open, onClose, onConfirm }) {
+// Re-styled Logout Modal for Admin theme, aligned with User's modal text
+function AdminLogoutConfirmModal({ open, onClose, onConfirm }) {
   if (!open) return null;
 
   return (
@@ -17,7 +18,7 @@ function LogoutConfirmModal({ open, onClose, onConfirm }) {
           <X size={20} />
         </button>
 
-        <h3 className="text-xl font-bold text-[#0458A9] mb-4">
+        <h3 className="text-xl font-bold text-[#56708A] mb-4">
           Confirm Logout
         </h3>
         <p className="text-gray-700 mb-6">Are you sure you want to log out?</p>
@@ -31,7 +32,7 @@ function LogoutConfirmModal({ open, onClose, onConfirm }) {
           </button>
           <button
             onClick={onConfirm}
-            className="px-6 py-2 bg-[#0458A9] text-white rounded-full font-medium hover:bg-[#03407a]"
+            className="px-6 py-2 bg-[#56708A] text-white rounded-full font-medium hover:bg-[#455b74]"
           >
             Yes, Logout
           </button>
@@ -41,7 +42,7 @@ function LogoutConfirmModal({ open, onClose, onConfirm }) {
   );
 }
 
-export default function RightSidebar() {
+export default function AdminRightSidebar() {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
@@ -49,42 +50,51 @@ export default function RightSidebar() {
   const handleLogout = async () => {
     await logout();
     setShowLogoutConfirm(false);
-    navigate("/login", { replace: true });
+    navigate("/admin/login", { replace: true });
   };
 
+  // Dummy notifications data for admin
   const notifications = [
     {
       id: 1,
-      user: "Admin",
+      user: "System",
       date: "Month, XX, XXXX at XX:XX",
-      message: "System Generated.",
+      message: "User [UserEmail] submitted a new venue request.",
       read: false,
     },
     {
       id: 2,
-      user: "Admin",
+      user: "System",
       date: "Month, XX, XXXX at XX:XX",
-      message: "Congratulations! lorem ipsum lorem….",
+      message: "Request for [VenueName] approved.",
       read: true,
     },
     {
       id: 3,
-      user: "Admin",
+      user: "Alert",
       date: "Month, XX, XXXX at XX:XX",
-      message: "Congratulations! lorem ipsum lorem….",
+      message: "High traffic warning for Cultural Center.",
       read: false,
+    },
+    {
+      id: 4,
+      user: "System",
+      date: "Month, XX, XXXX at XX:XX",
+      message: "User [AnotherUser] updated their profile.",
+      read: true,
     },
   ];
 
   return (
     <>
       <aside className="w-full lg:w-1/5 bg-white lg:border-t-0 lg:border-l p-4 md:p-6 order-1 lg:order-none flex flex-col gap-4 border-gray-200">
+        {/* Account Row */}
         <div className="flex items-center justify-between mb-2">
           <div className="text-base font-medium text-gray-700">
-            {currentUser?.email || "Account Name"}
+            {currentUser?.email || "Admin Portal"}
           </div>
           <div className="flex items-center bg-gray-100 rounded-full px-3 py-1 gap-2">
-            <span className="w-8 h-8 rounded-full bg-[#0458A9] flex items-center justify-center">
+            <span className="w-8 h-8 rounded-full bg-[#56708A] flex items-center justify-center">
               <User size={18} className="text-white" />
             </span>
             <Menu size={20} className="text-gray-600 cursor-pointer" />
@@ -100,8 +110,9 @@ export default function RightSidebar() {
             </button>
           </div>
         </div>
+        {/* Notifications Box */}
         <div className="rounded-2xl border border-[#C0C0C0] p-4 bg-white flex-grow flex flex-col">
-          <h2 className="text-2xl font-bold text-[#0458A9] mb-2">
+          <h2 className="text-2xl font-bold text-[#56708A] mb-2">
             Notifications
           </h2>
           <div className="relative mb-3">
@@ -112,9 +123,10 @@ export default function RightSidebar() {
             <input
               type="text"
               placeholder="Search for a notification"
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-[#0458A9] focus:border-[#0458A9]"
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-[#56708A] focus:border-[#56708A]"
             />
           </div>
+
           <ul
             className="divide-y divide-gray-200 overflow-y-auto flex-grow pr-1"
             style={{ maxHeight: "calc(100vh - 350px)" }}
@@ -122,7 +134,7 @@ export default function RightSidebar() {
             {notifications.map((notif) => (
               <li key={notif.id} className="flex items-center py-2">
                 <div className="flex-1">
-                  <span className="font-bold text-[#0458A9]">{notif.user}</span>
+                  <span className="font-bold text-[#56708A]">{notif.user}</span>
                   <span className="text-gray-400 text-sm ml-1">
                     {notif.date}
                   </span>
@@ -142,7 +154,8 @@ export default function RightSidebar() {
         </div>
       </aside>
 
-      <LogoutConfirmModal
+      {/* Logout Confirmation Modal */}
+      <AdminLogoutConfirmModal
         open={showLogoutConfirm}
         onClose={() => setShowLogoutConfirm(false)}
         onConfirm={handleLogout}

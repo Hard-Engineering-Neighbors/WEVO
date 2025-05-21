@@ -14,7 +14,10 @@ const dummyEventData = [
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function Calendar({ eventData = dummyEventData }) {
+export default function Calendar({
+  eventData = dummyEventData,
+  primaryColor = "#0458A9",
+}) {
   // Set today's date to May 22, 2025
   const today = new Date(2025, 4, 22); // May 22, 2025 (months are 0-indexed)
 
@@ -120,7 +123,7 @@ export default function Calendar({ eventData = dummyEventData }) {
     <div className="bg-white rounded-xl shadow border border-[#C0C0C0] overflow-hidden h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-6 pb-4">
-        <h2 className="text-2xl font-bold text-[#0458A9]">
+        <h2 className="text-2xl font-bold" style={{ color: primaryColor }}>
           {monthName} {view.year} Calendar
         </h2>
         <div className="flex gap-2">
@@ -183,7 +186,10 @@ export default function Calendar({ eventData = dummyEventData }) {
               >
                 {isTodayDate && (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-10 h-10 bg-[#0458A9] rounded-full z-0"></div>
+                    <div
+                      className="w-10 h-10 rounded-full z-0"
+                      style={{ backgroundColor: primaryColor }}
+                    ></div>
                   </div>
                 )}
                 <button
@@ -197,7 +203,10 @@ export default function Calendar({ eventData = dummyEventData }) {
                 >
                   <span className="text-lg">{cell.date.getDate()}</span>
                   {hasEvents && (
-                    <span className="absolute -top-1 right-1/4 w-1.5 h-1.5 bg-blue-600 rounded-full"></span>
+                    <span
+                      className="absolute -top-1 right-1/4 w-1.5 h-1.5 rounded-full"
+                      style={{ backgroundColor: primaryColor }}
+                    ></span>
                   )}
                 </button>
 
@@ -205,13 +214,13 @@ export default function Calendar({ eventData = dummyEventData }) {
                 {hoveredDate &&
                   formatDate(hoveredDate) === formatDate(cell.date) &&
                   hasEvents && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-1 z-20 bg-[#0458A9] text-white shadow-lg rounded-md px-3 py-2 text-xs whitespace-nowrap">
-                      {events.map((event, i) => (
-                        <div key={i} className="flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 bg-white rounded-full"></span>
-                          <span>{event.venue}</span>
-                        </div>
-                      ))}
+                    <div
+                      className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-20 p-2 rounded-md shadow-lg text-white text-xs w-max"
+                      style={{ backgroundColor: primaryColor }}
+                    >
+                      {getEvents(cell.date)
+                        .map((e) => e.venue)
+                        .join(", ")}
                     </div>
                   )}
               </div>
