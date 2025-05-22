@@ -12,6 +12,7 @@ export default function ReserveStep2Modal({
   reservationData = {},
   onReservationSubmitted, // <-- add this prop
 }) {
+  // Initialize form state with all needed fields
   const [form, setForm] = useState({
     title: "",
     type: "",
@@ -20,6 +21,10 @@ export default function ReserveStep2Modal({
     endTime: "08:00",
     venue: initialVenue || (venues[0] ? venues[0].name : ""),
     participants: "",
+    contactPerson: "",
+    contactPosition: "",
+    contactNumber: "",
+    orgName: "", // Add organization name field
   });
   const [venueDropdown, setVenueDropdown] = useState(false);
   const [step3Open, setStep3Open] = useState(false);
@@ -60,7 +65,6 @@ export default function ReserveStep2Modal({
     const hour12 = hourNum > 12 ? hourNum - 12 : hourNum === 0 ? 12 : hourNum;
     return `${hour12}:${minute} ${suffix}`;
   };
-
   // Prepare combined data for Step 3
   const prepareStep3Data = () => {
     const venueObj = venues.find((v) => v.name === form.venue) || {
@@ -75,7 +79,11 @@ export default function ReserveStep2Modal({
       startTime: formatTimeForDisplay(form.startTime),
       endTime: formatTimeForDisplay(form.endTime),
       venue: venueObj,
-      participants: `${form.participants} Participants`,
+      participants: parseInt(form.participants),
+      contactPerson: form.contactPerson || "",
+      contactPosition: form.contactPosition || "",
+      contactNumber: form.contactNumber || "",
+      orgName: form.orgName || "",
     };
   };
 
@@ -135,6 +143,23 @@ export default function ReserveStep2Modal({
                   />
                 </div>
               </div>
+              
+              {/* Row 1.5: Organization Name */}
+              <div className="w-full">
+                <label className="font-semibold text-gray-800 mb-1 block">
+                  <span className="text-[#E53935]">*</span> Organization Name
+                </label>
+                <input
+                  type="text"
+                  name="orgName"
+                  value={form.orgName}
+                  onChange={handleChange}
+                  placeholder="e.g., CIPHER, WVSU Spark Hub"
+                  className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                  required
+                />
+              </div>
+
               {/* Row 2: Purpose */}
               <div>
                 <label className="font-semibold text-gray-800 mb-1 block">
@@ -150,7 +175,54 @@ export default function ReserveStep2Modal({
                   required
                 />
               </div>
-              {/* Row 3: Start Time, End Time, Venue, Participants */}
+              
+              {/* Row 3: Contact Information */}
+              <div className="flex flex-col md:flex-row gap-6 w-full">
+                <div className="flex-1">
+                  <label className="font-semibold text-gray-800 mb-1 block">
+                    <span className="text-[#E53935]">*</span> Contact Person
+                  </label>
+                  <input
+                    type="text"
+                    name="contactPerson"
+                    value={form.contactPerson || ""}
+                    onChange={handleChange}
+                    placeholder="e.g., Juan Dela Cruz"
+                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                    required
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="font-semibold text-gray-800 mb-1 block">
+                    <span className="text-[#E53935]">*</span> Position
+                  </label>
+                  <input
+                    type="text"
+                    name="contactPosition"
+                    value={form.contactPosition || ""}
+                    onChange={handleChange}
+                    placeholder="e.g., President"
+                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                    required
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="font-semibold text-gray-800 mb-1 block">
+                    <span className="text-[#E53935]">*</span> Contact Number
+                  </label>
+                  <input
+                    type="text"
+                    name="contactNumber"
+                    value={form.contactNumber || ""}
+                    onChange={handleChange}
+                    placeholder="e.g., +63 912 345 6789"
+                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Row 4: Start Time, End Time */}
               <div className="flex flex-col md:flex-row gap-6 w-full">
                 <div className="flex-1">
                   <label className="font-semibold text-gray-800 mb-1 block">
@@ -216,8 +288,7 @@ export default function ReserveStep2Modal({
                       ))}
                     </div>
                   )}
-                </div>
-                <div className="flex-1">
+                </div>                <div className="flex-1">
                   <label className="font-semibold text-gray-800 mb-1 block">
                     <span className="text-[#E53935]">*</span> No. of
                     Participants
@@ -227,7 +298,7 @@ export default function ReserveStep2Modal({
                     name="participants"
                     value={form.participants}
                     onChange={handleChange}
-                    placeholder="e.g., 50 Participants"
+                    placeholder="e.g., 50"
                     className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
                     required
                     min={1}

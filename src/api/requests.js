@@ -1,6 +1,20 @@
 import { supabase } from "../supabase/supabaseClient";
 import culturalCenterImg from "../assets/cultural_center.webp";
 
+// Helper to format a date string as 'Month Day, Year'
+function formatDateStr(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
+
+// Helper to format a date string as 'HH:MM AM/PM'
+function formatTimeStr(dateStr) {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
 // Fetch all requests for the current user, including event and pdf_files
 export async function fetchRequests(userId) {
   const { data, error } = await supabase
@@ -21,12 +35,12 @@ export async function fetchRequests(userId) {
         .gte("uploaded_at", event.created_at)
         .order("uploaded_at", { ascending: true });
       pdf_files = pdfs || [];
-    }
-    return {
+    }    return {
       id: req.id,
       venue: event.venue,
       event: event.title,
-      type: event.org || "-",
+      type: event.type || event.org || "-", // Prefer type field, fall back to org for compatibility
+      organizationName: req.organization_name || event.org || "-", // Organization name
       date: `${formatDate(event.start_time)} - ${formatDate(event.end_time)}`,
       participants: event.participants,
       purpose: event.purpose,
@@ -91,19 +105,20 @@ export async function createReservation({ form, files, user }) {
     startTimeISO = form.startTimeISO || toISODateTime(eventDate, form.startTime);
     endTimeISO = form.endTimeISO || toISODateTime(eventDate, form.endTime);
   }
-
   // 1. Insert event
   const { data: eventData, error: eventError } = await supabase
     .from("events")
     .insert([
       {
         title: form.eventTitle || form.title,
-        org: form.eventType || form.type,
+        org: form.orgName || "", // Store organization name in org field
+        type: form.eventType || form.type, // Store event type in separate field
         venue: form.venue?.name || form.venue,
         start_time: startTimeISO,
         end_time: endTimeISO,
         created_by: user.id,
         created_at: new Date().toISOString(),
+        participants: parseInt(form.participants) || 0,  // parse to integer
         purpose: form.eventPurpose || form.purpose, // <-- add purpose
       },
     ])
@@ -138,8 +153,7 @@ export async function createReservation({ form, files, user }) {
       return pdfData;
     })
   );
-
-  // 3. Insert booking request
+  // 3. Insert booking request with contact information
   const { data: bookingData, error: bookingError } = await supabase
     .from("booking_requests")
     .insert([
@@ -148,6 +162,10 @@ export async function createReservation({ form, files, user }) {
         requested_by: user.id,
         status: "pending",
         notes: "",
+        contact_person: form.contactPerson || "",
+        contact_position: form.contactPosition || "", 
+        contact_number: form.contactNumber || "",
+        organization_name: form.orgName || ""
       },
     ])
     .select()
@@ -232,4 +250,125 @@ export async function cancelReservation(bookingRequestId) {
   }
 
   return true;
+}
+
+// Fetch all booking requests for admin view (includes events and uploaded docs)
+export async function fetchAdminRequests() {
+  // Fetch booking requests with related event
+  const { data: requests, error: fetchError } = await supabase
+    .from("booking_requests")
+    .select("*, events(*)");
+  if (fetchError) throw fetchError;
+
+  const results = await Promise.all(
+    (requests || []).map(async (req) => {
+      const ev = req.events || {};
+
+      // fetch pdf files for this event
+      const { data: pdfs, error: pdfError } = await supabase
+        .from("pdf_files")
+        .select("*")
+        .eq("event_id", ev.id);
+      if (pdfError) {
+        console.error("Error fetching pdf_files for event", ev.id, pdfError);
+      }
+      // generate public URLs
+      const uploadedDocuments = (pdfs || []).map((f) => {
+        const { data } = supabase.storage.from("pdfs").getPublicUrl(f.file_url);
+        return { name: f.file_name, url: data.publicUrl };      });      // Use contact info from booking request first, fall back to user profile
+      let contactPerson = req.contact_person || "";
+      let position = req.contact_position || "";
+      let contactNumber = req.contact_number || "";
+      let organizationName = req.organization_name || "";
+      
+      // If any contact info is missing, try to fetch from user profile as fallback
+      if (!contactPerson || !position || !contactNumber) {
+        const { data: profile, error: userErr } = await supabase
+          .from("users")
+          .select("full_name, position, contact_number")
+          .eq("id", req.requested_by)
+          .single();
+        
+        if (userErr) {
+          console.warn("Could not fetch user profile for request", req.id, userErr);
+        } else if (profile) {
+          contactPerson = contactPerson || profile.full_name || "";
+          position = position || profile.position || "";
+          contactNumber = contactNumber || profile.contact_number || "";
+        }
+      }      return {
+        id: req.id,
+        orgName: organizationName || ev.org || "",
+        location: ev.venue || "",
+        type: ev.type || ev.org || "",  // Try to use ev.type, fall back to ev.org for backward compatibility
+        eventName: ev.title || "",
+        date: formatDateStr(ev.start_time),
+        time: `${formatTimeStr(ev.start_time)} - ${formatTimeStr(ev.end_time)}`,
+        // normalize status to Title Case e.g. 'pending' -> 'Pending'
+        status: (() => {
+          const s = (req.status || '').toString().toLowerCase();
+          return s.charAt(0).toUpperCase() + s.slice(1);
+        })(),
+        contactPerson,
+        position,
+        contactNumber,
+        eventPurpose: ev.purpose || "",
+        participants: ev.participants || "",
+        uploadedDocuments,
+        rejectionReason: req.rejection_reason || "",
+      };
+    })
+  );
+  // Optionally sort by date descending
+  return results.sort((a, b) => new Date(b.date) - new Date(a.date));
+}
+
+// Update booking request status (Approve or Reject)
+export async function updateBookingRequestStatus(requestId, status, reason) {
+  const updates = {
+    status: status.toLowerCase(),
+    reviewed_at: new Date().toISOString(),
+  };
+  if (reason) updates.rejection_reason = reason;
+  const { data, error } = await supabase
+    .from("booking_requests")
+    .update(updates)
+    .eq("id", requestId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Fetch statistics for admin dashboard
+export async function fetchStatistics() {
+  // Get all booking requests
+  const { data, error } = await supabase
+    .from("booking_requests")
+    .select("status");
+  
+  if (error) throw error;
+  
+  // Default stats
+  const stats = {
+    totalRequests: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0
+  };
+  
+  // If there are no requests, return default stats
+  if (!data || data.length === 0) return stats;
+  
+  // Count requests by status
+  stats.totalRequests = data.length;
+  
+  data.forEach(request => {
+    const status = (request.status || "").toLowerCase();
+    if (status === "pending") stats.pending++;
+    else if (status === "approved") stats.approved++;
+    else if (status === "rejected") stats.rejected++;
+  });
+  
+  return stats;
 }

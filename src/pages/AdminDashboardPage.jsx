@@ -4,88 +4,13 @@ import AdminRightSidebar from "../components/Sidebar/AdminRightSidebar";
 import Calendar from "../components/Calendar/Calendar"; // Assuming a generic calendar can be used or adapted
 import { Search, ListFilter, Filter, User, Bookmark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import AdminReservationReviewModal from "../components/AdminReservationReviewModal"; // Import the modal
-
-// Dummy data for requests table - replace with API call
-const dummyRequests = [
-  {
-    id: 1,
-    orgName: "Organization Name",
-    location: "Med Gym",
-    type: "Seminar",
-    eventName: "Himig at Hiwaga 2025",
-    date: "April 10, 2025",
-    time: "7:30 AM - 5:30 PM",
-    status: "Pending", // For potential future use, not in mockup table
-    contactPerson: "Maria Dela Cruz",
-    position: "Event Coordinator",
-    contactNumber: "+63 917 123 4567",
-    eventPurpose: "Annual university-wide cultural night and talent showcase.",
-    participants: "250 Participants",
-    uploadedDocuments: [
-      { name: "Event_Proposal.pdf", url: "#" },
-      { name: "Letter_of_Request.pdf", url: "#" },
-    ],
-  },
-  {
-    id: 2,
-    orgName: "College of Arts & Sciences",
-    location: "Cultural Center",
-    type: "Conference",
-    eventName: "CASCON 2025",
-    date: "April 15, 2025",
-    time: "9:00 AM - 4:00 PM",
-    status: "Approved",
-    contactPerson: "Dr. Juan Santos",
-    position: "Dean",
-    contactNumber: "+63 928 987 6543",
-    eventPurpose: "Annual college conference on recent academic advancements.",
-    participants: "150 Participants",
-    uploadedDocuments: [{ name: "Conference_Agenda.pdf", url: "#" }],
-  },
-  {
-    id: 3,
-    orgName: "Organization Name",
-    location: "Med Gym",
-    type: "Seminar",
-    eventName: "Himig at Hiwaga 2025",
-    date: "April 10, 2025",
-    time: "7:30 AM - 5:30 PM",
-    status: "Rejected",
-  },
-  {
-    id: 4,
-    orgName: "Organization Name",
-    location: "Med Gym",
-    type: "Seminar",
-    eventName: "Himig at Hiwaga 2025",
-    date: "April 10, 2025",
-    time: "7:30 AM - 5:30 PM",
-    status: "Pending",
-  },
-  {
-    id: 5,
-    orgName: "Organization Name",
-    location: "Med Gym",
-    type: "Seminar",
-    eventName: "Himig at Hiwaga 2025",
-    date: "April 10, 2025",
-    time: "7:30 AM - 5:30 PM",
-    status: "Pending",
-  },
-];
-
-// Dummy data for Statistics - replace with API call
-const statisticsData = {
-  totalRequests: 120,
-  pending: 15,
-  approved: 95,
-  rejected: 10,
-};
+import AdminReservationReviewModal from "../components/AdminReservationReviewModal";
+import { fetchAdminRequests, updateBookingRequestStatus, fetchStatistics } from "../api/requests";
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
-  const [requests, setRequests] = useState(dummyRequests);
+  const [requests, setRequests] = useState([]);
+  const [stats, setStats] = useState({ totalRequests: 0, pending: 0, approved: 0, rejected: 0 });
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
@@ -110,6 +35,23 @@ export default function AdminDashboardPage() {
     return () => window.removeEventListener("popstate", blockNav);
   }, [navigate]);
 
+  // Load dashboard requests & stats
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [reqs, statistics] = await Promise.all([
+          fetchAdminRequests(),
+          fetchStatistics(),
+        ]);
+        setRequests(reqs);
+        setStats(statistics);
+      } catch (err) {
+        console.error("Error loading dashboard data:", err);
+      }
+    };
+    loadData();
+  }, []);
+
   const handleOpenReviewModal = (request) => {
     setSelectedRequest(request);
     setIsReviewModalOpen(true);
@@ -121,27 +63,29 @@ export default function AdminDashboardPage() {
   };
 
   const handleApproveRequest = (requestId) => {
-    console.log("Approving request:", requestId);
-    // TODO: Implement actual approval logic (e.g., API call to update status)
-    setRequests(
-      requests.map((req) =>
-        req.id === requestId ? { ...req, status: "Approved" } : req
+    updateBookingRequestStatus(requestId, "Approved")
+      .then(() =>
+        setRequests((prev) =>
+          prev.map((r) =>
+            r.id === requestId ? { ...r, status: "Approved" } : r
+          )
+        )
       )
-    );
-    // No need to call handleCloseReviewModal here if AdminReservationReviewModal already does onApprove
+      .catch((err) => console.error("Error approving on dashboard:", err));
   };
 
   const handleRejectRequest = (requestId, reason) => {
-    console.log("Rejecting request:", requestId, "Reason:", reason);
-    // TODO: Implement actual rejection logic (e.g., API call to update status and store reason)
-    setRequests(
-      requests.map((req) =>
-        req.id === requestId
-          ? { ...req, status: "Rejected", rejectionReason: reason }
-          : req
+    updateBookingRequestStatus(requestId, "Rejected", reason)
+      .then(() =>
+        setRequests((prev) =>
+          prev.map((r) =>
+            r.id === requestId
+              ? { ...r, status: "Rejected", rejectionReason: reason }
+              : r
+          )
+        )
       )
-    );
-    // No need to call handleCloseReviewModal here as AdminReservationReviewModal handles closing itself and the reason modal
+      .catch((err) => console.error("Error rejecting on dashboard:", err));
   };
 
   return (
@@ -292,7 +236,7 @@ export default function AdminDashboardPage() {
                   <div>
                     <div className="flex justify-between text-sm font-medium text-gray-700">
                       <span>Total Requests</span>
-                      <span>{statisticsData.totalRequests}</span>
+                      <span>{stats.totalRequests}</span>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full mt-1 overflow-hidden">
                       <div
@@ -304,15 +248,14 @@ export default function AdminDashboardPage() {
                   <div>
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>Pending</span>
-                      <span>{statisticsData.pending}</span>
+                      <span>{stats.pending}</span>
                     </div>
                     <div className="h-2 bg-yellow-200 rounded-full mt-1 overflow-hidden">
                       <div
                         className="h-full bg-yellow-400"
                         style={{
                           width: `${
-                            (statisticsData.pending /
-                              statisticsData.totalRequests) *
+                            (stats.pending / stats.totalRequests) *
                             100
                           }%`,
                         }}
@@ -322,15 +265,14 @@ export default function AdminDashboardPage() {
                   <div>
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>Approved</span>
-                      <span>{statisticsData.approved}</span>
+                      <span>{stats.approved}</span>
                     </div>
                     <div className="h-2 bg-green-200 rounded-full mt-1 overflow-hidden">
                       <div
                         className="h-full bg-green-500"
                         style={{
                           width: `${
-                            (statisticsData.approved /
-                              statisticsData.totalRequests) *
+                            (stats.approved / stats.totalRequests) *
                             100
                           }%`,
                         }}
@@ -340,15 +282,14 @@ export default function AdminDashboardPage() {
                   <div>
                     <div className="flex justify-between text-sm text-gray-600">
                       <span>Rejected</span>
-                      <span>{statisticsData.rejected}</span>
+                      <span>{stats.rejected}</span>
                     </div>
                     <div className="h-2 bg-red-200 rounded-full mt-1 overflow-hidden">
                       <div
                         className="h-full bg-red-500"
                         style={{
                           width: `${
-                            (statisticsData.rejected /
-                              statisticsData.totalRequests) *
+                            (stats.rejected / stats.totalRequests) *
                             100
                           }%`,
                         }}

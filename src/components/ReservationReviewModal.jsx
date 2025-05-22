@@ -28,7 +28,6 @@ export default function ReservationReviewModal({
   const formatTime = (timeString) => {
     return timeString || "";
   };
-
   // Extract data with defaults for each field
   const {
     venue = { name: "Cultural Center" },
@@ -40,6 +39,10 @@ export default function ReservationReviewModal({
     eventType = "Workshop",
     eventPurpose = "Team-building and skill development",
     participants = "50 Participants",
+    orgName = "N/A",
+    contactPerson = "N/A",
+    contactPosition = "N/A",
+    contactNumber = "N/A",
   } = reservationData;
 
   const handleSubmit = async () => {
@@ -92,9 +95,8 @@ export default function ReservationReviewModal({
             <div>
               <label className="block text-gray-600 text-sm mb-1">
                 Name of Organization / Individual
-              </label>
-              <div className="p-3 bg-gray-100 rounded-lg">
-                Tung Tung Tung Tung Sahur
+              </label>              <div className="p-3 bg-gray-100 rounded-lg">
+                {orgName}
               </div>
             </div>
             <div>
@@ -102,20 +104,20 @@ export default function ReservationReviewModal({
                 Contact Person
               </label>
               <div className="p-3 bg-gray-100 rounded-lg">
-                Tung Tung Tung Tung Sahur
+                {contactPerson}
               </div>
             </div>
             <div>
               <label className="block text-gray-600 text-sm mb-1">
                 Position
               </label>
-              <div className="p-3 bg-gray-100 rounded-lg">President</div>
+              <div className="p-3 bg-gray-100 rounded-lg">{contactPosition}</div>
             </div>
             <div>
               <label className="block text-gray-600 text-sm mb-1">
                 Contact Number
               </label>
-              <div className="p-3 bg-gray-100 rounded-lg">+63 123 1234 123</div>
+              <div className="p-3 bg-gray-100 rounded-lg">{contactNumber}</div>
             </div>
           </div>
         </div>

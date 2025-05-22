@@ -11,89 +11,38 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
-// Dummy data - can be expanded or fetched from an API
-// Ensure this data includes a mix of pending, approved (ongoing), and potentially completed reservations
-const allReservations = [
-  {
-    id: 1,
-    orgName: "Organization Name",
-    location: "Med Gym",
-    type: "Seminar",
-    eventName: "Himig at Hiwaga 2025",
-    date: "April 10, 2025",
-    time: "7:30 AM - 5:30 PM",
-    status: "Approved", // Could be 'Ongoing' if current, or 'Upcoming'
-    contactPerson: "Maria Dela Cruz",
-    position: "Event Coordinator",
-    contactNumber: "+63 917 123 4567",
-    eventPurpose: "Annual university-wide cultural night and talent showcase.",
-    participants: "250 Participants",
-    uploadedDocuments: [{ name: "Event_Proposal.pdf", url: "#" }],
-  },
-  {
-    id: 2,
-    orgName: "College of CS",
-    location: "CIT Audi",
-    type: "Workshop",
-    eventName: "Tech Summit 2025",
-    date: "May 5, 2025",
-    time: "1:00 PM - 5:00 PM",
-    status: "Pending",
-    contactPerson: "John Doe",
-    position: "Lead Organizer",
-    contactNumber: "+63 918 111 2222",
-    eventPurpose: "A workshop on emerging technologies.",
-    participants: "75 Participants",
-    uploadedDocuments: [{ name: "Workshop_Outline.pdf", url: "#" }],
-  },
-  {
-    id: 3,
-    orgName: "University Student Council",
-    location: "Cultural Center",
-    type: "General Assembly",
-    eventName: "USC General Assembly",
-    date: "May 20, 2025",
-    time: "8:00 AM - 12:00 PM",
-    status: "Approved",
-    contactPerson: "Jane Smith",
-    position: "USC Chairperson",
-    contactNumber: "+63 919 333 4444",
-    eventPurpose: "Quarterly general assembly for all students.",
-    participants: "500 Participants",
-    uploadedDocuments: [],
-  },
-  {
-    id: 4,
-    orgName: "Engineering Dept.",
-    location: "Engineering Hall",
-    type: "Exhibit",
-    eventName: "InnovateX 2025",
-    date: "June 10-12, 2025",
-    time: "9:00 AM - 5:00 PM daily",
-    status: "Pending",
-    contactPerson: "Engr. Alex Tan",
-    position: "Department Head",
-    contactNumber: "+63 920 555 6666",
-    eventPurpose: "Showcase of engineering student projects.",
-    participants: "Open to Public",
-    uploadedDocuments: [
-      { name: "Exhibit_Layout.pdf", url: "#" },
-      { name: "Safety_Plan.pdf", url: "#" },
-    ],
-  },
-];
+import { fetchAdminRequests, updateBookingRequestStatus } from "../api/requests";
+import { supabase } from "../supabase/supabaseClient";
 
 export default function AdminReservationsPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("Ongoing"); // "Ongoing" or "Pending"
-  const [reservations, setReservations] = useState(allReservations);
+  // Show pending requests by default
+  const [activeTab, setActiveTab] = useState("Pending");
+  const [reservations, setReservations] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   useEffect(() => {
-    // Potentially lock navigation similar to AdminDashboardPage if needed
-    // window.history.pushState({ page: "admin-reservations" }, "", "/admin/reservations");
+    // Initial fetch of admin reservation requests
+    const loadRequests = async () => {
+      try {
+        const data = await fetchAdminRequests();
+        setReservations(data);
+      } catch (err) {
+        console.error("Error fetching admin requests:", err);
+      }
+    };
+    loadRequests();
+    // Real-time subscription to booking_requests changes
+    const subscription = supabase
+      .channel('public:booking_requests')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'booking_requests' }, () => {
+        loadRequests();
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, []);
 
   const handleOpenReviewModal = (request) => {
@@ -106,31 +55,32 @@ export default function AdminReservationsPage() {
     setSelectedRequest(null);
   };
 
-  const handleApproveRequest = (requestId) => {
-    console.log("Approving request from Reservations Page:", requestId);
-    setReservations(
-      reservations.map((res) =>
-        res.id === requestId ? { ...res, status: "Approved" } : res
-      )
-    );
-    // Modal will close itself
+  const handleApproveRequest = async (requestId) => {
+    try {
+      await updateBookingRequestStatus(requestId, 'Approved');
+      setReservations((prev) =>
+        prev.map((res) =>
+          res.id === requestId ? { ...res, status: 'Approved' } : res
+        )
+      );
+    } catch (err) {
+      console.error("Error approving request:", err);
+    }
   };
 
-  const handleRejectRequest = (requestId, reason) => {
-    console.log(
-      "Rejecting request from Reservations Page:",
-      requestId,
-      "Reason:",
-      reason
-    );
-    setReservations(
-      reservations.map((res) =>
-        res.id === requestId
-          ? { ...res, status: "Rejected", rejectionReason: reason }
-          : res
-      )
-    );
-    // Modal will close itself
+  const handleRejectRequest = async (requestId, reason) => {
+    try {
+      await updateBookingRequestStatus(requestId, 'Rejected', reason);
+      setReservations((prev) =>
+        prev.map((res) =>
+          res.id === requestId
+            ? { ...res, status: 'Rejected', rejectionReason: reason }
+            : res
+        )
+      );
+    } catch (err) {
+      console.error("Error rejecting request:", err);
+    }
   };
 
   const filteredReservations = reservations.filter((res) => {

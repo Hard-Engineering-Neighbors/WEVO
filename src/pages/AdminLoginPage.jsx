@@ -3,6 +3,7 @@ import { Mail, Lock, Eye, EyeOff, ChevronRight, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { supabase } from "../supabase/supabaseClient";
+import { isAdmin } from "../supabase/checkAdminRole";
 
 function AdminLoginPage() {
   const [glow, setGlow] = useState(false);
@@ -94,9 +95,15 @@ function AdminLoginPage() {
         return;
       }
 
-      // TODO: Check if user has admin role
-      // This would check a custom claim or a field in the user's profile
-      // For now, we'll just proceed with 2FA
+      // Check if user has admin role
+      const user = data.user;
+      const isAdminUser = await isAdmin(email);
+      if (!isAdminUser) {
+        setErrorMessage("You do not have admin access.");
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
 
       // If credentials are correct, send 2FA code
       const { error: otpError } = await supabase.auth.signInWithOtp({

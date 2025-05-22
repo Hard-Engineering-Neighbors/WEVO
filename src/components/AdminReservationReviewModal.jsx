@@ -50,20 +50,15 @@ export default function AdminReservationReviewModal({
     location = "N/A",
     type = "N/A",
     eventName = "N/A",
-    date: eventDateRaw = "N/A", // This is a combined date/time in dummy data, might need parsing
+    date: eventDateRaw = "N/A",
     time: eventTimeRaw = "N/A",
-    // Assuming these might come from a more detailed request object later
-    contactPerson = "Tung Tung Tung Tung Sahur (Placeholder)",
-    position = "President (Placeholder)",
-    contactNumber = "+63 123 1234 123 (Placeholder)",
-    eventPurpose = "Team-building and skill development (Placeholder)",
-    participants = "50 Participants (Placeholder)",
-    uploadedDocuments = [
-      { name: "Filename1.pdf", url: "#" },
-      { name: "Filename2.pdf", url: "#" },
-      { name: "Filename3.pdf", url: "#" },
-      { name: "Filename4.pdf", url: "#" },
-    ], // Placeholder
+    // Actual contact info from requestData
+    contactPerson = "",
+    position = "",
+    contactNumber = "",
+    eventPurpose = "",
+    participants = "",
+    uploadedDocuments = [],
   } = requestData;
 
   // For display, try to split date and time if they are combined in 'date' field
@@ -218,7 +213,11 @@ export default function AdminReservationReviewModal({
                   No. of Participants
                 </label>
                 <div className="p-2.5 bg-gray-100 rounded-md mt-1 truncate">
-                  {participants}
+                  {participants
+                    ? typeof participants === 'number'
+                      ? `${participants} Participants`
+                      : participants
+                    : 'N/A'}
                 </div>
               </div>
             </div>
