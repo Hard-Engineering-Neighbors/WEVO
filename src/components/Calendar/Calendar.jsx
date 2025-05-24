@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 // Dummy event data - this will come from API/backend
 const dummyEventData = [
@@ -18,16 +18,78 @@ export default function Calendar({
   eventData = dummyEventData,
   primaryColor = "#0458A9",
 }) {
-  // Set today's date to May 22, 2025
-  const today = new Date(2025, 4, 22); // May 22, 2025 (months are 0-indexed)
+  // Get current date and time in PST
+  const now = new Date();
+  // To ensure we get the date parts (Y, M, D) correctly for PST for "today"
+  const todayPSTString = now.toLocaleString("en-US", {
+    timeZone: "Asia/Manila",
+  });
+  const dateParts = new Date(todayPSTString); // This will parse M/D/Y, H:M:S AM/PM correctly
 
-  // Initialize view to today's month and year
+  // Create a 'today' date object for midnight PST for accurate 'isToday' comparison
+  const today = new Date(
+    dateParts.getFullYear(),
+    dateParts.getMonth(),
+    dateParts.getDate()
+  );
+
+  // Initialize view to today's month and year (PST)
   const [view, setView] = useState({
     year: today.getFullYear(),
-    month: today.getMonth(), // May is 4 (0-indexed)
+    month: today.getMonth(),
   });
 
   const [hoveredDate, setHoveredDate] = useState(null);
+  const [currentTimePST, setCurrentTimePST] = useState({
+    hour: "",
+    minute: "",
+    period: "",
+    colonVisible: true,
+  });
+  const [currentDatePST, setCurrentDatePST] = useState("");
+
+  useEffect(() => {
+    const timerId = setInterval(() => {
+      const now = new Date();
+      // Format Date for PST
+      const dateString = now.toLocaleDateString("en-US", {
+        timeZone: "Asia/Manila",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      setCurrentDatePST(dateString);
+
+      // Format Time for PST (hours, minutes, period)
+      const hour = now
+        .toLocaleTimeString("en-US", {
+          timeZone: "Asia/Manila",
+          hour12: true,
+          hour: "2-digit",
+        })
+        .split(" ")[0]; // Get only the hour part
+      const minute = now.toLocaleTimeString("en-US", {
+        timeZone: "Asia/Manila",
+        minute: "2-digit",
+      });
+      const period = now
+        .toLocaleTimeString("en-US", {
+          timeZone: "Asia/Manila",
+          hour12: true,
+          hour: "numeric", // Need this to get AM/PM correctly
+        })
+        .split(" ")[1]; // Get AM/PM
+
+      setCurrentTimePST((prev) => ({
+        hour,
+        minute,
+        period,
+        colonVisible: !prev.colonVisible, // Toggle colon visibility
+      }));
+    }, 1000);
+
+    return () => clearInterval(timerId); // Cleanup interval on component unmount
+  }, []);
 
   function getMonthMatrix(year, month) {
     const firstDay = new Date(year, month, 1);
@@ -104,8 +166,10 @@ export default function Calendar({
     });
   }
 
-  const monthName = new Date(view.year, view.month).toLocaleString("default", {
+  const monthName = new Date(view.year, view.month).toLocaleString("en-PH", {
+    // Using 'en-PH' locale
     month: "long",
+    timeZone: "Asia/Manila", // Explicitly set timezone for month name
   });
 
   const matrix = getMonthMatrix(view.year, view.month);
@@ -123,9 +187,32 @@ export default function Calendar({
     <div className="bg-white rounded-xl shadow border border-[#C0C0C0] overflow-hidden h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-6 pb-4">
-        <h2 className="text-2xl font-bold" style={{ color: primaryColor }}>
-          {monthName} {view.year} Calendar
-        </h2>
+        <div>
+          <h2 className="text-2xl font-bold" style={{ color: primaryColor }}>
+            {monthName} {view.year} Calendar
+          </h2>
+          {currentTimePST.hour && (
+            <div
+              className="text-sm text-gray-600 flex items-center"
+              style={{ color: primaryColor }}
+            >
+              <>
+                <span>{currentTimePST.hour}</span>
+                <span
+                  style={{
+                    visibility: currentTimePST.colonVisible
+                      ? "visible"
+                      : "hidden",
+                  }}
+                >
+                  :
+                </span>
+                <span>{currentTimePST.minute}</span>
+                <span className="ml-1">{currentTimePST.period}</span>
+              </>
+            </div>
+          )}
+        </div>
         <div className="flex gap-2">
           <button
             onClick={handlePrev}
@@ -231,10 +318,16 @@ export default function Calendar({
       {/* Legend and Full View */}
       <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 mt-2">
         <div className="flex items-center gap-2 text-sm">
-          <span className="w-2 h-2 bg-blue-600 rounded-full inline-block" />
+          <span
+            className="w-2 h-2 rounded-full inline-block"
+            style={{ backgroundColor: primaryColor }}
+          />
           <span>Venue is reserved on that day</span>
         </div>
-        <button className="text-blue-700 hover:underline font-medium">
+        <button
+          className="hover:underline font-medium"
+          style={{ color: primaryColor }}
+        >
           Full View
         </button>
       </div>
