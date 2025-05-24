@@ -17,25 +17,20 @@ export default function RejectionReasonModal({ open, onClose, onSubmit }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-3xl mx-auto flex flex-col gap-5 p-6 md:p-8">
-        {/* Close Button */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+      <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6">
         <button
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
           onClick={onClose}
           aria-label="Close modal"
         >
-          <X size={24} />
+          <X size={20} />
         </button>
 
-        {/* Header */}
-        <div className="w-full">
-          <h2 className="text-2xl md:text-3xl font-bold text-[#56708A] mb-1">
-            Reason for Rejection
-          </h2>
-        </div>
+        <h3 className="text-xl font-bold text-[#0458A9] mb-4">
+          Reason for Rejection
+        </h3>
 
-        {/* Reason Text Area */}
         <div className="w-full">
           <textarea
             value={reason}
@@ -45,7 +40,6 @@ export default function RejectionReasonModal({ open, onClose, onSubmit }) {
           />
         </div>
 
-        {/* Footer: Action Buttons */}
         <div className="flex flex-col sm:flex-row justify-end items-center gap-3 mt-2">
           <button
             type="button"

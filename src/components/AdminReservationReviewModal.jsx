@@ -91,14 +91,14 @@ export default function AdminReservationReviewModal({
   return (
     <>
       <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-3xl mx-auto my-8 flex flex-col gap-5 p-6 md:p-8 max-h-[90vh] overflow-y-auto">
+        <div className="relative bg-white rounded-xl shadow-xl w-full max-w-3xl mx-auto flex flex-col gap-5 p-6 md:p-8 max-h-[90vh] overflow-y-auto">
           {/* Close Button */}
           <button
-            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+            className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
             onClick={onClose}
             aria-label="Close modal"
           >
-            <X size={24} />
+            <X size={20} />
           </button>
 
           {/* Header */}
@@ -214,10 +214,10 @@ export default function AdminReservationReviewModal({
                 </label>
                 <div className="p-2.5 bg-gray-100 rounded-md mt-1 truncate">
                   {participants
-                    ? typeof participants === 'number'
+                    ? typeof participants === "number"
                       ? `${participants} Participants`
                       : participants
-                    : 'N/A'}
+                    : "N/A"}
                 </div>
               </div>
             </div>

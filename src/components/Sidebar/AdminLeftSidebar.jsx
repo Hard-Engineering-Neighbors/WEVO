@@ -14,8 +14,8 @@ export default function AdminLeftSidebar({ active = "Dashboard" }) {
       {/* Centered nav section */}
       <div className="flex flex-1 flex-col items-center justify-start w-full">
         <img
-          src="/wevoLogoPng.png"
-          alt="Wevo Logo"
+          src="/wevoAdmin.png"
+          alt="Wevo Admin Logo"
           className="h-10 md:h-12 mb-8 lg:mb-12" // Matched LeftSidebar
         />
         <nav className="flex flex-col gap-4 w-full items-center justify-center">

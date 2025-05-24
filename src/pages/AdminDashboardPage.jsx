@@ -5,12 +5,29 @@ import Calendar from "../components/Calendar/Calendar"; // Assuming a generic ca
 import { Search, ListFilter, Filter, User, Bookmark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminReservationReviewModal from "../components/AdminReservationReviewModal";
-import { fetchAdminRequests, updateBookingRequestStatus, fetchStatistics } from "../api/requests";
+import {
+  fetchAdminRequests,
+  updateBookingRequestStatus,
+  fetchStatistics,
+} from "../api/requests";
+
+// Helper function to truncate text
+const truncateText = (text, maxLength) => {
+  if (text && text.length > maxLength) {
+    return text.substring(0, maxLength) + "...";
+  }
+  return text;
+};
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
-  const [stats, setStats] = useState({ totalRequests: 0, pending: 0, approved: 0, rejected: 0 });
+  const [stats, setStats] = useState({
+    totalRequests: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+  });
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
@@ -177,15 +194,18 @@ export default function AdminDashboardPage() {
                         key={req.id}
                         className="bg-white border-b hover:bg-gray-50"
                       >
-                        <td className="px-3 py-3 flex items-center gap-2">
-                          <span className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                            <User size={16} className="text-gray-500" />
-                          </span>
-                          {req.orgName}
+                        <td className="px-3 py-3">
+                          {truncateText(req.orgName, 25)}
                         </td>
-                        <td className="px-3 py-3">{req.location}</td>
-                        <td className="px-3 py-3">{req.type}</td>
-                        <td className="px-3 py-3">{req.eventName}</td>
+                        <td className="px-3 py-3">
+                          {truncateText(req.location, 25)}
+                        </td>
+                        <td className="px-3 py-3">
+                          {truncateText(req.type, 25)}
+                        </td>
+                        <td className="px-3 py-3">
+                          {truncateText(req.eventName, 25)}
+                        </td>
                         <td className="px-3 py-3 min-w-[8rem]">
                           <div>{req.date}</div>
                           <div className="text-xs text-gray-500">
@@ -255,8 +275,7 @@ export default function AdminDashboardPage() {
                         className="h-full bg-yellow-400"
                         style={{
                           width: `${
-                            (stats.pending / stats.totalRequests) *
-                            100
+                            (stats.pending / stats.totalRequests) * 100
                           }%`,
                         }}
                       ></div>
@@ -272,8 +291,7 @@ export default function AdminDashboardPage() {
                         className="h-full bg-green-500"
                         style={{
                           width: `${
-                            (stats.approved / stats.totalRequests) *
-                            100
+                            (stats.approved / stats.totalRequests) * 100
                           }%`,
                         }}
                       ></div>
@@ -289,8 +307,7 @@ export default function AdminDashboardPage() {
                         className="h-full bg-red-500"
                         style={{
                           width: `${
-                            (stats.rejected / stats.totalRequests) *
-                            100
+                            (stats.rejected / stats.totalRequests) * 100
                           }%`,
                         }}
                       ></div>

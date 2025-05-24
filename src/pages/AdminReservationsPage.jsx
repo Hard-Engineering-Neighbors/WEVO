@@ -11,8 +11,19 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { fetchAdminRequests, updateBookingRequestStatus } from "../api/requests";
+import {
+  fetchAdminRequests,
+  updateBookingRequestStatus,
+} from "../api/requests";
 import { supabase } from "../supabase/supabaseClient";
+
+// Helper function to truncate text
+const truncateText = (text, maxLength) => {
+  if (text && text.length > maxLength) {
+    return text.substring(0, maxLength) + "...";
+  }
+  return text;
+};
 
 export default function AdminReservationsPage() {
   const navigate = useNavigate();
@@ -35,10 +46,14 @@ export default function AdminReservationsPage() {
     loadRequests();
     // Real-time subscription to booking_requests changes
     const subscription = supabase
-      .channel('public:booking_requests')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'booking_requests' }, () => {
-        loadRequests();
-      })
+      .channel("public:booking_requests")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "booking_requests" },
+        () => {
+          loadRequests();
+        }
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(subscription);
@@ -57,10 +72,10 @@ export default function AdminReservationsPage() {
 
   const handleApproveRequest = async (requestId) => {
     try {
-      await updateBookingRequestStatus(requestId, 'Approved');
+      await updateBookingRequestStatus(requestId, "Approved");
       setReservations((prev) =>
         prev.map((res) =>
-          res.id === requestId ? { ...res, status: 'Approved' } : res
+          res.id === requestId ? { ...res, status: "Approved" } : res
         )
       );
     } catch (err) {
@@ -70,11 +85,11 @@ export default function AdminReservationsPage() {
 
   const handleRejectRequest = async (requestId, reason) => {
     try {
-      await updateBookingRequestStatus(requestId, 'Rejected', reason);
+      await updateBookingRequestStatus(requestId, "Rejected", reason);
       setReservations((prev) =>
         prev.map((res) =>
           res.id === requestId
-            ? { ...res, status: 'Rejected', rejectionReason: reason }
+            ? { ...res, status: "Rejected", rejectionReason: reason }
             : res
         )
       );
@@ -205,15 +220,18 @@ export default function AdminReservationsPage() {
                       key={res.id}
                       className="bg-white border-b hover:bg-gray-50"
                     >
-                      <td className="px-4 py-3 flex items-center gap-2">
-                        <span className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                          <User size={16} className="text-gray-500" />
-                        </span>
-                        {res.orgName}
+                      <td className="px-4 py-3">
+                        {truncateText(res.orgName, 25)}
                       </td>
-                      <td className="px-4 py-3">{res.location}</td>
-                      <td className="px-4 py-3">{res.type}</td>
-                      <td className="px-4 py-3">{res.eventName}</td>
+                      <td className="px-4 py-3">
+                        {truncateText(res.location, 25)}
+                      </td>
+                      <td className="px-4 py-3">
+                        {truncateText(res.type, 25)}
+                      </td>
+                      <td className="px-4 py-3">
+                        {truncateText(res.eventName, 25)}
+                      </td>
                       <td className="px-4 py-3">
                         <div>{res.date}</div>
                         <div className="text-xs text-gray-500">{res.time}</div>
