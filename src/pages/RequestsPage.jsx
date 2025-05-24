@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { fetchRequests } from "../api/requests";
+import { supabase } from "../supabase/supabaseClient";
 
 import venueSample from "../assets/cultural_center.webp";
 
@@ -62,7 +63,14 @@ function RequestCard({ request, onDetails }) {
           <FileText size={14} className="ml-2" /> {request.type}
         </div>
         <div className="flex items-center text-xs text-gray-500 gap-2 mb-2">
-          <Clock size={14} /> {request.date}
+          <Clock size={14} />
+          {request.perDayTimes && request.perDayTimes.length > 0 ? (
+            <span>
+              {new Date(request.perDayTimes[0].date).toLocaleDateString()} {request.perDayTimes[0].startTime} - {new Date(request.perDayTimes[request.perDayTimes.length-1].date).toLocaleDateString()} {request.perDayTimes[request.perDayTimes.length-1].endTime}
+            </span>
+          ) : (
+            request.date
+          )}
         </div>
         <div className="flex justify-end mt-auto">
           <button
@@ -77,11 +85,55 @@ function RequestCard({ request, onDetails }) {
   );
 }
 
+function RequestsGrid({ requests, onDetails }) {
+  // Responsive grid: 2 per row on md+, 1 per row on mobile
+  if (requests.length === 1) {
+    return (
+      <div className="w-full">
+        <RequestCard request={requests[0]} onDetails={onDetails} />
+      </div>
+    );
+  }
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {requests.map((request) => (
+        <RequestCard key={request.id} request={request} onDetails={onDetails} />
+      ))}
+    </div>
+  );
+}
+
+function useRealtimeRequests(userId, refetch) {
+  React.useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel('user_requests')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'booking_requests', filter: `requested_by=eq.${userId}` },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, refetch]);
+}
+
 export default function RequestsPage() {
   const { currentUser } = useAuth();
   const [requests, setRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const requestsPerPage = 5;
+  const totalPages = Math.ceil(requests.length / requestsPerPage);
+  const paginatedRequests = requests.slice(
+    (currentPage - 1) * requestsPerPage,
+    currentPage * requestsPerPage
+  );
 
   const loadRequests = async () => {
     if (!currentUser) return;
@@ -94,6 +146,8 @@ export default function RequestsPage() {
     // eslint-disable-next-line
   }, [currentUser]);
 
+  useRealtimeRequests(currentUser?.id, loadRequests);
+
   const handleDetails = (request) => {
     setSelectedRequest(request);
     setModalOpen(true);
@@ -102,6 +156,11 @@ export default function RequestsPage() {
   // Handler to refresh requests after reservation
   const handleReservationSubmitted = () => {
     loadRequests();
+  };
+
+  const goToPage = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
   };
 
   return (
@@ -126,16 +185,36 @@ export default function RequestsPage() {
               </button>
             </div>
           </div>
-          {/* Requests List */}
-          <div className="flex flex-col gap-4">
-            {requests.map((request) => (
-              <RequestCard
-                key={request.id}
-                request={request}
-                onDetails={handleDetails}
-              />
-            ))}
-          </div>
+          {/* Requests List with Pagination */}
+          <RequestsGrid requests={paginatedRequests} onDetails={handleDetails} />
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 mt-6">
+              <button
+                className="px-3 py-1 rounded border bg-white text-gray-700 disabled:opacity-50"
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Prev
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  className={`px-3 py-1 rounded border ${page === currentPage ? "bg-[#0458A9] text-white" : "bg-white text-gray-700"}`}
+                  onClick={() => goToPage(page)}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                className="px-3 py-1 rounded border bg-white text-gray-700 disabled:opacity-50"
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </main>
         {/* Right Sidebar */}
         <RightSidebar />

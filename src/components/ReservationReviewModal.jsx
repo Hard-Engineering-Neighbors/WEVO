@@ -45,12 +45,19 @@ export default function ReservationReviewModal({
     contactNumber = "N/A",
   } = reservationData;
 
+  const perDayTimes = reservationData.perDayTimes || reservationData.per_day_times || [];
+
   const handleSubmit = async () => {
     setLoading(true);
     setError("");
+    // Ensure perDayTimes is set correctly for the backend
+    const dataToSend = {
+      ...reservationData,
+      perDayTimes: reservationData.perDayTimes || reservationData.eventTimesPerDay || [],
+    };
     try {
       await createReservation({
-        form: reservationData,
+        form: dataToSend,
         files: Object.values(uploadedFiles),
         user: currentUser,
       });
@@ -147,34 +154,43 @@ export default function ReservationReviewModal({
             </label>
             <div className="p-3 bg-gray-100 rounded-lg">{eventPurpose}</div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-            <div>
-              <label className="block text-gray-600 text-sm mb-1">
-                Event Date and Time
-              </label>
-              <div className="flex flex-col gap-2">
-                {selectedDates.length > 0 ? (
-                  selectedDates.map((date, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3 bg-gray-100 rounded-lg flex justify-between"
-                    >
-                      <span>{formatDate(date)}</span>
-                      <span>
-                        {startTime} - {endTime}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-3 bg-gray-100 rounded-lg flex justify-between">
-                    <span>04/10/25</span>
-                    <span>
-                      {startTime} - {endTime}
-                    </span>
+          {/* Event Date and Time (per-day times) */}
+          <div className="w-full">
+            <label className="block text-gray-600 text-sm mb-1">
+              Event Date and Time
+            </label>
+            <div className="flex flex-col gap-2">
+              {perDayTimes.length > 0 ? (
+                perDayTimes.map(({ date, startTime, endTime }) => (
+                  <div key={date} className="p-3 bg-gray-100 rounded-lg flex justify-between">
+                    <span>{new Date(date).toLocaleDateString()}</span>
+                    <span>{startTime} - {endTime}</span>
                   </div>
-                )}
-              </div>
+                ))
+              ) : (
+                <div className="p-3 bg-gray-100 rounded-lg flex justify-between">
+                  <span>{selectedDates.length > 0 ? selectedDates[0] : "-"}</span>
+                  <span>{startTime} - {endTime}</span>
+                </div>
+              )}
             </div>
+          </div>
+
+          {/* Event Duration (summary) */}
+          <div className="w-full">
+            <label className="block text-gray-600 text-sm mb-1">
+              Event Duration
+            </label>
+            <div className="p-3 bg-gray-100 rounded-lg">
+              {perDayTimes.length > 0 ? (
+                `${new Date(perDayTimes[0].date).toLocaleDateString()} ${perDayTimes[0].startTime} - ${new Date(perDayTimes[perDayTimes.length-1].date).toLocaleDateString()} ${perDayTimes[perDayTimes.length-1].endTime}`
+              ) : (
+                `${selectedDates.length > 0 ? selectedDates[0] : "-"} ${startTime} - ${selectedDates.length > 0 ? selectedDates[selectedDates.length-1] : "-"} ${endTime}`
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
             <div>
               <label className="block text-gray-600 text-sm mb-1">
                 Preferred Venue

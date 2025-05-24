@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User, Menu, LogOut, X, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { fetchNotifications, markNotificationAsRead } from "../../api/requests";
 
 // Re-styled Logout Modal for Admin theme, aligned with User's modal text
 function AdminLogoutConfirmModal({ open, onClose, onConfirm }) {
@@ -42,10 +43,30 @@ function AdminLogoutConfirmModal({ open, onClose, onConfirm }) {
   );
 }
 
-export default function AdminRightSidebar() {
+export default function AdminRightSidebar({ onNotificationClick }) {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [showAll, setShowAll] = useState(false);
+  const [selectedNotif, setSelectedNotif] = useState(null);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    fetchNotifications(currentUser.id).then(setNotifications);
+  }, [currentUser]);
+
+  const handleNotificationClick = async (notif) => {
+    if (notif.status === "unread") {
+      await markNotificationAsRead(notif.id);
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === notif.id ? { ...n, status: "read" } : n
+        )
+      );
+    }
+    if (onNotificationClick) onNotificationClick(notif);
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -53,37 +74,10 @@ export default function AdminRightSidebar() {
     navigate("/admin/login", { replace: true });
   };
 
-  // Dummy notifications data for admin
-  const notifications = [
-    {
-      id: 1,
-      user: "System",
-      date: "Month, XX, XXXX at XX:XX",
-      message: "User [UserEmail] submitted a new venue request.",
-      read: false,
-    },
-    {
-      id: 2,
-      user: "System",
-      date: "Month, XX, XXXX at XX:XX",
-      message: "Request for [VenueName] approved.",
-      read: true,
-    },
-    {
-      id: 3,
-      user: "Alert",
-      date: "Month, XX, XXXX at XX:XX",
-      message: "High traffic warning for Cultural Center.",
-      read: false,
-    },
-    {
-      id: 4,
-      user: "System",
-      date: "Month, XX, XXXX at XX:XX",
-      message: "User [AnotherUser] updated their profile.",
-      read: true,
-    },
-  ];
+  const adminNotifications = notifications.filter(
+    (notif) => notif.role === "admin"
+  );
+  const visibleNotifications = showAll ? adminNotifications : adminNotifications.slice(0, 5);
 
   return (
     <>
@@ -129,26 +123,35 @@ export default function AdminRightSidebar() {
 
           <ul
             className="divide-y divide-gray-200 overflow-y-auto flex-grow pr-1"
-            style={{ maxHeight: "calc(100vh - 350px)" }}
+            style={{ maxHeight: showAll ? "none" : "calc(100vh - 350px)" }}
           >
-            {notifications.map((notif) => (
-              <li key={notif.id} className="flex items-center py-2">
+            {visibleNotifications.map((notif) => (
+              <li
+                key={notif.id}
+                className="flex items-center py-2 cursor-pointer hover:bg-gray-50"
+                onClick={() => handleNotificationClick(notif)}
+              >
                 <div className="flex-1">
-                  <span className="font-bold text-[#56708A]">{notif.user}</span>
+                  <span className="font-bold text-[#56708A]">
+                    {notif.type === "System" || notif.type === "WEVO" ? "WEVO" : notif.type === "Admin" ? "Admin" : ""}
+                  </span>
                   <span className="text-gray-400 text-sm ml-1">
-                    {notif.date}
+                    {new Date(notif.created_at).toLocaleString()}
                   </span>
                   <div className="text-gray-700 text-sm">{notif.message}</div>
                 </div>
-                {!notif.read && (
+                {notif.status === "unread" && (
                   <span className="w-3 h-3 bg-yellow-400 rounded-full ml-2 flex-shrink-0"></span>
                 )}
               </li>
             ))}
           </ul>
           <div className="flex justify-center mt-4 mb-1">
-            <button className="w-full py-2.5 bg-white rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-50 transition-colors">
-              Show All Notifications
+            <button
+              className="w-full py-2.5 bg-white rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              onClick={() => setShowAll(!showAll)}
+            >
+              {showAll ? "Show Less" : "Show All Notifications"}
             </button>
           </div>
         </div>

@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User, Menu, LogOut, X, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { fetchNotifications, markNotificationAsRead } from "../../api/requests";
+import NotificationDetailsModal from "../NotificationDetailsModal";
+import { supabase } from "../../supabase/supabaseClient";
 
 // Helper function to truncate text
 const truncateText = (text, maxLength) => {
@@ -49,10 +52,71 @@ function LogoutConfirmModal({ open, onClose, onConfirm }) {
   );
 }
 
-export default function RightSidebar() {
+function useRealtimeNotifications(userId, setNotifications, setHighlightedId) {
+  React.useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel('user_notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setNotifications((prev) => {
+              // Prevent duplicates
+              if (prev.some(n => n.id === payload.new.id)) return prev;
+              return [payload.new, ...prev];
+            });
+            setHighlightedId(payload.new.id);
+            setTimeout(() => setHighlightedId(null), 2000);
+          }
+          if (payload.eventType === 'DELETE') {
+            setNotifications((prev) => prev.filter(n => n.id !== payload.old.id));
+          }
+          if (payload.eventType === 'UPDATE') {
+            setNotifications((prev) => prev.map(n => n.id === payload.new.id ? payload.new : n));
+          }
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, setNotifications, setHighlightedId]);
+}
+
+export default function RightSidebar({ onNotificationClick }) {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [showAll, setShowAll] = useState(false);
+  const [selectedNotif, setSelectedNotif] = useState(null);
+  const [highlightedId, setHighlightedId] = useState(null);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    fetchNotifications(currentUser.id).then(setNotifications);
+  }, [currentUser]);
+
+  useRealtimeNotifications(currentUser?.id, setNotifications, setHighlightedId);
+
+  const handleNotificationClick = async (notif) => {
+    if (notif.status === "unread") {
+      await markNotificationAsRead(notif.id);
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === notif.id ? { ...n, status: "read" } : n
+        )
+      );
+    }
+    if (onNotificationClick) onNotificationClick(notif);
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -60,40 +124,21 @@ export default function RightSidebar() {
     navigate("/login", { replace: true });
   };
 
-  const notifications = [
-    {
-      id: 1,
-      user: "Admin",
-      date: "Month, XX, XXXX at XX:XX",
-      message: "System Generated.",
-      read: false,
-    },
-    {
-      id: 2,
-      user: "Admin",
-      date: "Month, XX, XXXX at XX:XX",
-      message: "Congratulations! lorem ipsum lorem….",
-      read: true,
-    },
-    {
-      id: 3,
-      user: "Admin",
-      date: "Month, XX, XXXX at XX:XX",
-      message: "Congratulations! lorem ipsum lorem….",
-      read: false,
-    },
-  ];
-
   // Find the latest notification for mobile view
   // Prioritize the latest unread, then the latest overall if no unread
   const latestUnread = notifications
-    .filter((n) => !n.read)
+    .filter((n) => n.status === "unread")
     .sort((a, b) => b.id - a.id)[0];
   const latestNotification =
     latestUnread ||
     (notifications.length > 0
       ? notifications.sort((a, b) => b.id - a.id)[0]
       : null);
+
+  const userNotifications = notifications.filter(
+    (notif) => notif.role === "user"
+  );
+  const visibleNotifications = showAll ? userNotifications : userNotifications.slice(0, 5);
 
   return (
     <>
@@ -134,63 +179,46 @@ export default function RightSidebar() {
               className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-[#0458A9] focus:border-[#0458A9]"
             />
           </div>
-          {/* Desktop: Full Notifications List (hidden on mobile) */}
+          {/* Desktop & Mobile: Full Notifications List */}
           <ul
-            className="hidden lg:block divide-y divide-gray-200 overflow-y-auto flex-grow pr-1"
-            style={{ maxHeight: "calc(100vh - 350px)" }}
+            className="divide-y divide-gray-200 overflow-y-auto flex-grow pr-1"
+            style={{ maxHeight: showAll ? "none" : "calc(100vh - 350px)" }}
           >
-            {notifications.map((notif) => (
-              <li key={notif.id} className="flex items-center py-2">
+            {visibleNotifications.map((notif) => (
+              <li
+                key={notif.id}
+                className={`flex items-center py-2 cursor-pointer hover:bg-gray-50 transition-all duration-500 ${highlightedId === notif.id ? "bg-yellow-50" : ""}`}
+                onClick={() => { handleNotificationClick(notif); setSelectedNotif(notif); }}
+              >
                 <div className="flex-1">
-                  <span className="font-bold text-[#0458A9]">{notif.user}</span>
-                  <span className="text-gray-400 text-sm ml-1">
-                    {notif.date}
+                  <span className="font-bold text-[#0458A9]">
+                    {notif.type === "System" || notif.type === "WEVO" ? "WEVO" : notif.type === "Admin" ? "Admin" : ""}
                   </span>
-                  <div className="text-gray-700 text-sm">{notif.message}</div>
+                  <span className="text-gray-400 text-sm ml-1">
+                    {new Date(notif.created_at).toLocaleString()}
+                  </span>
+                  <div className="text-gray-700 text-sm">{truncateText(notif.message, 60)}</div>
                 </div>
-                {!notif.read && (
+                {notif.status === "unread" && (
                   <span className="w-3 h-3 bg-yellow-400 rounded-full ml-2 flex-shrink-0"></span>
                 )}
               </li>
             ))}
           </ul>
-          {/* Mobile: Latest Notification (shown on mobile, hidden on lg and up) */}
-          {latestNotification && (
-            <div className="lg:hidden py-2 border-b border-gray-200 mb-2">
-              <div className="flex items-center">
-                <div className="flex-1">
-                  <span className="font-bold text-[#0458A9]">
-                    {latestNotification.user}
-                  </span>
-                  <span className="text-gray-400 text-sm ml-1">
-                    {latestNotification.date}
-                  </span>
-                  <div className="text-gray-700 text-sm">
-                    {truncateText(latestNotification.message, 50)}{" "}
-                    {/* Truncate message to 50 chars */}
-                  </div>
-                </div>
-                {!latestNotification.read && (
-                  <span className="w-3 h-3 bg-yellow-400 rounded-full ml-2 flex-shrink-0"></span>
-                )}
-              </div>
+          {/* Show All/Show Less button for both desktop and mobile */}
+          {userNotifications.length > 5 && (
+            <div className="flex justify-center mt-auto pt-2 lg:mt-4 mb-1">
+              <button className="w-full py-2.5 bg-white rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-50 transition-colors" onClick={() => setShowAll((v) => !v)}>
+                {showAll ? "Show Less" : "Show All Notifications"}
+              </button>
             </div>
           )}
-          {!latestNotification && notifications.length === 0 && (
-            <div className="lg:hidden py-2 text-sm text-gray-500 text-center">
-              No new notifications.
-            </div>
-          )}
-
-          <div className="flex justify-center mt-auto pt-2 lg:mt-4 mb-1">
-            {" "}
-            {/* Adjusted margin for mobile */}
-            <button className="w-full py-2.5 bg-white rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-50 transition-colors">
-              Show All Notifications
-            </button>
-          </div>
         </div>
       </aside>
+
+      {selectedNotif && (
+        <NotificationDetailsModal notif={selectedNotif} onClose={() => setSelectedNotif(null)} />
+      )}
 
       <LogoutConfirmModal
         open={showLogoutConfirm}

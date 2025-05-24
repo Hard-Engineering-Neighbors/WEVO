@@ -239,7 +239,13 @@ export default function ReserveStep2Modal({
     if (isMultipleDays && !sameTimeForAllDays) {
       timeDetails = {
         eventTimesPerDay: dailyTimes.map((dt) => ({
-          date: dt.date,
+          date: (() => {
+            // Always store as local YYYY-MM-DD
+            const local = new Date(dt.date);
+            return local.getFullYear() + '-' +
+              String(local.getMonth() + 1).padStart(2, '0') + '-' +
+              String(local.getDate()).padStart(2, '0');
+          })(),
           startTime: formatTimeForDisplay(dt.startTime),
           endTime: formatTimeForDisplay(dt.endTime),
         })),

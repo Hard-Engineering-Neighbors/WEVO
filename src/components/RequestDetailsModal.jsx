@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
-import { cancelReservation } from "../api/requests";
+import { cancelReservation, cancelApprovedReservation } from "../api/requests";
 import CancellationReasonModal from "./CancellationReasonModal";
 
 // Helper function to truncate text
@@ -21,6 +21,7 @@ export default function RequestDetailsModal({
   const [errorMessage, setErrorMessage] = useState("");
   const [isCancellationReasonModalOpen, setIsCancellationReasonModalOpen] =
     useState(false);
+  const [showAllDates, setShowAllDates] = useState(false);
 
   if (!open || !request) return null;
 
@@ -37,13 +38,14 @@ export default function RequestDetailsModal({
   // Placeholder functions for button actions
   const handleViewDocuments = () => {
     // TODO: Implement viewing/downloading documents
-    console.log("View documents for:", request);
+    // console.log("View documents for:", request); // Removed for privacy
   };
 
   const handleCancelReservation = async (reason) => {
     if (typeof reason === "string") {
+      // Approved event: cancel with reason
       try {
-        await cancelReservation(request.id);
+        await cancelApprovedReservation({ bookingRequestId: request.id, userId: request.requested_by, reason });
         if (typeof onReservationUpdated === "function") onReservationUpdated();
         setIsCancellationReasonModalOpen(false);
         onClose();
@@ -55,6 +57,7 @@ export default function RequestDetailsModal({
       if (request.status && request.status.toLowerCase() === "approved") {
         setIsCancellationReasonModalOpen(true);
       } else {
+        // Pending: delete
         try {
           await cancelReservation(request.id);
           if (typeof onReservationUpdated === "function")
@@ -64,6 +67,16 @@ export default function RequestDetailsModal({
           setErrorMessage("Failed to cancel reservation: " + (e.message || e));
         }
       }
+    }
+  };
+
+  const handleRemoveRequest = async () => {
+    try {
+      await cancelReservation(request.id);
+      if (typeof onReservationUpdated === "function") onReservationUpdated();
+      onClose();
+    } catch (e) {
+      setErrorMessage("Failed to remove request: " + (e.message || e));
     }
   };
 
@@ -152,14 +165,45 @@ export default function RequestDetailsModal({
                 </div>
               </div>
 
-              <div className="bg-gray-100 rounded-lg px-6 py-3">
-                <div className="text-gray-500 text-sm">Event Duration</div>
+              {/* Per-day times display with toggle */}
+              <div className="bg-gray-100 rounded-lg px-6 py-3 md:col-span-2">
+                <div className="text-gray-500 text-sm flex items-center gap-2">
+                  Event Date and Time
+                  {(request.perDayTimes && request.perDayTimes.length > 1) && (
+                    <button
+                      type="button"
+                      className="ml-2 text-xs text-[#0458A9] hover:underline focus:outline-none"
+                      onClick={() => setShowAllDates((prev) => !prev)}
+                    >
+                      {showAllDates ? "▲" : "▼"}
+                    </button>
+                  )}
+                </div>
                 <div className="font-semibold">
-                  {request.date || request.event}
+                  {(request.perDayTimes && request.perDayTimes.length > 0) ? (
+                    showAllDates ? (
+                      <div className="flex flex-col space-y-1 mt-1 pl-2">
+                        {request.perDayTimes.map((item, idx) => (
+                          <div key={idx}
+                            className="flex"
+                          >
+                            <span>{new Date(item.date).toLocaleDateString()} — {item.startTime} - {item.endTime}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span>
+                        {new Date(request.perDayTimes[0].date).toLocaleDateString()} {request.perDayTimes[0].startTime} - {new Date(request.perDayTimes[request.perDayTimes.length-1].date).toLocaleDateString()} {request.perDayTimes[request.perDayTimes.length-1].endTime}
+                      </span>
+                    )
+                  ) : (
+                    <span>{request.date || request.event}</span>
+                  )}
                 </div>
               </div>
 
-              <div className="bg-gray-100 rounded-lg px-6 py-3">
+              {/* Event Type fills the row if perDayTimes is present */}
+              <div className="bg-gray-100 rounded-lg px-6 py-3 md:col-span-2">
                 <div className="text-gray-500 text-sm">Event Type</div>
                 <div className="font-semibold">{request.type}</div>
               </div>
@@ -232,13 +276,30 @@ export default function RequestDetailsModal({
               >
                 Documents
               </button>
-              <button
-                className="bg-white text-[#0458A9] border border-[#0458A9] rounded-full px-8 py-3 font-semibold text-base hover:bg-gray-100"
-                onClick={() => handleCancelReservation()}
-              >
-                Cancel Reservation
-              </button>
+              {(request.status && (request.status.toLowerCase() === "cancelled" || request.status.toLowerCase() === "rejected")) ? (
+                <button
+                  className="bg-white text-red-600 border border-red-600 rounded-full px-8 py-3 font-semibold text-base hover:bg-gray-100"
+                  onClick={handleRemoveRequest}
+                >
+                  Remove Request
+                </button>
+              ) : (
+                <button
+                  className="bg-white text-[#0458A9] border border-[#0458A9] rounded-full px-8 py-3 font-semibold text-base hover:bg-gray-100"
+                  onClick={() => handleCancelReservation()}
+                >
+                  Cancel Reservation
+                </button>
+              )}
             </div>
+
+            {/* Show cancellation reason if cancelled */}
+            {request.status && request.status.toLowerCase() === "cancelled" && request.cancellation_reason && (
+              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-6 py-3 mt-4">
+                <div className="font-semibold mb-1">Cancellation Reason:</div>
+                <div>{request.cancellation_reason}</div>
+              </div>
+            )}
           </div>
         </div>
       </div>

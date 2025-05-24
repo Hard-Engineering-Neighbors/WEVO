@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import AdminLeftSidebar from "../components/Sidebar/AdminLeftSidebar";
 import AdminRightSidebar from "../components/Sidebar/AdminRightSidebar";
 import AdminReservationReviewModal from "../components/AdminReservationReviewModal";
+import NotificationDetailsModal from "../components/NotificationDetailsModal";
 import {
   Search,
   ListFilter,
@@ -25,6 +26,24 @@ const truncateText = (text, maxLength) => {
   return text;
 };
 
+function useRealtimeRequests(refetch) {
+  React.useEffect(() => {
+    const channel = supabase
+      .channel('admin_requests')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'booking_requests' },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [refetch]);
+}
+
 export default function AdminReservationsPage() {
   const navigate = useNavigate();
   // Show pending requests by default
@@ -32,33 +51,26 @@ export default function AdminReservationsPage() {
   const [reservations, setReservations] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [selectedNotif, setSelectedNotif] = useState(null);
 
+  // 1. Define loadRequests at the top level
+  const loadRequests = async () => {
+    try {
+      const data = await fetchAdminRequests();
+      // console.log("Fetched admin requests:", data); // Removed for privacy
+      setReservations(data);
+    } catch (err) {
+      console.error("Error fetching admin requests:", err);
+    }
+  };
+
+  // 2. Call it once on mount
   useEffect(() => {
-    // Initial fetch of admin reservation requests
-    const loadRequests = async () => {
-      try {
-        const data = await fetchAdminRequests();
-        setReservations(data);
-      } catch (err) {
-        console.error("Error fetching admin requests:", err);
-      }
-    };
     loadRequests();
-    // Real-time subscription to booking_requests changes
-    const subscription = supabase
-      .channel("public:booking_requests")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "booking_requests" },
-        () => {
-          loadRequests();
-        }
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(subscription);
-    };
   }, []);
+
+  // 3. Pass it to the real-time hook
+  useRealtimeRequests(loadRequests);
 
   const handleOpenReviewModal = (request) => {
     setSelectedRequest(request);
@@ -100,14 +112,12 @@ export default function AdminReservationsPage() {
 
   const filteredReservations = reservations.filter((res) => {
     if (activeTab === "Ongoing") {
-      // Define what 'Ongoing' means, e.g., Approved and not past (or some other logic)
-      // For now, let's assume 'Approved' status means ongoing/upcoming for simplicity
-      return res.status === "Approved";
+      return res.status && res.status.toLowerCase() === "approved";
     }
     if (activeTab === "Pending") {
-      return res.status === "Pending";
+      return res.status && res.status.toLowerCase() === "pending";
     }
-    return true; // Should not happen with current tabs
+    return true;
   });
 
   const tableHeaders = [
@@ -233,8 +243,16 @@ export default function AdminReservationsPage() {
                         {truncateText(res.eventName, 25)}
                       </td>
                       <td className="px-4 py-3">
-                        <div>{res.date}</div>
-                        <div className="text-xs text-gray-500">{res.time}</div>
+                        {res.perDayTimes && res.perDayTimes.length > 0 ? (
+                          <span>
+                            {new Date(res.perDayTimes[0].date).toLocaleDateString()} {res.perDayTimes[0].startTime} - {new Date(res.perDayTimes[res.perDayTimes.length-1].date).toLocaleDateString()} {res.perDayTimes[res.perDayTimes.length-1].endTime}
+                          </span>
+                        ) : (
+                          <>
+                            <div>{res.date}</div>
+                            <div className="text-xs text-gray-500">{res.time}</div>
+                          </>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <span
@@ -281,7 +299,7 @@ export default function AdminReservationsPage() {
             </div>
           </div>
         </main>
-        <AdminRightSidebar />
+        <AdminRightSidebar onNotificationClick={setSelectedNotif} />
       </div>
 
       {selectedRequest && (
@@ -292,6 +310,9 @@ export default function AdminReservationsPage() {
           onReject={handleRejectRequest}
           requestData={selectedRequest}
         />
+      )}
+      {selectedNotif && (
+        <NotificationDetailsModal notif={selectedNotif} onClose={() => setSelectedNotif(null)} />
       )}
     </div>
   );

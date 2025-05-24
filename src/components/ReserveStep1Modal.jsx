@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import ReserveStep2Modal from "./ReserveStep2Modal";
+import { getVenueBookings } from "../api/requests";
 
 // Helper function to get days in month
 const getDaysInMonth = (year, month) => {
@@ -45,6 +46,18 @@ export default function ReserveStep1Modal({
   const [showVenueSelector, setShowVenueSelector] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState([]);
+  const [bookedSlots, setBookedSlots] = useState([]);
+
+  // Fetch bookings for the selected venue
+  useEffect(() => {
+    if (venue && venue.name) {
+      getVenueBookings(venue.name).then(data => {
+        setBookedSlots(data);
+      });
+    } else {
+      setBookedSlots([]);
+    }
+  }, [venue]);
 
   // Update calendar when current date changes
   useEffect(() => {
@@ -59,21 +72,52 @@ export default function ReserveStep1Modal({
         const date = new Date(year, month, day);
         const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
         const isWithinWindow = isWithinBookingWindow(date);
-
+        const blackout = isDateBooked(date);
         return {
           day,
           date,
           isPast,
           isWithinWindow,
           formattedDate: formatDate(year, month, day),
-          disabled: isPast || !isWithinWindow,
+          disabled: isPast || !isWithinWindow || blackout,
         };
       }
       return null;
     });
 
     setCalendarDays(days);
-  }, [currentDate]);
+  }, [currentDate, bookedSlots]);
+
+  // Blackout logic for calendar
+  // Normalize to local date (YYYY-MM-DD)
+  const normalizeDate = d => {
+    const local = new Date(d);
+    return local.getFullYear() + '-' +
+      String(local.getMonth() + 1).padStart(2, '0') + '-' +
+      String(local.getDate()).padStart(2, '0');
+  };
+  const isDateBooked = (date) => {
+    const dateStr = normalizeDate(date);
+    const bookingsForDate = bookedSlots.filter(slot =>
+      slot.status && slot.status.toLowerCase() === "approved" &&
+      slot.perDayTimes.some(day => normalizeDate(day.date) === dateStr)
+    );
+    // If both morning and afternoon are booked, or a booking covers the whole day, return true
+    let morningBooked = false, afternoonBooked = false, fullDayBooked = false;
+    bookingsForDate.forEach(slot => {
+      slot.perDayTimes.forEach(day => {
+        if (normalizeDate(day.date) === dateStr) {
+          const start = parseInt(day.startTime.split(':')[0], 10);
+          const end = parseInt(day.endTime.split(':')[0], 10);
+          // University rule: 7:00 to 13:00 (1pm) or later is a full day
+          if (start === 7 && end >= 13) fullDayBooked = true;
+          else if (start < 13 && end <= 13) morningBooked = true;
+          else if (start >= 13) afternoonBooked = true;
+        }
+      });
+    });
+    return fullDayBooked || (morningBooked && afternoonBooked);
+  };
 
   if (!open || !venue) return null;
 

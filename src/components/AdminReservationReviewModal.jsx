@@ -61,6 +61,8 @@ export default function AdminReservationReviewModal({
     uploadedDocuments = [],
   } = requestData;
 
+  const perDayTimes = requestData.perDayTimes || requestData.per_day_times || [];
+
   // For display, try to split date and time if they are combined in 'date' field
   let displayDate = eventDateRaw;
   let displayTime = eventTimeRaw;
@@ -90,7 +92,8 @@ export default function AdminReservationReviewModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      {/* Main Review Modal */}
+      <div className="fixed inset-0 z-[50] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div className="relative bg-white rounded-xl shadow-xl w-full max-w-3xl mx-auto flex flex-col gap-5 p-6 md:p-8 max-h-[90vh] overflow-y-auto">
           {/* Close Button */}
           <button
@@ -223,6 +226,42 @@ export default function AdminReservationReviewModal({
             </div>
           </div>
 
+          {/* Event Date and Time (per-day times) */}
+          <div className="w-full">
+            <label className="block text-gray-600 text-sm mb-1">
+              Event Date and Time
+            </label>
+            <div className="flex flex-col gap-2">
+              {perDayTimes.length > 0 ? (
+                perDayTimes.map(({ date, startTime, endTime }) => (
+                  <div key={date} className="p-2.5 bg-gray-100 rounded-md flex justify-between">
+                    <span>{new Date(date).toLocaleDateString()}</span>
+                    <span>{startTime} - {endTime}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="p-2.5 bg-gray-100 rounded-md flex justify-between">
+                  <span>{requestData.date || "-"}</span>
+                  <span>{requestData.time || "-"}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Event Duration (summary) */}
+          <div className="w-full">
+            <label className="block text-gray-600 text-sm mb-1">
+              Event Duration
+            </label>
+            <div className="p-2.5 bg-gray-100 rounded-md">
+              {perDayTimes.length > 0 ? (
+                `${new Date(perDayTimes[0].date).toLocaleDateString()} ${perDayTimes[0].startTime} - ${new Date(perDayTimes[perDayTimes.length-1].date).toLocaleDateString()} ${perDayTimes[perDayTimes.length-1].endTime}`
+              ) : (
+                `${requestData.date || "-"} ${requestData.time || "-"}`
+              )}
+            </div>
+          </div>
+
           {/* Uploaded Documents */}
           <div className="w-full">
             <h3 className="text-xl font-semibold text-[#56708A] mb-3">
@@ -258,29 +297,31 @@ export default function AdminReservationReviewModal({
           </div>
 
           {/* Footer: Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-end items-center gap-3 mt-4 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              className="w-full sm:w-auto bg-red-600 text-white rounded-lg px-6 py-2.5 font-medium text-sm hover:bg-red-700 transition"
-              onClick={handleOpenRejectionModal}
-            >
-              Reject
-            </button>
-            <button
-              type="button"
-              className="w-full sm:w-auto bg-[#56708A] text-white rounded-lg px-6 py-2.5 font-medium text-sm hover:bg-[#455b74] transition"
-              onClick={() => {
-                onApprove(requestData.id);
-                onClose();
-              }}
-            >
-              Approve
-            </button>
-          </div>
+          {requestData.status === "Pending" && (
+            <div className="flex flex-col sm:flex-row justify-end items-center gap-3 mt-4 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                className="w-full sm:w-auto bg-red-600 text-white rounded-lg px-6 py-2.5 font-medium text-sm hover:bg-red-700 transition"
+                onClick={handleOpenRejectionModal}
+              >
+                Reject
+              </button>
+              <button
+                type="button"
+                className="w-full sm:w-auto bg-[#56708A] text-white rounded-lg px-6 py-2.5 font-medium text-sm hover:bg-[#455b74] transition"
+                onClick={() => {
+                  onApprove(requestData.id);
+                  onClose();
+                }}
+              >
+                Approve
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Rejection Reason Modal */}
+      {/* Rejection Reason Modal - always rendered on top */}
       <RejectionReasonModal
         open={isRejectionModalOpen}
         onClose={handleCloseRejectionModal}
