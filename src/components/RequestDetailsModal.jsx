@@ -40,39 +40,23 @@ export default function RequestDetailsModal({
     console.log("View documents for:", request);
   };
 
-  const handleCancelReservation = async (reasonOrData) => {
-    let cancellationReasonText = null;
-
-    // Check if reasonOrData is the object from CancellationReasonModal
-    if (
-      typeof reasonOrData === "object" &&
-      reasonOrData !== null &&
-      reasonOrData.hasOwnProperty("cancellationReason")
-    ) {
-      cancellationReasonText = reasonOrData.cancellationReason;
+  const handleCancelReservation = async (reason) => {
+    if (typeof reason === "string") {
       try {
-        // TODO: Update cancelReservation to accept a reason if your API supports it
-        // e.g., await cancelReservation(request.id, { cancellationReason: cancellationReasonText });
-        // Or if it just takes the string: await cancelReservation(request.id, cancellationReasonText);
-        await cancelReservation(request.id, cancellationReasonText); // Assuming API takes reason string directly
-
+        await cancelReservation(request.id);
         if (typeof onReservationUpdated === "function") onReservationUpdated();
-        setIsCancellationReasonModalOpen(false); // Close the reason modal
-        onClose(); // Close the main details modal
+        setIsCancellationReasonModalOpen(false);
+        onClose();
       } catch (e) {
         setErrorMessage("Failed to cancel reservation: " + (e.message || e));
-        setIsCancellationReasonModalOpen(false); // Still close reason modal on error
+        setIsCancellationReasonModalOpen(false);
       }
     } else {
-      // This is the initial click on "Cancel Reservation" button, or called without specific reason data
-      // Check if request status is 'approved'
-      // IMPORTANT: Adjust 'approved' to match the exact status string from your backend
       if (request.status && request.status.toLowerCase() === "approved") {
-        setIsCancellationReasonModalOpen(true); // Open reason modal for approved requests
+        setIsCancellationReasonModalOpen(true);
       } else {
-        // For non-approved (e.g., pending) requests, cancel directly
         try {
-          await cancelReservation(request.id); // No reason passed for non-approved
+          await cancelReservation(request.id);
           if (typeof onReservationUpdated === "function")
             onReservationUpdated();
           onClose();

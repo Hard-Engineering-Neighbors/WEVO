@@ -8,8 +8,8 @@ export default function CancellationReasonModal({ open, onClose, onSubmit }) {
 
   const handleSubmit = () => {
     if (reason.trim()) {
-      onSubmit({ cancellationReason: reason.trim() });
-      setReason("");
+      onSubmit(reason);
+      setReason(""); // Clear reason after submit
     }
   };
 
