@@ -16,6 +16,14 @@ import { fetchRequests } from "../api/requests";
 
 import venueSample from "../assets/cultural_center.webp";
 
+// Helper function to truncate text
+const truncateText = (text, maxLength) => {
+  if (text && typeof text === "string" && text.length > maxLength) {
+    return text.substring(0, maxLength) + "...";
+  }
+  return text;
+};
+
 function RequestCard({ request, onDetails }) {
   return (
     <div className="flex bg-white rounded-xl shadow border border-[#C0C0C0] overflow-hidden max-w-2xl w-full">
@@ -50,7 +58,7 @@ function RequestCard({ request, onDetails }) {
         </div>
         <h3 className="font-bold text-base md:text-lg mb-1">{request.venue}</h3>
         <div className="flex items-center text-xs text-gray-700 gap-2 mb-1">
-          <Calendar size={14} /> {request.event}
+          <Calendar size={14} /> {truncateText(request.event, 15)}
           <FileText size={14} className="ml-2" /> {request.type}
         </div>
         <div className="flex items-center text-xs text-gray-500 gap-2 mb-2">

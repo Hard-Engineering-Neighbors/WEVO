@@ -2,7 +2,20 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import { cancelReservation } from "../api/requests";
 
-export default function RequestDetailsModal({ open, onClose, request, onReservationUpdated }) {
+// Helper function to truncate text
+const truncateText = (text, maxLength) => {
+  if (text && typeof text === "string" && text.length > maxLength) {
+    return text.substring(0, 25) + "...";
+  }
+  return text;
+};
+
+export default function RequestDetailsModal({
+  open,
+  onClose,
+  request,
+  onReservationUpdated,
+}) {
   const [current, setCurrent] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -39,10 +52,11 @@ export default function RequestDetailsModal({ open, onClose, request, onReservat
       <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col md:flex-row p-4 md:p-8 gap-6 overflow-y-auto max-h-[95vh]">
         {/* Close Button */}
         <button
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
+          className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
           onClick={onClose}
+          aria-label="Close modal"
         >
-          <X size={28} />
+          <X size={20} />
         </button>
 
         {/* Error Message */}
@@ -98,14 +112,16 @@ export default function RequestDetailsModal({ open, onClose, request, onReservat
             {request.venue}
           </h2>
           <div className="text-gray-500 text-sm">
-            Managed by (Insert Department Name)
+            Managed by WVSU Administration
           </div>
 
           {/* Event Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
             <div className="bg-gray-100 rounded-lg px-6 py-3">
               <div className="text-gray-500 text-sm">Event Name</div>
-              <div className="font-semibold">{request.event}</div>
+              <div className="font-semibold">
+                {truncateText(request.event, 40)}
+              </div>
             </div>
 
             <div className="bg-gray-100 rounded-lg px-6 py-3">
@@ -129,7 +145,9 @@ export default function RequestDetailsModal({ open, onClose, request, onReservat
 
             <div className="bg-gray-100 rounded-lg px-6 py-3 md:col-span-2">
               <div className="text-gray-500 text-sm">Event Purpose</div>
-              <div className="font-semibold">{request.purpose || "-"}</div>
+              <div className="font-semibold">
+                {truncateText(request.purpose, 100) || "-"}
+              </div>
             </div>
           </div>
 
@@ -142,7 +160,9 @@ export default function RequestDetailsModal({ open, onClose, request, onReservat
           {/* PDF Documents Section */}
           {pdfFiles.length > 0 && (
             <div className="mt-4">
-              <div className="text-lg font-semibold mb-2">Uploaded Documents</div>
+              <div className="text-lg font-semibold mb-2">
+                Uploaded Documents
+              </div>
               <ul className="space-y-2">
                 {pdfFiles.map((file, idx) => (
                   <li key={file.id || idx} className="flex items-center gap-2">
@@ -172,7 +192,7 @@ export default function RequestDetailsModal({ open, onClose, request, onReservat
                       rel="noopener noreferrer"
                       className="text-blue-700 underline hover:text-blue-900 text-sm truncate max-w-[200px]"
                     >
-                      {file.file_name}
+                      {truncateText(file.file_name, 30)}
                     </a>
                   </li>
                 ))}
