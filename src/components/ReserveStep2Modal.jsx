@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, ChevronDown } from "lucide-react";
 import ReserveStep3Modal from "./ReserveStep3Modal";
 
@@ -30,10 +30,126 @@ export default function ReserveStep2Modal({
   const [step3Open, setStep3Open] = useState(false);
   const [step2Data, setStep2Data] = useState(null);
 
+  // State for multi-day time handling
+  const isMultipleDays =
+    reservationData?.bookingType === "multiple" &&
+    reservationData?.rawSelectedDays?.length > 1;
+  const [sameTimeForAllDays, setSameTimeForAllDays] = useState(true);
+  const [dailyTimes, setDailyTimes] = useState([]);
+
+  // Initialize dailyTimes and manage main form times based on booking type
+  useEffect(() => {
+    if (open) {
+      // Only run these initializations/resets when the modal is opened or critical data changes
+      if (isMultipleDays && reservationData.rawSelectedDays) {
+        const initialStartTimeForDaily = sameTimeForAllDays
+          ? form.startTime || "07:00"
+          : "07:00";
+        const initialEndTimeForDaily = sameTimeForAllDays
+          ? form.endTime || "08:00"
+          : "08:00";
+
+        let newDailyTimes = reservationData.rawSelectedDays.map((day) => ({
+          date: day.formattedDate,
+          startTime: initialStartTimeForDaily,
+          endTime: initialEndTimeForDaily,
+        }));
+
+        // If not using sameTimeForAllDays, try to preserve existing dailyTimes if they match the dates
+        if (
+          !sameTimeForAllDays &&
+          dailyTimes.length === reservationData.rawSelectedDays.length
+        ) {
+          const currentDates = dailyTimes.map((dt) => dt.date).join(",");
+          const newDates = reservationData.rawSelectedDays
+            .map((day) => day.formattedDate)
+            .join(",");
+          if (currentDates === newDates) {
+            newDailyTimes = dailyTimes; // Keep existing if dates match
+          }
+        }
+        setDailyTimes(newDailyTimes);
+
+        if (sameTimeForAllDays) {
+          // If multi-day and sameTimeForAll, ensure main form times are set (once)
+          setForm((prev) => ({
+            ...prev,
+            startTime: prev.startTime || "07:00",
+            endTime: prev.endTime || "08:00",
+          }));
+        }
+      } else {
+        // Single day booking or no rawSelectedDays
+        setDailyTimes([]);
+        setSameTimeForAllDays(true); // Should be true for single day
+        // For single day, ensure main form times are set (once) or preserved if already changed by user
+        setForm((prev) => ({
+          ...prev,
+          startTime:
+            prev.startTime && prev.bookingType === reservationData?.bookingType
+              ? prev.startTime
+              : "07:00",
+          endTime:
+            prev.endTime && prev.bookingType === reservationData?.bookingType
+              ? prev.endTime
+              : "08:00",
+          // Persist bookingType from reservationData if it exists
+          bookingType: reservationData?.bookingType || prev.bookingType,
+        }));
+      }
+    }
+  }, [open, reservationData?.bookingType, reservationData?.rawSelectedDays]); // Removed isMultipleDays, sameTimeForAllDays, form.startTime, form.endTime from main dependencies
+
+  // Effect to handle changes when 'sameTimeForAllDays' toggle changes for multi-day
+  useEffect(() => {
+    if (open && isMultipleDays) {
+      if (sameTimeForAllDays) {
+        // When toggling TO sameTimeForAllDays, set main form times from the first dailyTime or defaults
+        const firstDailyStartTime = dailyTimes[0]?.startTime || "07:00";
+        const firstDailyEndTime = dailyTimes[0]?.endTime || "08:00";
+        setForm((prev) => ({
+          ...prev,
+          startTime: firstDailyStartTime,
+          endTime: firstDailyEndTime,
+        }));
+      } else {
+        // When toggling FROM sameTimeForAllDays, re-initialize dailyTimes using current form times
+        // or defaults if form times are not sensible for individual setting.
+        const currentFormStartTime = form.startTime || "07:00";
+        const currentFormEndTime = form.endTime || "08:00";
+        if (reservationData.rawSelectedDays) {
+          setDailyTimes(
+            reservationData.rawSelectedDays.map((day) => ({
+              date: day.formattedDate,
+              startTime: currentFormStartTime,
+              endTime: currentFormEndTime,
+            }))
+          );
+        }
+      }
+    }
+  }, [sameTimeForAllDays, open, isMultipleDays]); // Only depends on sameTimeForAllDays, open, and isMultipleDays
+
   if (!open && !step3Open) return null;
 
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((prev) => {
+      const newForm = { ...prev, [name]: value };
+      // If startTime is changed, update endTime accordingly
+      if (name === "startTime") {
+        const validEndTimes = getEndTimeOptions(value);
+        if (validEndTimes.length > 0) {
+          // Check if current endTime is still valid
+          if (!validEndTimes.includes(newForm.endTime)) {
+            newForm.endTime = validEndTimes[0]; // Set to first valid endTime
+          }
+        } else {
+          newForm.endTime = ""; // No valid end times
+        }
+      }
+      return newForm;
+    });
   };
 
   const handleVenueSelect = (venue) => {
@@ -41,20 +157,68 @@ export default function ReserveStep2Modal({
     setVenueDropdown(false);
   };
 
+  const handleDailyTimeChange = (index, field, value) => {
+    setDailyTimes((currentDailyTimes) =>
+      currentDailyTimes.map((item, i) => {
+        if (i === index) {
+          const updatedItem = { ...item, [field]: value };
+          // If startTime is changed for a day, update its endTime accordingly
+          if (field === "startTime") {
+            const validEndTimes = getEndTimeOptions(value);
+            if (validEndTimes.length > 0) {
+              if (!validEndTimes.includes(updatedItem.endTime)) {
+                updatedItem.endTime = validEndTimes[0];
+              }
+            } else {
+              updatedItem.endTime = "";
+            }
+          }
+          return updatedItem;
+        }
+        return item;
+      })
+    );
+  };
+
   // Helper to generate time options in 15-min increments from 7:00 to 19:00
   const generateTimeOptions = () => {
     const options = [];
     for (let h = 7; h <= 19; h++) {
-      for (let m = 0; m < 60; m += 15) {
+      for (let m = 0; m < 60; m += 30) {
+        // Changed increment to 30 minutes
         if (h === 19 && m > 0) break;
-        const hour = h.toString().padStart(2, "0");
+        const hour24 = h.toString().padStart(2, "0");
         const min = m.toString().padStart(2, "0");
-        options.push(`${hour}:${min}`);
+        const timeValue = `${hour24}:${min}`; // Value will be 24-hour format
+
+        // Format for display (AM/PM)
+        let displayHour = h;
+        const suffix = displayHour >= 12 ? "PM" : "AM";
+        if (displayHour === 0) {
+          displayHour = 12; // Midnight
+        } else if (displayHour > 12) {
+          displayHour -= 12;
+        }
+        const timeDisplay = `${displayHour
+          .toString()
+          .padStart(2, "0")}:${min} ${suffix}`;
+
+        options.push({ value: timeValue, display: timeDisplay });
       }
     }
     return options;
   };
-  const timeOptions = generateTimeOptions();
+  const timeOptionsWithFormat = generateTimeOptions();
+  // Keep a simple array of 24-hour values for internal logic if needed, though getEndTimeOptions will use the objects
+  const timeOptions = timeOptionsWithFormat.map((opt) => opt.value);
+
+  // Helper to get valid end time options based on selected start time
+  const getEndTimeOptions = (selectedStartTime) => {
+    if (!selectedStartTime) return timeOptionsWithFormat; // Return all if no start time selected
+    const startIndex = timeOptions.indexOf(selectedStartTime);
+    if (startIndex === -1 || startIndex >= timeOptions.length - 1) return [];
+    return timeOptionsWithFormat.slice(startIndex + 1);
+  };
 
   // Format time for display (24-hour to 12-hour with AM/PM)
   const formatTimeForDisplay = (time24) => {
@@ -71,13 +235,32 @@ export default function ReserveStep2Modal({
       name: form.venue,
     };
 
+    let timeDetails = {};
+    if (isMultipleDays && !sameTimeForAllDays) {
+      timeDetails = {
+        eventTimesPerDay: dailyTimes.map((dt) => ({
+          date: dt.date,
+          startTime: formatTimeForDisplay(dt.startTime),
+          endTime: formatTimeForDisplay(dt.endTime),
+        })),
+        // Explicitly nullify or omit single startTime/endTime if using daily times
+        startTime: null,
+        endTime: null,
+      };
+    } else {
+      timeDetails = {
+        startTime: formatTimeForDisplay(form.startTime),
+        endTime: formatTimeForDisplay(form.endTime),
+        eventTimesPerDay: null, // Explicitly nullify or omit if using single time
+      };
+    }
+
     return {
       ...reservationData,
       eventTitle: form.title,
       eventType: form.type,
       eventPurpose: form.purpose,
-      startTime: formatTimeForDisplay(form.startTime),
-      endTime: formatTimeForDisplay(form.endTime),
+      ...timeDetails, // Spread the determined time details
       venue: venueObj,
       participants: parseInt(form.participants),
       contactPerson: form.contactPerson || "",
@@ -223,45 +406,179 @@ export default function ReserveStep2Modal({
                 </div>
               </div>
 
-              {/* Row 4: Start Time, End Time */}
-              <div className="flex flex-col md:flex-row gap-6 w-full">
-                <div className="flex-1">
-                  <label className="font-semibold text-gray-800 mb-1 block">
-                    <span className="text-[#E53935]">*</span> Start Time
-                  </label>
-                  <select
-                    name="startTime"
-                    value={form.startTime}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                    required
-                  >
-                    {timeOptions.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
+              {/* Conditional Time Inputs based on booking type and toggle */}
+              {isMultipleDays && (
+                <div className="my-4 p-4 border border-gray-200 rounded-lg">
+                  <div className="flex items-center mb-3">
+                    <input
+                      type="checkbox"
+                      id="sameTimeToggle"
+                      checked={sameTimeForAllDays}
+                      onChange={(e) => {
+                        setSameTimeForAllDays(e.target.checked);
+                        // If unchecking, might need to re-initialize dailyTimes or form times if logic demands
+                        if (
+                          !e.target.checked &&
+                          dailyTimes.length === 0 &&
+                          reservationData.rawSelectedDays
+                        ) {
+                          // Initialize dailyTimes if it's empty and we are unchecking
+                          setDailyTimes(
+                            reservationData.rawSelectedDays.map((day) => ({
+                              date: day.formattedDate,
+                              startTime: form.startTime || "07:00", // Use current form time or default
+                              endTime: form.endTime || "08:00", // Use current form time or default
+                            }))
+                          );
+                        } else if (e.target.checked) {
+                          // When checking, ensure main form times are reasonable
+                          setForm((prev) => ({
+                            ...prev,
+                            startTime: "07:00",
+                            endTime: "08:00",
+                          }));
+                        }
+                      }}
+                      className="h-4 w-4 text-[#0458A9] border-gray-300 rounded focus:ring-[#0458A9] mr-2"
+                    />
+                    <label
+                      htmlFor="sameTimeToggle"
+                      className="font-medium text-gray-700"
+                    >
+                      Use the same start and end time for all selected days
+                    </label>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <label className="font-semibold text-gray-800 mb-1 block">
-                    <span className="text-[#E53935]">*</span> End Time
-                  </label>
-                  <select
-                    name="endTime"
-                    value={form.endTime}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                    required
-                  >
-                    {timeOptions.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
+              )}
+
+              {/* Main Start Time / End Time (conditionally shown or used for all days) */}
+              {(sameTimeForAllDays || !isMultipleDays) && (
+                <div className="flex flex-col md:flex-row gap-6 w-full">
+                  <div className="flex-1">
+                    <label className="font-semibold text-gray-800 mb-1 block">
+                      <span className="text-[#E53935]">*</span> Start Time{" "}
+                      {isMultipleDays && sameTimeForAllDays
+                        ? "(for all days)"
+                        : ""}
+                    </label>
+                    <select
+                      name="startTime"
+                      value={form.startTime}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                      required
+                    >
+                      {timeOptionsWithFormat.slice(0, -1).map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.display}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    <label className="font-semibold text-gray-800 mb-1 block">
+                      <span className="text-[#E53935]">*</span> End Time{" "}
+                      {isMultipleDays && sameTimeForAllDays
+                        ? "(for all days)"
+                        : ""}
+                    </label>
+                    <select
+                      name="endTime"
+                      value={form.endTime}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                      required
+                      disabled={!form.startTime}
+                    >
+                      {getEndTimeOptions(form.startTime).map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.display}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Individual Day Time Inputs (shown if multi-day and sameTimeForAllDays is false) */}
+              {isMultipleDays &&
+                !sameTimeForAllDays &&
+                reservationData.rawSelectedDays && (
+                  <div className="space-y-6 my-4 p-4 border border-gray-200 rounded-lg">
+                    <h3 class="text-lg font-semibold text-[#0458A9] mb-2">
+                      Set Time for Each Day:
+                    </h3>
+                    {dailyTimes.map((dayTime, index) => (
+                      <div
+                        key={dayTime.date}
+                        className="p-3 bg-gray-50 rounded-md"
+                      >
+                        <label className="font-semibold text-gray-700 mb-2 block">
+                          Date:{" "}
+                          {new Date(
+                            dayTime.date + "T00:00:00"
+                          ).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </label>
+                        <div className="flex flex-col md:flex-row gap-4">
+                          <div className="flex-1">
+                            <label className="text-sm text-gray-600 mb-1 block">
+                              Start Time
+                            </label>
+                            <select
+                              name={`dailyStartTime-${index}`}
+                              value={dayTime.startTime}
+                              onChange={(e) =>
+                                handleDailyTimeChange(
+                                  index,
+                                  "startTime",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                            >
+                              {timeOptionsWithFormat.slice(0, -1).map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.display}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="flex-1">
+                            <label className="text-sm text-gray-600 mb-1 block">
+                              End Time
+                            </label>
+                            <select
+                              name={`dailyEndTime-${index}`}
+                              value={dayTime.endTime}
+                              onChange={(e) =>
+                                handleDailyTimeChange(
+                                  index,
+                                  "endTime",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                              disabled={!dayTime.startTime}
+                            >
+                              {getEndTimeOptions(dayTime.startTime).map(
+                                (opt) => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.display}
+                                  </option>
+                                )
+                              )}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
               {/* Row 4: Venue, Participants */}
               <div className="flex flex-col md:flex-row gap-6 w-full">
                 <div className="flex-1 relative">
@@ -327,8 +644,11 @@ export default function ReserveStep2Modal({
                   !form.title ||
                   !form.type ||
                   !form.purpose ||
-                  !form.startTime ||
-                  !form.endTime ||
+                  ((sameTimeForAllDays || !isMultipleDays) &&
+                    (!form.startTime || !form.endTime)) ||
+                  (isMultipleDays &&
+                    !sameTimeForAllDays &&
+                    dailyTimes.some((dt) => !dt.startTime || !dt.endTime)) ||
                   !form.venue ||
                   !form.participants
                 }
