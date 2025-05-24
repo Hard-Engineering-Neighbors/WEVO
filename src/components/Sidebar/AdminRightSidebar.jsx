@@ -97,7 +97,7 @@ export default function AdminRightSidebar() {
             <span className="w-8 h-8 rounded-full bg-[#56708A] flex items-center justify-center">
               <User size={18} className="text-white" />
             </span>
-            <Menu size={20} className="text-gray-600 cursor-pointer" />
+            {/* <Menu size={20} className="text-gray-600 cursor-pointer" /> */}
             <button
               onClick={() => setShowLogoutConfirm(true)}
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-100 group"
