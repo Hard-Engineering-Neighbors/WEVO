@@ -185,7 +185,7 @@ export default function RightSidebar() {
           <div className="flex justify-center mt-auto pt-2 lg:mt-4 mb-1">
             {" "}
             {/* Adjusted margin for mobile */}
-            <button className="w-full py-2.5 bg-white rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+            <button className="border rounded-full py-2 px-4 text-xs md:text-base text-gray-700 hover:bg-gray-100 w-full">
               Show All Notifications
             </button>
           </div>
