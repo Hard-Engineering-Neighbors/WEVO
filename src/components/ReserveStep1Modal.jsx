@@ -159,183 +159,187 @@ export default function ReserveStep1Modal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-        <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]">
-          {/* Close Button */}
-          <button
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
-            onClick={onClose}
-          >
-            <X size={28} />
-          </button>
-          {/* Step 1 label */}
-          <div className="flex justify-end w-full">
-            <span className="text-[#0458A9] font-semibold text-lg md:text-xl">
-              Step 1
-            </span>
-          </div>
-          {/* Title and subtitle */}
-          <div className="mb-2">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9]">
-              Preferred Date
-            </h2>
-            <div className="text-gray-600 text-sm md:text-base">
-              indicate whether your booking is for a single day or multiple
-              days, then select your preferred date(s).
-            </div>
-          </div>
-          {/* Main content */}
-          <div className="flex flex-col md:flex-row gap-8 w-full">
-            {/* Left: Venue Info */}
-            <div className="flex flex-col items-center md:w-1/2 w-full justify-start">
-              <div className="w-full aspect-video rounded-2xl overflow-hidden mb-4">
-                <img
-                  src={venue.images ? venue.images[0] : venue.image}
-                  alt={venue.name}
-                  className="object-cover w-full h-full"
-                />
-              </div>
-              <div className="w-full text-left">
-                <h3 className="text-2xl font-bold text-[#0458A9] leading-tight mb-1">
-                  {venue.name}
-                </h3>
-                <div className="text-gray-400 text-base mb-4">
-                  Managed by (Insert Department Name)
-                </div>
-                <button
-                  className="bg-[#0458A9] text-white rounded-full px-6 py-2 font-semibold text-base w-full md:w-auto hover:bg-[#03407a] transition"
-                  onClick={() => {
-                    setShowVenueSelector(true);
-                  }}
-                >
-                  Change Venue
-                </button>
-              </div>
-            </div>
-            {/* Right: Booking Type and Calendar */}
-            <div className="flex flex-col gap-4 md:w-1/2 w-full">
-              <div>
-                <h4 className="text-xl md:text-2xl font-bold text-[#0458A9] mb-2">
-                  Type of Booking
-                </h4>
-                <div className="flex gap-2 mb-2">
-                  <button
-                    className={`rounded-full px-6 py-2 font-semibold border transition text-base w-1/2 md:w-auto ${
-                      bookingType === "one"
-                        ? "bg-[#0458A9] text-white border-[#0458A9]"
-                        : "bg-white text-gray-400 border-gray-300"
-                    }`}
-                    onClick={() => {
-                      setBookingType("one");
-                      setSelectedDays([]);
-                    }}
-                  >
-                    One Day
-                  </button>
-                  <button
-                    className={`rounded-full px-6 py-2 font-semibold border transition text-base w-1/2 md:w-auto ${
-                      bookingType === "multiple"
-                        ? "bg-[#0458A9] text-white border-[#0458A9]"
-                        : "bg-white text-gray-400 border-gray-300"
-                    }`}
-                    onClick={() => {
-                      setBookingType("multiple");
-                      setSelectedDays([]);
-                    }}
-                  >
-                    Multiple Days
-                  </button>
-                </div>
-              </div>
-              <div>
-                <h4 className="text-xl md:text-2xl font-bold text-[#0458A9] mb-2">
-                  Preferred Day(s)
-                </h4>
-                <div className="rounded-2xl border border-gray-400 p-4 bg-white">
-                  <div className="flex justify-between items-center mb-4">
-                    <button
-                      onClick={() => handleMonthChange(-1)}
-                      className="text-gray-600 hover:text-[#0458A9]"
-                    >
-                      ←
-                    </button>
-                    <div className="font-bold text-[#0458A9] text-lg">
-                      {currentDate.toLocaleString("default", {
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </div>
-                    <button
-                      onClick={() => handleMonthChange(1)}
-                      className="text-gray-600 hover:text-[#0458A9]"
-                    >
-                      →
-                    </button>
-                  </div>
-                  <div className="text-sm text-gray-600 mb-2 text-center">
-                    Bookings available from{" "}
-                    {new Date(
-                      new Date().setDate(new Date().getDate() + 14)
-                    ).toLocaleDateString()}
-                  </div>
-                  <div className="grid grid-cols-7 gap-1 text-center text-gray-700 text-base mb-1">
-                    {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-                      (d) => (
-                        <div key={d} className="font-semibold">
-                          {d}
-                        </div>
-                      )
-                    )}
-                  </div>
-                  <div className="grid grid-cols-7 gap-1 text-center">
-                    {calendarDays.map((dayData, i) => (
-                      <button
-                        key={i}
-                        className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center text-base transition border-2 ${
-                          !dayData
-                            ? "bg-transparent border-transparent cursor-default"
-                            : dayData.disabled
-                            ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                            : selectedDays.some(
-                                (d) => d.formattedDate === dayData.formattedDate
-                              )
-                            ? "bg-[#0458A9] text-white border-[#0458A9]"
-                            : "bg-white text-gray-700 border-transparent hover:bg-blue-50"
-                        }`}
-                        disabled={!dayData || dayData.disabled}
-                        onClick={() => handleDayClick(dayData)}
-                        title={
-                          dayData?.disabled
-                            ? "Bookings available from 2 weeks ahead"
-                            : ""
-                        }
-                      >
-                        {dayData?.day || ""}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          {/* Footer: Back/Next */}
-          <div className="flex justify-between items-center mt-6 w-full">
+      {open && !step2Open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]">
+            {/* Close Button */}
             <button
-              className="text-gray-400 font-semibold text-base px-6 py-2 rounded-full cursor-pointer hover:text-[#0458A9] hover:bg-gray-100 transition"
+              className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
               onClick={onClose}
+              aria-label="Close modal"
             >
-              Back
+              <X size={20} />
             </button>
-            <button
-              className="bg-[#0458A9] text-white rounded-full px-10 py-2 font-semibold text-base hover:bg-[#03407a] transition"
-              onClick={handleNext}
-              disabled={selectedDays.length === 0}
-            >
-              Next
-            </button>
+            {/* Step 1 label */}
+            <div className="flex justify-end w-full">
+              <span className="text-[#0458A9] font-semibold text-lg md:text-xl">
+                Step 1
+              </span>
+            </div>
+            {/* Title and subtitle */}
+            <div className="mb-2">
+              <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9]">
+                Preferred Date
+              </h2>
+              <div className="text-gray-600 text-sm md:text-base">
+                indicate whether your booking is for a single day or multiple
+                days, then select your preferred date(s).
+              </div>
+            </div>
+            {/* Main content */}
+            <div className="flex flex-col md:flex-row gap-8 w-full">
+              {/* Left: Venue Info */}
+              <div className="flex flex-col items-center md:w-1/2 w-full justify-start">
+                <div className="w-full aspect-video rounded-2xl overflow-hidden mb-4">
+                  <img
+                    src={venue.images ? venue.images[0] : venue.image}
+                    alt={venue.name}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+                <div className="w-full text-left">
+                  <h3 className="text-2xl font-bold text-[#0458A9] leading-tight mb-1">
+                    {venue.name}
+                  </h3>
+                  <div className="text-gray-400 text-base mb-4">
+                    Managed by (Insert Department Name)
+                  </div>
+                  <button
+                    className="bg-[#0458A9] text-white rounded-full px-6 py-2 font-semibold text-base w-full md:w-auto hover:bg-[#03407a] transition"
+                    onClick={() => {
+                      setShowVenueSelector(true);
+                    }}
+                  >
+                    Change Venue
+                  </button>
+                </div>
+              </div>
+              {/* Right: Booking Type and Calendar */}
+              <div className="flex flex-col gap-4 md:w-1/2 w-full">
+                <div>
+                  <h4 className="text-xl md:text-2xl font-bold text-[#0458A9] mb-2">
+                    Type of Booking
+                  </h4>
+                  <div className="flex gap-2 mb-2">
+                    <button
+                      className={`rounded-full px-6 py-2 font-semibold border transition text-base w-1/2 md:w-auto ${
+                        bookingType === "one"
+                          ? "bg-[#0458A9] text-white border-[#0458A9]"
+                          : "bg-white text-gray-400 border-gray-300"
+                      }`}
+                      onClick={() => {
+                        setBookingType("one");
+                        setSelectedDays([]);
+                      }}
+                    >
+                      One Day
+                    </button>
+                    <button
+                      className={`rounded-full px-6 py-2 font-semibold border transition text-base w-1/2 md:w-auto ${
+                        bookingType === "multiple"
+                          ? "bg-[#0458A9] text-white border-[#0458A9]"
+                          : "bg-white text-gray-400 border-gray-300"
+                      }`}
+                      onClick={() => {
+                        setBookingType("multiple");
+                        setSelectedDays([]);
+                      }}
+                    >
+                      Multiple Days
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-xl md:text-2xl font-bold text-[#0458A9] mb-2">
+                    Preferred Day(s)
+                  </h4>
+                  <div className="rounded-2xl border border-gray-400 p-4 bg-white">
+                    <div className="flex justify-between items-center mb-4">
+                      <button
+                        onClick={() => handleMonthChange(-1)}
+                        className="text-gray-600 hover:text-[#0458A9]"
+                      >
+                        ←
+                      </button>
+                      <div className="font-bold text-[#0458A9] text-lg">
+                        {currentDate.toLocaleString("default", {
+                          month: "long",
+                          year: "numeric",
+                        })}
+                      </div>
+                      <button
+                        onClick={() => handleMonthChange(1)}
+                        className="text-gray-600 hover:text-[#0458A9]"
+                      >
+                        →
+                      </button>
+                    </div>
+                    <div className="text-sm text-gray-600 mb-2 text-center">
+                      Bookings available from{" "}
+                      {new Date(
+                        new Date().setDate(new Date().getDate() + 14)
+                      ).toLocaleDateString()}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 text-center text-gray-700 text-base mb-1">
+                      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                        (d) => (
+                          <div key={d} className="font-semibold">
+                            {d}
+                          </div>
+                        )
+                      )}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 text-center">
+                      {calendarDays.map((dayData, i) => (
+                        <button
+                          key={i}
+                          className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center text-base transition border-2 ${
+                            !dayData
+                              ? "bg-transparent border-transparent cursor-default"
+                              : dayData.disabled
+                              ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                              : selectedDays.some(
+                                  (d) =>
+                                    d.formattedDate === dayData.formattedDate
+                                )
+                              ? "bg-[#0458A9] text-white border-[#0458A9]"
+                              : "bg-white text-gray-700 border-transparent hover:bg-blue-50"
+                          }`}
+                          disabled={!dayData || dayData.disabled}
+                          onClick={() => handleDayClick(dayData)}
+                          title={
+                            dayData?.disabled
+                              ? "Bookings available from 2 weeks ahead"
+                              : ""
+                          }
+                        >
+                          {dayData?.day || ""}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Footer: Back/Next */}
+            <div className="flex justify-between items-center mt-6 w-full">
+              <button
+                className="text-gray-400 font-semibold text-base px-6 py-2 rounded-full cursor-pointer hover:text-[#0458A9] hover:bg-gray-100 transition"
+                onClick={onClose}
+              >
+                Back
+              </button>
+              <button
+                className="bg-[#0458A9] text-white rounded-full px-10 py-2 font-semibold text-base hover:bg-[#03407a] transition"
+                onClick={handleNext}
+                disabled={selectedDays.length === 0}
+              >
+                Next
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
       {/* Step 2 Modal */}
       <ReserveStep2Modal
         open={step2Open}

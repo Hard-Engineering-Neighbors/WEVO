@@ -5,6 +5,9 @@ import ReserveStep1Modal from "./ReserveStep1Modal";
 export default function VenueDetailsModal({ open, onClose, venue }) {
   const [reserveOpen, setReserveOpen] = useState(false);
   const [current, setCurrent] = useState(0);
+  const [step1Open, setStep1Open] = useState(false);
+  const [reservationData, setReservationData] = useState({});
+
   if (!open || !venue) return null;
 
   // Carousel state
@@ -19,10 +22,11 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
         <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col md:flex-row p-4 md:p-8 gap-6 overflow-y-auto max-h-[95vh]">
           {/* Close Button */}
           <button
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
+            className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
             onClick={onClose}
+            aria-label="Close modal"
           >
-            <X size={28} />
+            <X size={20} />
           </button>
           {/* Left: Carousel & Reserve */}
           <div className="flex flex-col items-end md:w-1/2 w-full">

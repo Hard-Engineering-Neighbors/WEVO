@@ -95,10 +95,11 @@ export default function ReserveStep2Modal({
           <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]">
             {/* Close Button */}
             <button
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
+              className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
               onClick={onClose}
+              aria-label="Close modal"
             >
-              <X size={28} />
+              <X size={20} />
             </button>
             {/* Step 2 label */}
             <div className="flex justify-end w-full">
@@ -143,7 +144,7 @@ export default function ReserveStep2Modal({
                   />
                 </div>
               </div>
-              
+
               {/* Row 1.5: Organization Name */}
               <div className="w-full">
                 <label className="font-semibold text-gray-800 mb-1 block">
@@ -175,7 +176,7 @@ export default function ReserveStep2Modal({
                   required
                 />
               </div>
-              
+
               {/* Row 3: Contact Information */}
               <div className="flex flex-col md:flex-row gap-6 w-full">
                 <div className="flex-1">
@@ -288,7 +289,8 @@ export default function ReserveStep2Modal({
                       ))}
                     </div>
                   )}
-                </div>                <div className="flex-1">
+                </div>{" "}
+                <div className="flex-1">
                   <label className="font-semibold text-gray-800 mb-1 block">
                     <span className="text-[#E53935]">*</span> No. of
                     Participants

@@ -51,13 +51,14 @@ export default function ReserveStep3Modal({
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-        <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]">
+        <div className="relative bg-white rounded-2xl shadow-xl max-w-4xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]">
           {/* Close Button */}
           <button
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
+            className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
             onClick={onClose}
+            aria-label="Close modal"
           >
-            <X size={28} />
+            <X size={20} />
           </button>
           {/* Step 3 label */}
           <div className="flex justify-end w-full">
