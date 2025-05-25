@@ -40,9 +40,7 @@ export async function fetchRequests(userId) {
     if (req.per_day_times) {
       try {
         perDayTimes = typeof req.per_day_times === 'string' ? JSON.parse(req.per_day_times) : req.per_day_times;
-      } catch (_) { 
-        perDayTimes = []; 
-      }
+      } catch (e) { perDayTimes = []; }
     }
     return {
       id: req.id,
@@ -235,6 +233,7 @@ export async function cancelReservation(bookingRequestId) {
   if (fetchError) throw fetchError;
 
   // 2. Get the event to find the user and event creation time
+  let event = null;
   let eventId = null;
   if (booking && booking.event_id) {
     eventId = booking.event_id;
@@ -243,7 +242,7 @@ export async function cancelReservation(bookingRequestId) {
       .select("id, created_by, created_at")
       .eq("id", booking.event_id)
       .single();
-    // eventData is fetched but not used - could be used for logging if needed
+    event = eventData;
   }
 
   // 3. Always delete all pdf_files with event_id first, even if event is missing
@@ -403,9 +402,7 @@ export async function fetchAdminRequests() {
       if (req.per_day_times) {
         try {
           perDayTimes = typeof req.per_day_times === 'string' ? JSON.parse(req.per_day_times) : req.per_day_times;
-        } catch (_) { 
-          perDayTimes = []; 
-        }
+        } catch (e) { perDayTimes = []; }
       }
       return {
         id: req.id,
@@ -465,9 +462,7 @@ export async function updateBookingRequestStatus(requestId, status, reason) {
     if (booking.per_day_times) {
       try {
         approvedPerDay = typeof booking.per_day_times === 'string' ? JSON.parse(booking.per_day_times) : booking.per_day_times;
-      } catch (_) { 
-        approvedPerDay = []; 
-      }
+      } catch (e) { approvedPerDay = []; }
     }
     // Fallback to single date/time if per_day_times is empty
     if (!approvedPerDay.length && booking.events.start_time && booking.events.end_time) {
@@ -489,9 +484,7 @@ export async function updateBookingRequestStatus(requestId, status, reason) {
       if (req.per_day_times) {
         try {
           reqPerDay = typeof req.per_day_times === 'string' ? JSON.parse(req.per_day_times) : req.per_day_times;
-        } catch (_) { 
-          reqPerDay = []; 
-        }
+        } catch (e) { reqPerDay = []; }
       }
       if (!reqPerDay.length && req.events.start_time && req.events.end_time) {
         reqPerDay = [{
@@ -502,7 +495,6 @@ export async function updateBookingRequestStatus(requestId, status, reason) {
       }
       // 3. Check for overlap on any day
       let conflict = false;
-      let conflictingDate = "";
       for (const aDay of approvedPerDay) {
         for (const rDay of reqPerDay) {
           if (aDay.date === rDay.date) {
@@ -525,7 +517,6 @@ export async function updateBookingRequestStatus(requestId, status, reason) {
             // If times overlap, mark as conflict
             if (aStart < rEnd && rStart < aEnd) {
               conflict = true;
-              conflictingDate = rDay.date;
               break;
             }
           }
@@ -548,7 +539,7 @@ export async function updateBookingRequestStatus(requestId, status, reason) {
           data: {
             status: "rejected",
             venue: booking.events.venue,
-            date: conflictingDate,
+            date: aDay.date,
             orgName: booking.organization_name,
             rejectionReason,
           },
@@ -572,9 +563,7 @@ export async function updateBookingRequestStatus(requestId, status, reason) {
             dateStr = perDay.map(d => new Date(d.date).toLocaleDateString()).join(', ');
           }
         }
-      } catch (_) {
-        // Ignore parsing errors
-      }
+      } catch (e) {}
     }
     if (!dateStr && booking.events?.start_time && booking.events?.end_time) {
       dateStr = new Date(booking.events.start_time).toLocaleString() + ' - ' + new Date(booking.events.end_time).toLocaleString();
@@ -612,8 +601,7 @@ export async function fetchStatistics() {
     totalRequests: 0,
     pending: 0,
     approved: 0,
-    rejected: 0,
-    cancelled: 0
+    rejected: 0
   };
   
   // If there are no requests, return default stats
@@ -627,7 +615,6 @@ export async function fetchStatistics() {
     if (status === "pending") stats.pending++;
     else if (status === "approved") stats.approved++;
     else if (status === "rejected") stats.rejected++;
-    else if (status === "cancelled") stats.cancelled++;
   });
   
   return stats;
@@ -684,9 +671,7 @@ export async function getVenueBookings(venueName) {
     if (req.per_day_times) {
       try {
         perDayTimes = typeof req.per_day_times === 'string' ? JSON.parse(req.per_day_times) : req.per_day_times;
-      } catch (_) { 
-        perDayTimes = []; 
-      }
+      } catch (e) { perDayTimes = []; }
     }
     // Fallback to single date/time if perDayTimes is empty
     if (!perDayTimes.length && req.events.start_time && req.events.end_time) {
