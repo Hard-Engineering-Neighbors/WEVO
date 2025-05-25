@@ -56,30 +56,34 @@ function useRealtimeNotifications(userId, setNotifications, setHighlightedId) {
   React.useEffect(() => {
     if (!userId) return;
     const channel = supabase
-      .channel('user_notifications')
+      .channel("user_notifications")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
+          event: "*",
+          schema: "public",
+          table: "notifications",
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          if (payload.eventType === 'INSERT') {
+          if (payload.eventType === "INSERT") {
             setNotifications((prev) => {
               // Prevent duplicates
-              if (prev.some(n => n.id === payload.new.id)) return prev;
+              if (prev.some((n) => n.id === payload.new.id)) return prev;
               return [payload.new, ...prev];
             });
             setHighlightedId(payload.new.id);
             setTimeout(() => setHighlightedId(null), 2000);
           }
-          if (payload.eventType === 'DELETE') {
-            setNotifications((prev) => prev.filter(n => n.id !== payload.old.id));
+          if (payload.eventType === "DELETE") {
+            setNotifications((prev) =>
+              prev.filter((n) => n.id !== payload.old.id)
+            );
           }
-          if (payload.eventType === 'UPDATE') {
-            setNotifications((prev) => prev.map(n => n.id === payload.new.id ? payload.new : n));
+          if (payload.eventType === "UPDATE") {
+            setNotifications((prev) =>
+              prev.map((n) => (n.id === payload.new.id ? payload.new : n))
+            );
           }
         }
       )
@@ -110,9 +114,7 @@ export default function RightSidebar({ onNotificationClick }) {
     if (notif.status === "unread") {
       await markNotificationAsRead(notif.id);
       setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notif.id ? { ...n, status: "read" } : n
-        )
+        prev.map((n) => (n.id === notif.id ? { ...n, status: "read" } : n))
       );
     }
     if (onNotificationClick) onNotificationClick(notif);
@@ -138,7 +140,9 @@ export default function RightSidebar({ onNotificationClick }) {
   const userNotifications = notifications.filter(
     (notif) => notif.role === "user"
   );
-  const visibleNotifications = showAll ? userNotifications : userNotifications.slice(0, 5);
+  const visibleNotifications = showAll
+    ? userNotifications
+    : userNotifications.slice(0, 5);
 
   return (
     <>
@@ -187,17 +191,28 @@ export default function RightSidebar({ onNotificationClick }) {
             {visibleNotifications.map((notif) => (
               <li
                 key={notif.id}
-                className={`flex items-center py-2 cursor-pointer hover:bg-gray-50 transition-all duration-500 ${highlightedId === notif.id ? "bg-yellow-50" : ""}`}
-                onClick={() => { handleNotificationClick(notif); setSelectedNotif(notif); }}
+                className={`flex items-center py-2 cursor-pointer hover:bg-gray-50 transition-all duration-500 ${
+                  highlightedId === notif.id ? "bg-yellow-50" : ""
+                }`}
+                onClick={() => {
+                  handleNotificationClick(notif);
+                  setSelectedNotif(notif);
+                }}
               >
                 <div className="flex-1">
                   <span className="font-bold text-[#0458A9]">
-                    {notif.type === "System" || notif.type === "WEVO" ? "WEVO" : notif.type === "Admin" ? "Admin" : ""}
+                    {notif.type === "System" || notif.type === "WEVO"
+                      ? "WEVO"
+                      : notif.type === "Admin"
+                      ? "Admin"
+                      : ""}
                   </span>
                   <span className="text-gray-400 text-sm ml-1">
                     {new Date(notif.created_at).toLocaleString()}
                   </span>
-                  <div className="text-gray-700 text-sm">{truncateText(notif.message, 60)}</div>
+                  <div className="text-gray-700 text-sm">
+                    {truncateText(notif.message, 60)}
+                  </div>
                 </div>
                 {notif.status === "unread" && (
                   <span className="w-3 h-3 bg-yellow-400 rounded-full ml-2 flex-shrink-0"></span>
@@ -208,7 +223,10 @@ export default function RightSidebar({ onNotificationClick }) {
           {/* Show All/Show Less button for both desktop and mobile */}
           {userNotifications.length > 5 && (
             <div className="flex justify-center mt-auto pt-2 lg:mt-4 mb-1">
-              <button className="w-full py-2.5 bg-white rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-50 transition-colors" onClick={() => setShowAll((v) => !v)}>
+              <button
+                className="border rounded-full py-2 px-4 text-xs md:text-base text-gray-700 hover:bg-gray-100 w-full"
+                onClick={() => setShowAll((v) => !v)}
+              >
                 {showAll ? "Show Less" : "Show All Notifications"}
               </button>
             </div>
@@ -217,7 +235,10 @@ export default function RightSidebar({ onNotificationClick }) {
       </aside>
 
       {selectedNotif && (
-        <NotificationDetailsModal notif={selectedNotif} onClose={() => setSelectedNotif(null)} />
+        <NotificationDetailsModal
+          notif={selectedNotif}
+          onClose={() => setSelectedNotif(null)}
+        />
       )}
 
       <LogoutConfirmModal
