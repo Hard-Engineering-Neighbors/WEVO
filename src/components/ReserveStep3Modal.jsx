@@ -1,6 +1,5 @@
 import React, { useRef, useState } from "react";
 import { X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import ReservationReviewModal from "./ReservationReviewModal";
 
 const requirements = [
@@ -51,181 +50,114 @@ export default function ReserveStep3Modal({
 
   return (
     <>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+        <div className="relative bg-white rounded-2xl shadow-xl max-w-4xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]">
+          {/* Close Button */}
+          <button
+            className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
             onClick={onClose}
+            aria-label="Close modal"
           >
-            <motion.div
-              className="relative bg-white rounded-2xl shadow-xl max-w-4xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]"
-              initial={{ scale: 0.95, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close Button */}
-              <motion.button
-                className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
-                onClick={onClose}
-                aria-label="Close modal"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <X size={20} />
-              </motion.button>
-              {/* Step 3 label */}
-              <motion.div
-                className="flex justify-end w-full"
-                initial={{ x: 10, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.15, delay: 0.05 }}
-              >
-                <span className="text-[#0458A9] font-semibold text-lg md:text-xl">
-                  Step 3
-                </span>
-              </motion.div>
-              {/* Title */}
-              <motion.h2
-                className="text-2xl md:text-3xl font-bold text-[#0458A9] mb-2"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.15, delay: 0.1 }}
-              >
-                Upload Documents
-              </motion.h2>
-              <motion.div
-                className="text-gray-700 text-sm md:text-base mb-2"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.15, delay: 0.15 }}
-              >
-                Upload all required documents to support your event application.
-                Make sure each file is{" "}
-                <span className="italic text-[#0458A9]">
-                  complete and clearly labeled
-                </span>
-                .
-              </motion.div>
-              {/* Upload Form */}
-              <motion.form
-                className="flex flex-col gap-8 w-full"
-                onSubmit={handleSubmit}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.15, delay: 0.2 }}
-              >
-                <motion.div
-                  className="flex flex-col gap-4"
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.15, delay: 0.25 }}
+            <X size={20} />
+          </button>
+          {/* Step 3 label */}
+          <div className="flex justify-end w-full">
+            <span className="text-[#0458A9] font-semibold text-lg md:text-xl">
+              Step 3
+            </span>
+          </div>
+          {/* Title */}
+          <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9] mb-2">
+            Upload Documents
+          </h2>
+          <div className="text-gray-700 text-sm md:text-base mb-2">
+            Upload all required documents to support your event application.
+            Make sure each file is{" "}
+            <span className="italic text-[#0458A9]">
+              complete and clearly labeled
+            </span>
+            .
+          </div>
+          {/* Upload Form */}
+          <form className="flex flex-col gap-8 w-full" onSubmit={handleSubmit}>
+            <div className="flex flex-col gap-4">
+              {requirements.map((req, idx) => (
+                <div
+                  key={idx}
+                  className="flex flex-col md:flex-row items-center gap-4 w-full"
                 >
-                  {requirements.map((req, idx) => (
-                    <motion.div
-                      key={idx}
-                      className="flex flex-col md:flex-row items-center gap-4 w-full"
-                      initial={{ x: -10, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ duration: 0.15, delay: 0.3 + idx * 0.05 }}
+                  <div className="flex-1 flex items-center gap-2 min-w-0">
+                    <span className="text-[#E53935] text-lg">*</span>
+                    <span className="truncate font-medium text-gray-800">
+                      {req}
+                    </span>
+                  </div>
+                  <div className="flex-1 flex justify-center">
+                    <button
+                      type="button"
+                      className="bg-[#0458A9] text-white rounded-full px-8 py-2 font-semibold text-base hover:bg-[#03407a] transition w-full md:w-auto"
+                      onClick={() => handleUploadClick(idx)}
                     >
-                      <div className="flex-1 flex items-center gap-2 min-w-0">
-                        <span className="text-[#E53935] text-lg">*</span>
-                        <span className="truncate font-medium text-gray-800">
-                          {req}
-                        </span>
-                      </div>
-                      <div className="flex-1 flex justify-center">
-                        <motion.button
-                          type="button"
-                          className="bg-[#0458A9] text-white rounded-full px-8 py-2 font-semibold text-base hover:bg-[#03407a] transition w-full md:w-auto"
-                          onClick={() => handleUploadClick(idx)}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
+                      Upload
+                    </button>
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      className="hidden"
+                      ref={(el) => (fileInputs.current[idx] = el)}
+                      onChange={(e) => handleFileChange(idx, e.target.files[0])}
+                    />
+                  </div>
+                  <div className="flex-1 flex items-center gap-2 min-w-0 justify-center md:justify-start">
+                    <span className="flex items-center gap-1">
+                      <svg
+                        width="32"
+                        height="32"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <rect width="24" height="24" rx="4" fill="#0458A9" />
+                        <path d="M7 7H17V17H7V7Z" fill="white" />
+                        <text
+                          x="12"
+                          y="16"
+                          textAnchor="middle"
+                          fontSize="8"
+                          fill="#0458A9"
+                          fontWeight="bold"
                         >
-                          Upload
-                        </motion.button>
-                        <input
-                          type="file"
-                          accept="application/pdf"
-                          className="hidden"
-                          ref={(el) => (fileInputs.current[idx] = el)}
-                          onChange={(e) =>
-                            handleFileChange(idx, e.target.files[0])
-                          }
-                        />
-                      </div>
-                      <div className="flex-1 flex items-center gap-2 min-w-0 justify-center md:justify-start">
-                        <span className="flex items-center gap-1">
-                          <svg
-                            width="32"
-                            height="32"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <rect
-                              width="24"
-                              height="24"
-                              rx="4"
-                              fill="#0458A9"
-                            />
-                            <path d="M7 7H17V17H7V7Z" fill="white" />
-                            <text
-                              x="12"
-                              y="16"
-                              textAnchor="middle"
-                              fontSize="8"
-                              fill="#0458A9"
-                              fontWeight="bold"
-                            >
-                              PDF
-                            </text>
-                          </svg>
-                          <span className="text-gray-700 text-xs md:text-sm truncate max-w-[100px]">
-                            {files[idx]?.name || "Filename.pdf"}
-                          </span>
-                        </span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </motion.div>
-                {/* Footer: Previous/Submit */}
-                <motion.div
-                  className="flex justify-between items-center mt-6 w-full"
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.15, delay: 0.4 }}
-                >
-                  <motion.button
-                    type="button"
-                    className="text-gray-400 font-semibold text-base px-6 py-2 rounded-full cursor-pointer hover:text-[#0458A9] hover:bg-gray-100 transition"
-                    onClick={onPrevious}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Previous
-                  </motion.button>
-                  <motion.button
-                    type="submit"
-                    className="bg-[#0458A9] text-white rounded-full px-10 py-2 font-semibold text-base hover:bg-[#03407a] transition"
-                    disabled={requirements.some((_, idx) => !files[idx])}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    Continue
-                  </motion.button>
-                </motion.div>
-              </motion.form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                          PDF
+                        </text>
+                      </svg>
+                      <span className="text-gray-700 text-xs md:text-sm truncate max-w-[100px]">
+                        {files[idx]?.name || "Filename.pdf"}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Footer: Previous/Submit */}
+            <div className="flex justify-between items-center mt-6 w-full">
+              <button
+                type="button"
+                className="text-gray-400 font-semibold text-base px-6 py-2 rounded-full cursor-pointer hover:text-[#0458A9] hover:bg-gray-100 transition"
+                onClick={onPrevious}
+              >
+                Previous
+              </button>
+              <button
+                type="submit"
+                className="bg-[#0458A9] text-white rounded-full px-10 py-2 font-semibold text-base hover:bg-[#03407a] transition"
+                disabled={requirements.some((_, idx) => !files[idx])}
+              >
+                Continue
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
 
       {/* Review Modal */}
       <ReservationReviewModal

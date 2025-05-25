@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { X, ChevronDown } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import ReserveStep3Modal from "./ReserveStep3Modal";
 
 export default function ReserveStep2Modal({
@@ -243,13 +242,9 @@ export default function ReserveStep2Modal({
           date: (() => {
             // Always store as local YYYY-MM-DD
             const local = new Date(dt.date);
-            return (
-              local.getFullYear() +
-              "-" +
-              String(local.getMonth() + 1).padStart(2, "0") +
-              "-" +
-              String(local.getDate()).padStart(2, "0")
-            );
+            return local.getFullYear() + '-' +
+              String(local.getMonth() + 1).padStart(2, '0') + '-' +
+              String(local.getDate()).padStart(2, '0');
           })(),
           startTime: formatTimeForDisplay(dt.startTime),
           endTime: formatTimeForDisplay(dt.endTime),
@@ -284,500 +279,392 @@ export default function ReserveStep2Modal({
   return (
     <>
       {/* Step 2 Modal */}
-      <AnimatePresence>
-        {open && !step3Open && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
-            onClick={onClose}
-          >
-            <motion.div
-              className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]"
-              initial={{ scale: 0.95, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
-              onClick={(e) => e.stopPropagation()}
+      {open && !step3Open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]">
+            {/* Close Button */}
+            <button
+              className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
+              onClick={onClose}
+              aria-label="Close modal"
             >
-              {/* Close Button */}
-              <motion.button
-                className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
-                onClick={onClose}
-                aria-label="Close modal"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-              >
-                <X size={20} />
-              </motion.button>
-              {/* Step 2 label */}
-              <motion.div
-                className="flex justify-end w-full"
-                initial={{ x: 10, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.15, delay: 0.05 }}
-              >
-                <span className="text-[#0458A9] font-semibold text-lg md:text-xl">
-                  Step 2
-                </span>
-              </motion.div>
-              {/* Title */}
-              <motion.h2
-                className="text-2xl md:text-3xl font-bold text-[#0458A9] mb-2"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.15, delay: 0.1 }}
-              >
-                Event Details
-              </motion.h2>
-              {/* Form */}
-              <motion.form
-                className="flex flex-col gap-8 w-full"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.15, delay: 0.15 }}
-              >
-                {/* Row 1: Title & Type */}
-                <motion.div
-                  className="flex flex-col md:flex-row gap-6 w-full"
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.15, delay: 0.2 }}
-                >
-                  <div className="flex-1">
-                    <label className="font-semibold text-gray-800 mb-1 block">
-                      <span className="text-[#E53935]">*</span> Title of the
-                      Event
-                    </label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={form.title}
-                      onChange={handleChange}
-                      placeholder="e.g., Artikulo: Voices in Motion"
-                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                      required
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="font-semibold text-gray-800 mb-1 block">
-                      <span className="text-[#E53935]">*</span> Type of Activity
-                    </label>
-                    <input
-                      type="text"
-                      name="type"
-                      value={form.type}
-                      onChange={handleChange}
-                      placeholder="e.g., Workshop"
-                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                      required
-                    />
-                  </div>
-                </motion.div>
-
-                {/* Row 1.5: Organization Name */}
-                <motion.div
-                  className="w-full"
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.15, delay: 0.25 }}
-                >
+              <X size={20} />
+            </button>
+            {/* Step 2 label */}
+            <div className="flex justify-end w-full">
+              <span className="text-[#0458A9] font-semibold text-lg md:text-xl">
+                Step 2
+              </span>
+            </div>
+            {/* Title */}
+            <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9] mb-2">
+              Event Details
+            </h2>
+            {/* Form */}
+            <form className="flex flex-col gap-8 w-full">
+              {/* Row 1: Title & Type */}
+              <div className="flex flex-col md:flex-row gap-6 w-full">
+                <div className="flex-1">
                   <label className="font-semibold text-gray-800 mb-1 block">
-                    <span className="text-[#E53935]">*</span> Organization Name
+                    <span className="text-[#E53935]">*</span> Title of the Event
                   </label>
                   <input
                     type="text"
-                    name="orgName"
-                    value={form.orgName}
+                    name="title"
+                    value={form.title}
                     onChange={handleChange}
-                    placeholder="e.g., CIPHER, WVSU Spark Hub"
+                    placeholder="e.g., Artikulo: Voices in Motion"
                     className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
                     required
                   />
-                </motion.div>
-
-                {/* Row 2: Purpose */}
-                <motion.div
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.15, delay: 0.3 }}
-                >
+                </div>
+                <div className="flex-1">
                   <label className="font-semibold text-gray-800 mb-1 block">
-                    <span className="text-[#E53935]">*</span> Purpose of the
-                    Event
+                    <span className="text-[#E53935]">*</span> Type of Activity
                   </label>
                   <input
                     type="text"
-                    name="purpose"
-                    value={form.purpose}
+                    name="type"
+                    value={form.type}
                     onChange={handleChange}
-                    placeholder="e.g., Team-building and skill development"
+                    placeholder="e.g., Workshop"
                     className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
                     required
                   />
-                </motion.div>
+                </div>
+              </div>
 
-                {/* Row 3: Contact Information */}
-                <motion.div
-                  className="flex flex-col md:flex-row gap-6 w-full"
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.15, delay: 0.35 }}
-                >
-                  <div className="flex-1">
-                    <label className="font-semibold text-gray-800 mb-1 block">
-                      <span className="text-[#E53935]">*</span> Contact Person
-                    </label>
+              {/* Row 1.5: Organization Name */}
+              <div className="w-full">
+                <label className="font-semibold text-gray-800 mb-1 block">
+                  <span className="text-[#E53935]">*</span> Organization Name
+                </label>
+                <input
+                  type="text"
+                  name="orgName"
+                  value={form.orgName}
+                  onChange={handleChange}
+                  placeholder="e.g., CIPHER, WVSU Spark Hub"
+                  className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                  required
+                />
+              </div>
+
+              {/* Row 2: Purpose */}
+              <div>
+                <label className="font-semibold text-gray-800 mb-1 block">
+                  <span className="text-[#E53935]">*</span> Purpose of the Event
+                </label>
+                <input
+                  type="text"
+                  name="purpose"
+                  value={form.purpose}
+                  onChange={handleChange}
+                  placeholder="e.g., Team-building and skill development"
+                  className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                  required
+                />
+              </div>
+
+              {/* Row 3: Contact Information */}
+              <div className="flex flex-col md:flex-row gap-6 w-full">
+                <div className="flex-1">
+                  <label className="font-semibold text-gray-800 mb-1 block">
+                    <span className="text-[#E53935]">*</span> Contact Person
+                  </label>
+                  <input
+                    type="text"
+                    name="contactPerson"
+                    value={form.contactPerson || ""}
+                    onChange={handleChange}
+                    placeholder="e.g., Juan Dela Cruz"
+                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                    required
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="font-semibold text-gray-800 mb-1 block">
+                    <span className="text-[#E53935]">*</span> Position
+                  </label>
+                  <input
+                    type="text"
+                    name="contactPosition"
+                    value={form.contactPosition || ""}
+                    onChange={handleChange}
+                    placeholder="e.g., President"
+                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                    required
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="font-semibold text-gray-800 mb-1 block">
+                    <span className="text-[#E53935]">*</span> Contact Number
+                  </label>
+                  <input
+                    type="text"
+                    name="contactNumber"
+                    value={form.contactNumber || ""}
+                    onChange={handleChange}
+                    placeholder="e.g., +63 912 345 6789"
+                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Conditional Time Inputs based on booking type and toggle */}
+              {isMultipleDays && (
+                <div className="my-4 p-4 border border-gray-200 rounded-lg">
+                  <div className="flex items-center mb-3">
                     <input
-                      type="text"
-                      name="contactPerson"
-                      value={form.contactPerson || ""}
-                      onChange={handleChange}
-                      placeholder="e.g., Juan Dela Cruz"
-                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                      required
+                      type="checkbox"
+                      id="sameTimeToggle"
+                      checked={sameTimeForAllDays}
+                      onChange={(e) => {
+                        setSameTimeForAllDays(e.target.checked);
+                        // If unchecking, might need to re-initialize dailyTimes or form times if logic demands
+                        if (
+                          !e.target.checked &&
+                          dailyTimes.length === 0 &&
+                          reservationData.rawSelectedDays
+                        ) {
+                          // Initialize dailyTimes if it's empty and we are unchecking
+                          setDailyTimes(
+                            reservationData.rawSelectedDays.map((day) => ({
+                              date: day.formattedDate,
+                              startTime: form.startTime || "07:00", // Use current form time or default
+                              endTime: form.endTime || "08:00", // Use current form time or default
+                            }))
+                          );
+                        } else if (e.target.checked) {
+                          // When checking, ensure main form times are reasonable
+                          setForm((prev) => ({
+                            ...prev,
+                            startTime: "07:00",
+                            endTime: "08:00",
+                          }));
+                        }
+                      }}
+                      className="h-4 w-4 text-[#0458A9] border-gray-300 rounded focus:ring-[#0458A9] mr-2"
                     />
-                  </div>
-                  <div className="flex-1">
-                    <label className="font-semibold text-gray-800 mb-1 block">
-                      <span className="text-[#E53935]">*</span> Position
-                    </label>
-                    <input
-                      type="text"
-                      name="contactPosition"
-                      value={form.contactPosition || ""}
-                      onChange={handleChange}
-                      placeholder="e.g., President"
-                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                      required
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="font-semibold text-gray-800 mb-1 block">
-                      <span className="text-[#E53935]">*</span> Contact Number
-                    </label>
-                    <input
-                      type="text"
-                      name="contactNumber"
-                      value={form.contactNumber || ""}
-                      onChange={handleChange}
-                      placeholder="e.g., +63 912 345 6789"
-                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                      required
-                    />
-                  </div>
-                </motion.div>
-
-                {/* Conditional Time Inputs based on booking type and toggle */}
-                {isMultipleDays && (
-                  <motion.div
-                    className="my-4 p-4 border border-gray-200 rounded-lg"
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.15, delay: 0.4 }}
-                  >
-                    <div className="flex items-center mb-3">
-                      <input
-                        type="checkbox"
-                        id="sameTimeToggle"
-                        checked={sameTimeForAllDays}
-                        onChange={(e) => {
-                          setSameTimeForAllDays(e.target.checked);
-                          // If unchecking, might need to re-initialize dailyTimes or form times if logic demands
-                          if (
-                            !e.target.checked &&
-                            dailyTimes.length === 0 &&
-                            reservationData.rawSelectedDays
-                          ) {
-                            // Initialize dailyTimes if it's empty and we are unchecking
-                            setDailyTimes(
-                              reservationData.rawSelectedDays.map((day) => ({
-                                date: day.formattedDate,
-                                startTime: form.startTime || "07:00", // Use current form time or default
-                                endTime: form.endTime || "08:00", // Use current form time or default
-                              }))
-                            );
-                          } else if (e.target.checked) {
-                            // When checking, ensure main form times are reasonable
-                            setForm((prev) => ({
-                              ...prev,
-                              startTime: "07:00",
-                              endTime: "08:00",
-                            }));
-                          }
-                        }}
-                        className="h-4 w-4 text-[#0458A9] border-gray-300 rounded focus:ring-[#0458A9] mr-2"
-                      />
-                      <label
-                        htmlFor="sameTimeToggle"
-                        className="font-medium text-gray-700"
-                      >
-                        Use the same start and end time for all selected days
-                      </label>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Main Start Time / End Time (conditionally shown or used for all days) */}
-                {(sameTimeForAllDays || !isMultipleDays) && (
-                  <motion.div
-                    className="flex flex-col md:flex-row gap-6 w-full"
-                    initial={{ y: 10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.15, delay: 0.45 }}
-                  >
-                    <div className="flex-1">
-                      <label className="font-semibold text-gray-800 mb-1 block">
-                        <span className="text-[#E53935]">*</span> Start Time{" "}
-                        {isMultipleDays && sameTimeForAllDays
-                          ? "(for all days)"
-                          : ""}
-                      </label>
-                      <select
-                        name="startTime"
-                        value={form.startTime}
-                        onChange={handleChange}
-                        className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                        required
-                      >
-                        {timeOptionsWithFormat.slice(0, -1).map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.display}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex-1">
-                      <label className="font-semibold text-gray-800 mb-1 block">
-                        <span className="text-[#E53935]">*</span> End Time{" "}
-                        {isMultipleDays && sameTimeForAllDays
-                          ? "(for all days)"
-                          : ""}
-                      </label>
-                      <select
-                        name="endTime"
-                        value={form.endTime}
-                        onChange={handleChange}
-                        className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                        required
-                        disabled={!form.startTime}
-                      >
-                        {getEndTimeOptions(form.startTime).map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.display}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* Individual Day Time Inputs (shown if multi-day and sameTimeForAllDays is false) */}
-                <AnimatePresence>
-                  {isMultipleDays &&
-                    !sameTimeForAllDays &&
-                    reservationData.rawSelectedDays && (
-                      <motion.div
-                        className="space-y-6 my-4 p-4 border border-gray-200 rounded-lg"
-                        initial={{ y: 10, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: -10, opacity: 0 }}
-                        transition={{ duration: 0.15 }}
-                      >
-                        <h3 className="text-lg font-semibold text-[#0458A9] mb-2">
-                          Set Time for Each Day:
-                        </h3>
-                        {dailyTimes.map((dayTime, index) => (
-                          <motion.div
-                            key={dayTime.date}
-                            className="p-3 bg-gray-50 rounded-md"
-                            initial={{ x: -10, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ duration: 0.15, delay: index * 0.05 }}
-                          >
-                            <label className="font-semibold text-gray-700 mb-2 block">
-                              Date:{" "}
-                              {new Date(
-                                dayTime.date + "T00:00:00"
-                              ).toLocaleDateString("en-US", {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              })}
-                            </label>
-                            <div className="flex flex-col md:flex-row gap-4">
-                              <div className="flex-1">
-                                <label className="text-sm text-gray-600 mb-1 block">
-                                  Start Time
-                                </label>
-                                <select
-                                  name={`dailyStartTime-${index}`}
-                                  value={dayTime.startTime}
-                                  onChange={(e) =>
-                                    handleDailyTimeChange(
-                                      index,
-                                      "startTime",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                                >
-                                  {timeOptionsWithFormat
-                                    .slice(0, -1)
-                                    .map((opt) => (
-                                      <option key={opt.value} value={opt.value}>
-                                        {opt.display}
-                                      </option>
-                                    ))}
-                                </select>
-                              </div>
-                              <div className="flex-1">
-                                <label className="text-sm text-gray-600 mb-1 block">
-                                  End Time
-                                </label>
-                                <select
-                                  name={`dailyEndTime-${index}`}
-                                  value={dayTime.endTime}
-                                  onChange={(e) =>
-                                    handleDailyTimeChange(
-                                      index,
-                                      "endTime",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                                  disabled={!dayTime.startTime}
-                                >
-                                  {getEndTimeOptions(dayTime.startTime).map(
-                                    (opt) => (
-                                      <option key={opt.value} value={opt.value}>
-                                        {opt.display}
-                                      </option>
-                                    )
-                                  )}
-                                </select>
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* Row 4: Venue, Participants */}
-                <motion.div
-                  className="flex flex-col md:flex-row gap-6 w-full"
-                  initial={{ y: 10, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.15, delay: 0.5 }}
-                >
-                  <div className="flex-1 relative">
-                    <label className="font-semibold text-gray-800 mb-1 block">
-                      <span className="text-[#E53935]">*</span> Preferred Venue
-                    </label>
-                    <motion.button
-                      type="button"
-                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base flex items-center justify-between focus:outline-none focus:border-[#0458A9]"
-                      onClick={() => setVenueDropdown((v) => !v)}
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.99 }}
+                    <label
+                      htmlFor="sameTimeToggle"
+                      className="font-medium text-gray-700"
                     >
-                      {form.venue || "Select Venue"}
-                      <ChevronDown size={20} />
-                    </motion.button>
-                    <AnimatePresence>
-                      {venueDropdown && (
-                        <motion.div
-                          className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto"
-                          initial={{ opacity: 0, y: -5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -5 }}
-                          transition={{ duration: 0.1 }}
-                        >
-                          {venues.map((v, index) => (
-                            <motion.div
-                              key={v.name}
-                              className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
-                              onClick={() => handleVenueSelect(v.name)}
-                              initial={{ opacity: 0, x: -5 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{
-                                duration: 0.1,
-                                delay: index * 0.02,
-                              }}
-                              whileHover={{ backgroundColor: "#eff6ff" }}
-                            >
-                              {v.name}
-                            </motion.div>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                      Use the same start and end time for all selected days
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              {/* Main Start Time / End Time (conditionally shown or used for all days) */}
+              {(sameTimeForAllDays || !isMultipleDays) && (
+                <div className="flex flex-col md:flex-row gap-6 w-full">
+                  <div className="flex-1">
+                    <label className="font-semibold text-gray-800 mb-1 block">
+                      <span className="text-[#E53935]">*</span> Start Time{" "}
+                      {isMultipleDays && sameTimeForAllDays
+                        ? "(for all days)"
+                        : ""}
+                    </label>
+                    <select
+                      name="startTime"
+                      value={form.startTime}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                      required
+                    >
+                      {timeOptionsWithFormat.slice(0, -1).map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.display}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="flex-1">
                     <label className="font-semibold text-gray-800 mb-1 block">
-                      <span className="text-[#E53935]">*</span> No. of
-                      Participants
+                      <span className="text-[#E53935]">*</span> End Time{" "}
+                      {isMultipleDays && sameTimeForAllDays
+                        ? "(for all days)"
+                        : ""}
                     </label>
-                    <input
-                      type="number"
-                      name="participants"
-                      value={form.participants}
+                    <select
+                      name="endTime"
+                      value={form.endTime}
                       onChange={handleChange}
-                      placeholder="e.g., 50"
                       className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
                       required
-                      min={1}
-                    />
+                      disabled={!form.startTime}
+                    >
+                      {getEndTimeOptions(form.startTime).map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.display}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </motion.div>
-              </motion.form>
-              {/* Footer: Previous/Next */}
-              <motion.div
-                className="flex justify-between items-center mt-6 w-full"
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.15, delay: 0.55 }}
+                </div>
+              )}
+
+              {/* Individual Day Time Inputs (shown if multi-day and sameTimeForAllDays is false) */}
+              {isMultipleDays &&
+                !sameTimeForAllDays &&
+                reservationData.rawSelectedDays && (
+                  <div className="space-y-6 my-4 p-4 border border-gray-200 rounded-lg">
+                    <h3 class="text-lg font-semibold text-[#0458A9] mb-2">
+                      Set Time for Each Day:
+                    </h3>
+                    {dailyTimes.map((dayTime, index) => (
+                      <div
+                        key={dayTime.date}
+                        className="p-3 bg-gray-50 rounded-md"
+                      >
+                        <label className="font-semibold text-gray-700 mb-2 block">
+                          Date:{" "}
+                          {new Date(
+                            dayTime.date + "T00:00:00"
+                          ).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </label>
+                        <div className="flex flex-col md:flex-row gap-4">
+                          <div className="flex-1">
+                            <label className="text-sm text-gray-600 mb-1 block">
+                              Start Time
+                            </label>
+                            <select
+                              name={`dailyStartTime-${index}`}
+                              value={dayTime.startTime}
+                              onChange={(e) =>
+                                handleDailyTimeChange(
+                                  index,
+                                  "startTime",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                            >
+                              {timeOptionsWithFormat.slice(0, -1).map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.display}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="flex-1">
+                            <label className="text-sm text-gray-600 mb-1 block">
+                              End Time
+                            </label>
+                            <select
+                              name={`dailyEndTime-${index}`}
+                              value={dayTime.endTime}
+                              onChange={(e) =>
+                                handleDailyTimeChange(
+                                  index,
+                                  "endTime",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                              disabled={!dayTime.startTime}
+                            >
+                              {getEndTimeOptions(dayTime.startTime).map(
+                                (opt) => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.display}
+                                  </option>
+                                )
+                              )}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              {/* Row 4: Venue, Participants */}
+              <div className="flex flex-col md:flex-row gap-6 w-full">
+                <div className="flex-1 relative">
+                  <label className="font-semibold text-gray-800 mb-1 block">
+                    <span className="text-[#E53935]">*</span> Preferred Venue
+                  </label>
+                  <button
+                    type="button"
+                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base flex items-center justify-between focus:outline-none focus:border-[#0458A9]"
+                    onClick={() => setVenueDropdown((v) => !v)}
+                  >
+                    {form.venue || "Select Venue"}
+                    <ChevronDown size={20} />
+                  </button>
+                  {venueDropdown && (
+                    <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
+                      {venues.map((v) => (
+                        <div
+                          key={v.name}
+                          className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
+                          onClick={() => handleVenueSelect(v.name)}
+                        >
+                          {v.name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>{" "}
+                <div className="flex-1">
+                  <label className="font-semibold text-gray-800 mb-1 block">
+                    <span className="text-[#E53935]">*</span> No. of
+                    Participants
+                  </label>
+                  <input
+                    type="number"
+                    name="participants"
+                    value={form.participants}
+                    onChange={handleChange}
+                    placeholder="e.g., 50"
+                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                    required
+                    min={1}
+                  />
+                </div>
+              </div>
+            </form>
+            {/* Footer: Previous/Next */}
+            <div className="flex justify-between items-center mt-6 w-full">
+              <button
+                className="text-gray-400 font-semibold text-base px-6 py-2 rounded-full cursor-pointer hover:text-[#0458A9] hover:bg-gray-100 transition"
+                onClick={onPrevious}
               >
-                <motion.button
-                  className="text-gray-400 font-semibold text-base px-6 py-2 rounded-full cursor-pointer hover:text-[#0458A9] hover:bg-gray-100 transition"
-                  onClick={onPrevious}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Previous
-                </motion.button>
-                <motion.button
-                  className="bg-[#0458A9] text-white rounded-full px-10 py-2 font-semibold text-base hover:bg-[#03407a] transition"
-                  onClick={() => {
-                    const combinedData = prepareStep3Data();
-                    setStep2Data(combinedData);
-                    setStep3Open(true);
-                  }}
-                  disabled={
-                    !form.title ||
-                    !form.type ||
-                    !form.purpose ||
-                    ((sameTimeForAllDays || !isMultipleDays) &&
-                      (!form.startTime || !form.endTime)) ||
-                    (isMultipleDays &&
-                      !sameTimeForAllDays &&
-                      dailyTimes.some((dt) => !dt.startTime || !dt.endTime)) ||
-                    !form.venue ||
-                    !form.participants
-                  }
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  Next
-                </motion.button>
-              </motion.div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                Previous
+              </button>
+              <button
+                className="bg-[#0458A9] text-white rounded-full px-10 py-2 font-semibold text-base hover:bg-[#03407a] transition"
+                onClick={() => {
+                  const combinedData = prepareStep3Data();
+                  setStep2Data(combinedData);
+                  setStep3Open(true);
+                }}
+                disabled={
+                  !form.title ||
+                  !form.type ||
+                  !form.purpose ||
+                  ((sameTimeForAllDays || !isMultipleDays) &&
+                    (!form.startTime || !form.endTime)) ||
+                  (isMultipleDays &&
+                    !sameTimeForAllDays &&
+                    dailyTimes.some((dt) => !dt.startTime || !dt.endTime)) ||
+                  !form.venue ||
+                  !form.participants
+                }
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Step 3 Modal */}
       {step3Open && (
         <ReserveStep3Modal
