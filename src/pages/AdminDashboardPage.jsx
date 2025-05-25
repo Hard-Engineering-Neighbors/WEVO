@@ -27,6 +27,7 @@ export default function AdminDashboardPage() {
     pending: 0,
     approved: 0,
     rejected: 0,
+    cancelled: 0,
   });
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -308,6 +309,22 @@ export default function AdminDashboardPage() {
                         style={{
                           width: `${
                             (stats.rejected / stats.totalRequests) * 100
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Cancelled</span>
+                      <span>{stats.cancelled}</span>
+                    </div>
+                    <div className="h-2 bg-orange-200 rounded-full mt-1 overflow-hidden">
+                      <div
+                        className="h-full bg-orange-500"
+                        style={{
+                          width: `${
+                            (stats.cancelled / stats.totalRequests) * 100
                           }%`,
                         }}
                       ></div>

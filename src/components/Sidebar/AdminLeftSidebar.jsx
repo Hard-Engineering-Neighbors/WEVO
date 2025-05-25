@@ -1,6 +1,6 @@
 import React from "react";
 import { LayoutDashboard, Clock, Settings } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const adminSidebarLinks = [
   { name: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
@@ -9,6 +9,12 @@ const adminSidebarLinks = [
 ];
 
 export default function AdminLeftSidebar({ active = "Dashboard" }) {
+  const navigate = useNavigate();
+
+  const handleNav = (path) => {
+    navigate(path);
+  };
+
   return (
     <aside className="w-full lg:w-1/5 bg-white lg:border-b-0 lg:border-r p-4 md:p-6 flex flex-col justify-between border-gray-200 lg:min-h-screen">
       {/* Centered nav section */}
