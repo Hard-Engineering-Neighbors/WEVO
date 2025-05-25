@@ -48,10 +48,22 @@ export default function ReserveStep1Modal({
   const [calendarDays, setCalendarDays] = useState([]);
   const [bookedSlots, setBookedSlots] = useState([]);
 
+  // Set initial calendar month to the first available booking month when modal opens
+  useEffect(() => {
+    if (open) {
+      const firstAvailableBookingDate = new Date();
+      firstAvailableBookingDate.setHours(0, 0, 0, 0); // Normalize to start of day
+      firstAvailableBookingDate.setDate(
+        firstAvailableBookingDate.getDate() + 14
+      );
+      setCurrentDate(firstAvailableBookingDate);
+    }
+  }, [open]); // Re-run if the modal is opened
+
   // Fetch bookings for the selected venue
   useEffect(() => {
     if (venue && venue.name) {
-      getVenueBookings(venue.name).then(data => {
+      getVenueBookings(venue.name).then((data) => {
         setBookedSlots(data);
       });
     } else {
@@ -90,25 +102,33 @@ export default function ReserveStep1Modal({
 
   // Blackout logic for calendar
   // Normalize to local date (YYYY-MM-DD)
-  const normalizeDate = d => {
+  const normalizeDate = (d) => {
     const local = new Date(d);
-    return local.getFullYear() + '-' +
-      String(local.getMonth() + 1).padStart(2, '0') + '-' +
-      String(local.getDate()).padStart(2, '0');
+    return (
+      local.getFullYear() +
+      "-" +
+      String(local.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(local.getDate()).padStart(2, "0")
+    );
   };
   const isDateBooked = (date) => {
     const dateStr = normalizeDate(date);
-    const bookingsForDate = bookedSlots.filter(slot =>
-      slot.status && slot.status.toLowerCase() === "approved" &&
-      slot.perDayTimes.some(day => normalizeDate(day.date) === dateStr)
+    const bookingsForDate = bookedSlots.filter(
+      (slot) =>
+        slot.status &&
+        slot.status.toLowerCase() === "approved" &&
+        slot.perDayTimes.some((day) => normalizeDate(day.date) === dateStr)
     );
     // If both morning and afternoon are booked, or a booking covers the whole day, return true
-    let morningBooked = false, afternoonBooked = false, fullDayBooked = false;
-    bookingsForDate.forEach(slot => {
-      slot.perDayTimes.forEach(day => {
+    let morningBooked = false,
+      afternoonBooked = false,
+      fullDayBooked = false;
+    bookingsForDate.forEach((slot) => {
+      slot.perDayTimes.forEach((day) => {
         if (normalizeDate(day.date) === dateStr) {
-          const start = parseInt(day.startTime.split(':')[0], 10);
-          const end = parseInt(day.endTime.split(':')[0], 10);
+          const start = parseInt(day.startTime.split(":")[0], 10);
+          const end = parseInt(day.endTime.split(":")[0], 10);
           // University rule: 7:00 to 13:00 (1pm) or later is a full day
           if (start === 7 && end >= 13) fullDayBooked = true;
           else if (start < 13 && end <= 13) morningBooked = true;

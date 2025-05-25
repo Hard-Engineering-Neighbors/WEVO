@@ -28,10 +28,10 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
           >
             <X size={20} />
           </button>
-          {/* Left: Carousel & Reserve */}
-          <div className="flex flex-col items-end md:w-1/2 w-full">
+          {/* Left: Carousel & Venue Details */}
+          <div className="md:w-1/2 w-full flex flex-col gap-4">
             {/* Carousel */}
-            <div className="relative w-full aspect-video rounded-2xl overflow-hidden mb-4">
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden">
               <img
                 src={images[current]}
                 alt={venue.name}
@@ -67,32 +67,25 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
                 </div>
               )}
             </div>
-            {/* Reserve Button */}
-            <button
-              className="bg-[#0458A9] text-white rounded-full px-10 py-2 font-semibold text-base mt-2 w-40 hover:bg-[#03407a] transition"
-              onClick={() => setReserveOpen(true)}
-            >
-              Reserve
-            </button>
-          </div>
-          {/* Right: Details */}
-          <div className="flex-1 flex flex-col gap-2 min-w-0">
-            <h2 className="text-2xl md:text-4xl font-bold text-[#0458A9] leading-tight">
+            {/* Venue Details - MOVED HERE */}
+            <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9] leading-tight">
               {venue.name}
             </h2>
-            <div className="text-gray-400 text-sm mb-1">
+            <div className="text-gray-400 text-sm -mt-3">
               Managed by (Insert Department Name)
             </div>
-            <div className="flex items-center gap-2 text-gray-700 font-medium mb-2">
+            <div className="flex items-center gap-2 text-gray-700 font-medium">
               <Users size={20} />
               {venue.participants} Participants Max
             </div>
-            <div className="text-gray-700 text-sm mb-2 max-h-32 overflow-y-auto">
+            <div className="text-gray-700 text-sm max-h-32 overflow-y-auto">
               {venue.description}
             </div>
-            {/* Show More (optional) */}
-            {/* Location */}
-            <div className="mt-4">
+          </div>
+          {/* Right: Map & Reserve Button */}
+          <div className="flex-1 flex flex-col min-w-0 md:ml-6">
+            {/* Location / Map - MOVED UP */}
+            <div className="flex-grow">
               <h3 className="text-lg font-bold mb-2">Location</h3>
               <div className="w-full aspect-video rounded-xl overflow-hidden border">
                 {/* Replace src with venue.mapUrl or similar if available */}
@@ -105,6 +98,14 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
                 ></iframe>
               </div>
             </div>
+
+            {/* Reserve Button - MOVED HERE & MODIFIED */}
+            <button
+              className="bg-[#0458A9] text-white rounded-full px-10 py-3 font-semibold text-base w-full hover:bg-[#03407a] transition mt-auto"
+              onClick={() => setReserveOpen(true)}
+            >
+              Reserve
+            </button>
           </div>
         </div>
       </div>
