@@ -45,7 +45,11 @@ export default function RequestDetailsModal({
     if (typeof reason === "string") {
       // Approved event: cancel with reason
       try {
-        await cancelApprovedReservation({ bookingRequestId: request.id, userId: request.requested_by, reason });
+        await cancelApprovedReservation({
+          bookingRequestId: request.id,
+          userId: request.requested_by,
+          reason,
+        });
         if (typeof onReservationUpdated === "function") onReservationUpdated();
         setIsCancellationReasonModalOpen(false);
         onClose();
@@ -83,7 +87,7 @@ export default function RequestDetailsModal({
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-        <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col md:flex-row p-4 md:p-8 gap-6 overflow-y-auto max-h-[95vh]">
+        <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col md:flex-row px-4 pb-4 pt-14 md:px-8 md:pb-8 md:pt-16 gap-6 overflow-y-auto max-h-[95vh]">
           {/* Close Button */}
           <button
             className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
@@ -138,19 +142,26 @@ export default function RequestDetailsModal({
                 </div>
               )}
             </div>
+
+            {/* Venue Name and Description - MOVED HERE */}
+            <div className="mt-4">
+              <h2 className="text-3xl md:text-4xl font-bold text-[#0458A9]">
+                {request.venue}
+              </h2>
+              <div className="text-gray-500 text-sm mt-1">
+                Managed by WVSU Administration
+              </div>
+              <div className="text-gray-700 mt-4">
+                {request.description ||
+                  "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."}
+              </div>
+            </div>
           </div>
 
           {/* Right: Details */}
           <div className="flex-1 flex flex-col gap-4 min-w-0">
-            <h2 className="text-3xl md:text-5xl font-bold text-[#0458A9]">
-              {request.venue}
-            </h2>
-            <div className="text-gray-500 text-sm">
-              Managed by WVSU Administration
-            </div>
-
             {/* Event Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-gray-100 rounded-lg px-6 py-3">
                 <div className="text-gray-500 text-sm">Event Name</div>
                 <div className="font-semibold">
@@ -169,7 +180,7 @@ export default function RequestDetailsModal({
               <div className="bg-gray-100 rounded-lg px-6 py-3 md:col-span-2">
                 <div className="text-gray-500 text-sm flex items-center gap-2">
                   Event Date and Time
-                  {(request.perDayTimes && request.perDayTimes.length > 1) && (
+                  {request.perDayTimes && request.perDayTimes.length > 1 && (
                     <button
                       type="button"
                       className="ml-2 text-xs text-[#0458A9] hover:underline focus:outline-none"
@@ -180,20 +191,33 @@ export default function RequestDetailsModal({
                   )}
                 </div>
                 <div className="font-semibold">
-                  {(request.perDayTimes && request.perDayTimes.length > 0) ? (
+                  {request.perDayTimes && request.perDayTimes.length > 0 ? (
                     showAllDates ? (
                       <div className="flex flex-col space-y-1 mt-1 pl-2">
                         {request.perDayTimes.map((item, idx) => (
-                          <div key={idx}
-                            className="flex"
-                          >
-                            <span>{new Date(item.date).toLocaleDateString()} — {item.startTime} - {item.endTime}</span>
+                          <div key={idx} className="flex">
+                            <span>
+                              {new Date(item.date).toLocaleDateString()} —{" "}
+                              {item.startTime} - {item.endTime}
+                            </span>
                           </div>
                         ))}
                       </div>
                     ) : (
                       <span>
-                        {new Date(request.perDayTimes[0].date).toLocaleDateString()} {request.perDayTimes[0].startTime} - {new Date(request.perDayTimes[request.perDayTimes.length-1].date).toLocaleDateString()} {request.perDayTimes[request.perDayTimes.length-1].endTime}
+                        {new Date(
+                          request.perDayTimes[0].date
+                        ).toLocaleDateString()}{" "}
+                        {request.perDayTimes[0].startTime} -{" "}
+                        {new Date(
+                          request.perDayTimes[
+                            request.perDayTimes.length - 1
+                          ].date
+                        ).toLocaleDateString()}{" "}
+                        {
+                          request.perDayTimes[request.perDayTimes.length - 1]
+                            .endTime
+                        }
                       </span>
                     )
                   ) : (
@@ -214,12 +238,6 @@ export default function RequestDetailsModal({
                   {truncateText(request.purpose, 100) || "-"}
                 </div>
               </div>
-            </div>
-
-            {/* Description */}
-            <div className="text-gray-700 mt-2">
-              {request.description ||
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."}
             </div>
 
             {/* PDF Documents Section */}
@@ -276,7 +294,9 @@ export default function RequestDetailsModal({
               >
                 Documents
               </button>
-              {(request.status && (request.status.toLowerCase() === "cancelled" || request.status.toLowerCase() === "rejected")) ? (
+              {request.status &&
+              (request.status.toLowerCase() === "cancelled" ||
+                request.status.toLowerCase() === "rejected") ? (
                 <button
                   className="bg-white text-red-600 border border-red-600 rounded-full px-8 py-3 font-semibold text-base hover:bg-gray-100"
                   onClick={handleRemoveRequest}
@@ -294,12 +314,14 @@ export default function RequestDetailsModal({
             </div>
 
             {/* Show cancellation reason if cancelled */}
-            {request.status && request.status.toLowerCase() === "cancelled" && request.cancellation_reason && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-6 py-3 mt-4">
-                <div className="font-semibold mb-1">Cancellation Reason:</div>
-                <div>{request.cancellation_reason}</div>
-              </div>
-            )}
+            {request.status &&
+              request.status.toLowerCase() === "cancelled" &&
+              request.cancellation_reason && (
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-6 py-3 mt-4">
+                  <div className="font-semibold mb-1">Cancellation Reason:</div>
+                  <div>{request.cancellation_reason}</div>
+                </div>
+              )}
           </div>
         </div>
       </div>
