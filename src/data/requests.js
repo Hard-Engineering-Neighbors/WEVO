@@ -19,14 +19,3 @@ const requests = [
 ];
 
 export default requests; 
-
-const loadRequests = async () => {
-  try {
-    const data = await fetchAdminRequests();
-    console.log("Fetched admin requests:", data);
-    console.log("All reservations before filtering:", reservations);
-    setReservations(data);
-  } catch (err) {
-    console.error("Error fetching admin requests:", err);
-  }
-}; 
