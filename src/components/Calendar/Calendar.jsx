@@ -179,30 +179,10 @@ export default function Calendar({
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-6 pb-4">
         <div>
+          {/* Month and Year */}
           <h2 className="text-2xl font-bold" style={{ color: primaryColor }}>
             {monthName} {view.year} Calendar
           </h2>
-          {currentTimePST.hour && (
-            <div
-              className="text-sm text-gray-600 flex items-center"
-              style={{ color: primaryColor }}
-            >
-              <>
-                <span>{currentTimePST.hour}</span>
-                <span
-                  style={{
-                    visibility: currentTimePST.colonVisible
-                      ? "visible"
-                      : "hidden",
-                  }}
-                >
-                  :
-                </span>
-                <span>{currentTimePST.minute}</span>
-                <span className="ml-1">{currentTimePST.period}</span>
-              </>
-            </div>
-          )}
         </div>
         <div className="flex gap-2">
           <button
