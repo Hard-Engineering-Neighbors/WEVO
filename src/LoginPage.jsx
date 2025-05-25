@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, ChevronRight, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
@@ -13,6 +12,8 @@ function LoginPage() {
   const [cooldown, setCooldown] = useState(0);
   const cooldownInterval = useRef(null);
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  const [userData, setUserData] = useState(null);
   const formRef = useRef();
 
   const handleGetStarted = () => {
@@ -61,9 +62,7 @@ function LoginPage() {
     // Check cooldown before proceeding
     const cooldownLeft = getCooldownRemaining(email);
     if (cooldownLeft > 0) {
-      setErrorMessage(
-        `Please wait ${cooldownLeft}s before requesting another code.`
-      );
+      setErrorMessage(`Please wait ${cooldownLeft}s before requesting another code.`);
       setCooldown(cooldownLeft);
       setLoading(false);
       if (!cooldownInterval.current) {
@@ -79,10 +78,11 @@ function LoginPage() {
     }
     try {
       // Check credentials with Supabase
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error: signInError } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
       if (signInError) {
         setErrorMessage("Incorrect email or password.");
         setLoading(false);
@@ -97,7 +97,7 @@ function LoginPage() {
       localStorage.setItem("2fa_email", email);
       startCooldown(email);
       navigate("/2fa");
-    } catch (_) {
+    } catch (error) {
       setErrorMessage("Failed to send verification code. Please try again.");
     } finally {
       setLoading(false);
@@ -107,109 +107,52 @@ function LoginPage() {
   // Prevent back/forward navigation from leaving login page or returning to 2fa
   useEffect(() => {
     // Instantly disable back/forward navigation by pushing a dummy state and locking the user in a navigation loop
-    window.history.pushState({ page: "login" }, "", "/login");
+    window.history.pushState({ page: 'login' }, '', '/login');
     const blockNav = () => {
-      window.history.pushState({ page: "login" }, "", "/login");
+      window.history.pushState({ page: 'login' }, '', '/login');
     };
-    window.addEventListener("popstate", blockNav);
-    return () => window.removeEventListener("popstate", blockNav);
+    window.addEventListener('popstate', blockNav);
+    return () => window.removeEventListener('popstate', blockNav);
   }, []);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.15,
-        staggerChildren: 0.03,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { y: 10, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.15 },
-    },
-  };
-
   return (
-    <motion.div
-      className="flex flex-col min-h-screen"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.15 }}
-    >
+    <div className="flex flex-col min-h-screen">
       <main className="flex flex-1 flex-col lg:flex-row">
         {/* Left side: WEVO Info */}
-        <motion.div
-          className="w-full lg:w-3/5 bg-white flex flex-col justify-center items-center p-8 md:p-12 space-y-6 text-center"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.img
+        <div className="w-full lg:w-3/5 bg-white flex flex-col justify-center items-center p-8 md:p-12 space-y-6 text-center">
+          <img
             src="/wevoLogoPng.png"
             alt="Wevo Logo"
             className="w-auto max-h-32 md:max-h-40"
-            variants={itemVariants}
-            whileHover={{ scale: 1.05 }}
-            transition={{ duration: 0.1 }}
           />
-          <motion.div
-            className="text-3xl md:text-4xl text-[#0458A9] font-semibold"
-            variants={itemVariants}
-          >
+          <div className="text-3xl md:text-4xl text-[#0458A9] font-semibold">
             Smart Scheduling for a Smarter Campus
-          </motion.div>
-          <motion.p
-            className="text-base max-w-3xl text-gray-500"
-            variants={itemVariants}
-          >
+          </div>
+          <p className="text-base max-w-3xl text-gray-500">
             Keeps West Visayas State University in sync by providing real-time
             updates on venue availability and streamlining communication between
             student organizations and campus administration.
-          </motion.p>
-          <motion.div
-            className="flex flex-col sm:flex-row gap-4"
-            variants={itemVariants}
-          >
-            <motion.button
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
               onClick={handleGetStarted}
               className="bg-[#0458A9] text-white px-10 py-2 rounded-full hover:bg-[#0458A9] transition flex items-center gap-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
             >
               Get Started <ChevronRight size={18} />
-            </motion.button>
+            </button>
 
-            <motion.button
-              className="border border-[#0458A9] text-[#0458A9] px-10 py-2 rounded-full hover:bg-[#0458A9] transition hover:text-white"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
+            <button className="border border-[#0458A9] text-[#0458A9] px-10 py-2 rounded-full hover:bg-[#0458A9] transition hover:text-white">
               Explore
-            </motion.button>
-          </motion.div>
-        </motion.div>
+            </button>
+          </div>
+        </div>
 
         {/* Right side: Login Card */}
-        <motion.div
-          className="w-full lg:w-2/5 flex items-center justify-center p-8 md:p-12"
-          initial={{ x: 50, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.2, delay: 0.1 }}
-        >
-          <motion.div
+        <div className="w-full lg:w-2/5 flex items-center justify-center p-8 md:p-12">
+          <div
             className={`w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-md transition-all duration-300 ${
               glow ? "animate-glow" : ""
             }`}
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.2, delay: 0.15 }}
           >
             <h2 className="text-2xl md:text-3xl text-[#0458A9] font-bold mb-2">
               Login Credentials
@@ -221,28 +164,15 @@ function LoginPage() {
               </a>
             </p>
 
-            <AnimatePresence>
-              {errorMessage && (
-                <motion.div
-                  className="bg-red-100 text-red-600 p-3 rounded-md mb-4"
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  {errorMessage}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {errorMessage && (
+              <div className="bg-red-100 text-red-600 p-3 rounded-md mb-4">
+                {errorMessage}
+              </div>
+            )}
 
             <form ref={formRef} className="space-y-4" onSubmit={handleLogin}>
               {/* Email Field with Icon */}
-              <motion.div
-                className="relative"
-                initial={{ x: -10, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.15, delay: 0.2 }}
-              >
+              <div className="relative">
                 <Mail
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                   size={18}
@@ -254,15 +184,10 @@ function LoginPage() {
                   placeholder="email@wvsu.edu.ph"
                   required
                 />
-              </motion.div>
+              </div>
 
               {/* Password Field with Icon + Toggle */}
-              <motion.div
-                className="relative"
-                initial={{ x: -10, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.15, delay: 0.25 }}
-              >
+              <div className="relative">
                 <Lock
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                   size={18}
@@ -274,27 +199,20 @@ function LoginPage() {
                   placeholder="Password"
                   required
                 />
-                <motion.button
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-[#0458A9]"
                   tabIndex={-1}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </motion.button>
-              </motion.div>
+                </button>
+              </div>
 
-              <motion.button
+              <button
                 type="submit"
                 className="w-full bg-[#0458A9] text-white py-2 rounded-md hover:bg-[#0458A9] transition flex items-center justify-center"
                 disabled={loading || cooldown > 0}
-                initial={{ y: 10, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.15, delay: 0.3 }}
-                whileHover={{ scale: loading || cooldown > 0 ? 1 : 1.02 }}
-                whileTap={{ scale: loading || cooldown > 0 ? 1 : 0.98 }}
               >
                 {loading ? (
                   <>
@@ -306,22 +224,16 @@ function LoginPage() {
                 ) : (
                   "Continue"
                 )}
-              </motion.button>
+              </button>
 
-              <motion.div
-                className="text-right"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.15, delay: 0.35 }}
-              >
-                <motion.a
+              <div className="text-right">
+                <a
                   href="/forgot-password"
                   className="text-sm font-semibold text-gray-600 hover:underline"
-                  whileHover={{ scale: 1.05 }}
                 >
                   Forgot Password?
-                </motion.a>
-              </motion.div>
+                </a>
+              </div>
             </form>
 
             <p className="text-xs text-gray-400 text-center mt-6">
@@ -339,8 +251,8 @@ function LoginPage() {
               </a>
               .
             </p>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
       </main>
 
       {/* Footer */}
@@ -362,7 +274,7 @@ function LoginPage() {
           }
         `}
       </style>
-    </motion.div>
+    </div>
   );
 }
 
