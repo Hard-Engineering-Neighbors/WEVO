@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import ReserveStep2Modal from "./ReserveStep2Modal";
 import { getVenueBookings } from "../api/requests";
 
@@ -186,62 +187,53 @@ export default function ReserveStep1Modal({
     });
   };
 
-  // Venue Selector Modal
-  const VenueSelector = () => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full mx-4 p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-2xl font-bold text-[#0458A9]">Select a Venue</h3>
-          <button
-            onClick={() => setShowVenueSelector(false)}
-            className="text-gray-400 hover:text-gray-700"
-          >
-            <X size={24} />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {venues.map((v) => (
-            <button
-              key={v.id}
-              onClick={() => handleVenueSelect(v)}
-              className="flex flex-col items-center p-4 border rounded-xl hover:border-[#0458A9] transition"
-            >
-              <div className="w-full aspect-video rounded-lg overflow-hidden mb-2">
-                <img
-                  src={v.images ? v.images[0] : v.image}
-                  alt={v.name}
-                  className="object-cover w-full h-full"
-                />
-              </div>
-              <h4 className="font-semibold text-[#0458A9]">{v.name}</h4>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <>
+    <AnimatePresence>
       {open && !step2Open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]">
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.1 }}
+          onClick={onClose}
+        >
+          <motion.div
+            className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]"
+            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Close Button */}
-            <button
+            <motion.button
               className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
               onClick={onClose}
               aria-label="Close modal"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
             >
               <X size={20} />
-            </button>
+            </motion.button>
             {/* Step 1 label */}
-            <div className="flex justify-end w-full">
+            <motion.div
+              className="flex justify-end w-full"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.15, delay: 0.05 }}
+            >
               <span className="text-[#0458A9] font-semibold text-lg md:text-xl">
                 Step 1
               </span>
-            </div>
+            </motion.div>
             {/* Title and subtitle */}
-            <div className="mb-2">
+            <motion.div
+              className="mb-2"
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.2, delay: 0.1 }}
+            >
               <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9]">
                 Preferred Date
               </h2>
@@ -249,43 +241,69 @@ export default function ReserveStep1Modal({
                 indicate whether your booking is for a single day or multiple
                 days, then select your preferred date(s).
               </div>
-            </div>
+            </motion.div>
             {/* Main content */}
             <div className="flex flex-col md:flex-row gap-8 w-full">
               {/* Left: Venue Info */}
-              <div className="flex flex-col items-center md:w-1/2 w-full justify-start">
-                <div className="w-full aspect-video rounded-2xl overflow-hidden mb-4">
+              <motion.div
+                className="flex flex-col items-center md:w-1/2 w-full justify-start"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.2, delay: 0.15 }}
+              >
+                <motion.div
+                  className="w-full aspect-video rounded-2xl overflow-hidden mb-4"
+                  initial={{ scale: 0.98, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.2, delay: 0.2 }}
+                >
                   <img
                     src={venue.images ? venue.images[0] : venue.image}
                     alt={venue.name}
                     className="object-cover w-full h-full"
                   />
-                </div>
-                <div className="w-full text-left">
+                </motion.div>
+                <motion.div
+                  className="w-full text-left"
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.2, delay: 0.25 }}
+                >
                   <h3 className="text-2xl font-bold text-[#0458A9] leading-tight mb-1">
                     {venue.name}
                   </h3>
                   <div className="text-gray-400 text-base mb-4">
                     Managed by (Insert Department Name)
                   </div>
-                  <button
+                  <motion.button
                     className="bg-[#0458A9] text-white rounded-full px-6 py-2 font-semibold text-base w-full md:w-auto hover:bg-[#03407a] transition"
                     onClick={() => {
                       setShowVenueSelector(true);
                     }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     Change Venue
-                  </button>
-                </div>
-              </div>
+                  </motion.button>
+                </motion.div>
+              </motion.div>
               {/* Right: Booking Type and Calendar */}
-              <div className="flex flex-col gap-4 md:w-1/2 w-full">
-                <div>
+              <motion.div
+                className="flex flex-col gap-4 md:w-1/2 w-full"
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ duration: 0.2, delay: 0.2 }}
+              >
+                <motion.div
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.15, delay: 0.25 }}
+                >
                   <h4 className="text-xl md:text-2xl font-bold text-[#0458A9] mb-2">
                     Type of Booking
                   </h4>
                   <div className="flex gap-2 mb-2">
-                    <button
+                    <motion.button
                       className={`rounded-full px-6 py-2 font-semibold border transition text-base w-1/2 md:w-auto ${
                         bookingType === "one"
                           ? "bg-[#0458A9] text-white border-[#0458A9]"
@@ -295,10 +313,12 @@ export default function ReserveStep1Modal({
                         setBookingType("one");
                         setSelectedDays([]);
                       }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                     >
                       One Day
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
                       className={`rounded-full px-6 py-2 font-semibold border transition text-base w-1/2 md:w-auto ${
                         bookingType === "multiple"
                           ? "bg-[#0458A9] text-white border-[#0458A9]"
@@ -308,35 +328,50 @@ export default function ReserveStep1Modal({
                         setBookingType("multiple");
                         setSelectedDays([]);
                       }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                     >
                       Multiple Days
-                    </button>
+                    </motion.button>
                   </div>
-                </div>
-                <div>
+                </motion.div>
+                <motion.div
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.15, delay: 0.3 }}
+                >
                   <h4 className="text-xl md:text-2xl font-bold text-[#0458A9] mb-2">
                     Preferred Day(s)
                   </h4>
-                  <div className="rounded-2xl border border-gray-400 p-4 bg-white">
+                  <motion.div
+                    className="rounded-2xl border border-gray-400 p-4 bg-white"
+                    initial={{ scale: 0.99, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.15, delay: 0.35 }}
+                  >
                     <div className="flex justify-between items-center mb-4">
-                      <button
+                      <motion.button
                         onClick={() => handleMonthChange(-1)}
                         className="text-gray-600 hover:text-[#0458A9]"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                       >
                         ←
-                      </button>
+                      </motion.button>
                       <div className="font-bold text-[#0458A9] text-lg">
                         {currentDate.toLocaleString("default", {
                           month: "long",
                           year: "numeric",
                         })}
                       </div>
-                      <button
+                      <motion.button
                         onClick={() => handleMonthChange(1)}
                         className="text-gray-600 hover:text-[#0458A9]"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
                       >
                         →
-                      </button>
+                      </motion.button>
                     </div>
                     <div className="text-sm text-gray-600 mb-2 text-center">
                       Bookings available from{" "}
@@ -346,16 +381,25 @@ export default function ReserveStep1Modal({
                     </div>
                     <div className="grid grid-cols-7 gap-1 text-center text-gray-700 text-base mb-1">
                       {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-                        (d) => (
-                          <div key={d} className="font-semibold">
+                        (d, index) => (
+                          <motion.div
+                            key={d}
+                            className="font-semibold"
+                            initial={{ opacity: 0, y: -5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{
+                              duration: 0.1,
+                              delay: 0.4 + index * 0.01,
+                            }}
+                          >
                             {d}
-                          </div>
+                          </motion.div>
                         )
                       )}
                     </div>
                     <div className="grid grid-cols-7 gap-1 text-center">
                       {calendarDays.map((dayData, i) => (
-                        <button
+                        <motion.button
                           key={i}
                           className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center text-base transition border-2 ${
                             !dayData
@@ -376,33 +420,54 @@ export default function ReserveStep1Modal({
                               ? "Bookings available from 2 weeks ahead"
                               : ""
                           }
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{
+                            duration: 0.1,
+                            delay: 0.45 + i * 0.005,
+                          }}
+                          whileHover={
+                            dayData && !dayData.disabled ? { scale: 1.1 } : {}
+                          }
+                          whileTap={
+                            dayData && !dayData.disabled ? { scale: 0.9 } : {}
+                          }
                         >
                           {dayData?.day || ""}
-                        </button>
+                        </motion.button>
                       ))}
                     </div>
-                  </div>
-                </div>
-              </div>
+                  </motion.div>
+                </motion.div>
+              </motion.div>
             </div>
             {/* Footer: Back/Next */}
-            <div className="flex justify-between items-center mt-6 w-full">
-              <button
+            <motion.div
+              className="flex justify-between items-center mt-6 w-full"
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.2, delay: 0.5 }}
+            >
+              <motion.button
                 className="text-gray-400 font-semibold text-base px-6 py-2 rounded-full cursor-pointer hover:text-[#0458A9] hover:bg-gray-100 transition"
                 onClick={onClose}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
                 Back
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 className="bg-[#0458A9] text-white rounded-full px-10 py-2 font-semibold text-base hover:bg-[#03407a] transition"
                 onClick={handleNext}
                 disabled={selectedDays.length === 0}
+                whileHover={{ scale: selectedDays.length > 0 ? 1.02 : 1 }}
+                whileTap={{ scale: selectedDays.length > 0 ? 0.98 : 1 }}
               >
                 Next
-              </button>
-            </div>
-          </div>
-        </div>
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       )}
       {/* Step 2 Modal */}
       <ReserveStep2Modal
@@ -426,7 +491,64 @@ export default function ReserveStep1Modal({
         }}
       />
       {/* Add Venue Selector Modal */}
-      {showVenueSelector && <VenueSelector />}
-    </>
+      <AnimatePresence>
+        {showVenueSelector && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.1 }}
+            onClick={() => setShowVenueSelector(false)}
+          >
+            <motion.div
+              className="bg-white rounded-2xl shadow-xl max-w-4xl w-full mx-4 p-6"
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-2xl font-bold text-[#0458A9]">
+                  Select a Venue
+                </h3>
+                <motion.button
+                  onClick={() => setShowVenueSelector(false)}
+                  className="text-gray-400 hover:text-gray-700"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <X size={24} />
+                </motion.button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {venues.map((v, index) => (
+                  <motion.button
+                    key={v.id}
+                    onClick={() => handleVenueSelect(v)}
+                    className="flex flex-col items-center p-4 border rounded-xl hover:border-[#0458A9] transition"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.15, delay: index * 0.02 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="w-full aspect-video rounded-lg overflow-hidden mb-2">
+                      <img
+                        src={v.images ? v.images[0] : v.image}
+                        alt={v.name}
+                        className="object-cover w-full h-full"
+                      />
+                    </div>
+                    <h4 className="font-semibold text-[#0458A9]">{v.name}</h4>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </AnimatePresence>
   );
 }
