@@ -46,10 +46,19 @@ export default function Calendar({
     period: "",
     colonVisible: true,
   });
+  const [currentDatePST, setCurrentDatePST] = useState("");
 
   useEffect(() => {
     const timerId = setInterval(() => {
       const now = new Date();
+      // Format Date for PST
+      const dateString = now.toLocaleDateString("en-US", {
+        timeZone: "Asia/Manila",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      setCurrentDatePST(dateString);
 
       // Format Time for PST (hours, minutes, period)
       const hour = now
