@@ -12,6 +12,9 @@ export default function ReserveStep2Modal({
   reservationData = {},
   onReservationSubmitted, // <-- add this prop
 }) {
+  // Debug log
+  console.log('ReserveStep2Modal venues:', venues, 'reservationData:', reservationData, 'initialVenue:', initialVenue);
+
   // Initialize form state with all needed fields
   const [form, setForm] = useState({
     title: "",
@@ -19,8 +22,8 @@ export default function ReserveStep2Modal({
     purpose: "",
     startTime: "07:00",
     endTime: "08:00",
-    venue: initialVenue || (venues[0] ? venues[0].name : ""),
-    participants: "",
+    venue: reservationData?.venue?.name || initialVenue || (venues[0] ? venues[0].name : ""),
+    participants: reservationData?.participants || "",
     contactPerson: "",
     contactPosition: "",
     contactNumber: "",
@@ -97,24 +100,38 @@ export default function ReserveStep2Modal({
           bookingType: reservationData?.bookingType || prev.bookingType,
         }));
       }
+      setForm((prev) => ({
+        ...prev,
+        venue: reservationData?.venue?.name || initialVenue || (venues[0] ? venues[0].name : ""),
+        participants: reservationData?.participants || prev.participants || "",
+      }));
     }
-  }, [open, reservationData?.bookingType, reservationData?.rawSelectedDays]); // Removed isMultipleDays, sameTimeForAllDays, form.startTime, form.endTime from main dependencies
+  }, [open, reservationData?.bookingType, reservationData?.rawSelectedDays, reservationData?.venue?.name, initialVenue, venues]); // Removed isMultipleDays, sameTimeForAllDays, form.startTime, form.endTime from main dependencies
 
   // Effect to handle changes when 'sameTimeForAllDays' toggle changes for multi-day
   useEffect(() => {
     if (open && isMultipleDays) {
       if (sameTimeForAllDays) {
         // When toggling TO sameTimeForAllDays, set main form times from the first dailyTime or defaults
-        const firstDailyStartTime = dailyTimes[0]?.startTime || "07:00";
-        const firstDailyEndTime = dailyTimes[0]?.endTime || "08:00";
+        const firstDailyStartTime = dailyTimes[0]?.startTime || form.startTime || "07:00";
+        const firstDailyEndTime = dailyTimes[0]?.endTime || form.endTime || "08:00";
         setForm((prev) => ({
           ...prev,
           startTime: firstDailyStartTime,
           endTime: firstDailyEndTime,
         }));
+        // Also update all dailyTimes to match
+        if (reservationData.rawSelectedDays) {
+          setDailyTimes(
+            reservationData.rawSelectedDays.map((day) => ({
+              date: day.formattedDate,
+              startTime: firstDailyStartTime,
+              endTime: firstDailyEndTime,
+            }))
+          );
+        }
       } else {
         // When toggling FROM sameTimeForAllDays, re-initialize dailyTimes using current form times
-        // or defaults if form times are not sensible for individual setting.
         const currentFormStartTime = form.startTime || "07:00";
         const currentFormEndTime = form.endTime || "08:00";
         if (reservationData.rawSelectedDays) {
@@ -236,20 +253,29 @@ export default function ReserveStep2Modal({
     };
 
     let timeDetails = {};
-    if (isMultipleDays && !sameTimeForAllDays) {
+    if (isMultipleDays) {
+      // Always set eventTimesPerDay for multi-day, regardless of sameTimeForAllDays
       timeDetails = {
-        eventTimesPerDay: dailyTimes.map((dt) => ({
-          date: (() => {
-            // Always store as local YYYY-MM-DD
-            const local = new Date(dt.date);
-            return local.getFullYear() + '-' +
-              String(local.getMonth() + 1).padStart(2, '0') + '-' +
-              String(local.getDate()).padStart(2, '0');
-          })(),
-          startTime: formatTimeForDisplay(dt.startTime),
-          endTime: formatTimeForDisplay(dt.endTime),
-        })),
-        // Explicitly nullify or omit single startTime/endTime if using daily times
+        eventTimesPerDay: (sameTimeForAllDays
+          ? reservationData.rawSelectedDays.map((day) => ({
+              date: day.formattedDate,
+              startTime: formatTimeForDisplay(form.startTime),
+              endTime: formatTimeForDisplay(form.endTime),
+            }))
+          : dailyTimes.map((dt) => ({
+              date: (() => {
+                const local = new Date(dt.date);
+                return (
+                  local.getFullYear() +
+                  "-" +
+                  String(local.getMonth() + 1).padStart(2, "0") +
+                  "-" +
+                  String(local.getDate()).padStart(2, "0")
+                );
+              })(),
+              startTime: formatTimeForDisplay(dt.startTime),
+              endTime: formatTimeForDisplay(dt.endTime),
+            }))),
         startTime: null,
         endTime: null,
       };
@@ -257,7 +283,7 @@ export default function ReserveStep2Modal({
       timeDetails = {
         startTime: formatTimeForDisplay(form.startTime),
         endTime: formatTimeForDisplay(form.endTime),
-        eventTimesPerDay: null, // Explicitly nullify or omit if using single time
+        eventTimesPerDay: null,
       };
     }
 
@@ -266,7 +292,7 @@ export default function ReserveStep2Modal({
       eventTitle: form.title,
       eventType: form.type,
       eventPurpose: form.purpose,
-      ...timeDetails, // Spread the determined time details
+      ...timeDetails,
       venue: venueObj,
       participants: parseInt(form.participants),
       contactPerson: form.contactPerson || "",
@@ -302,6 +328,47 @@ export default function ReserveStep2Modal({
             </h2>
             {/* Form */}
             <form className="flex flex-col gap-8 w-full">
+              {/* Row 0: Preferred Venue & Participants */}
+              <div className="flex flex-col md:flex-row gap-6 w-full">
+                <div className="flex-1">
+                  <label className="font-semibold text-gray-800 mb-1 block">
+                    <span className="text-[#E53935]">*</span> Preferred Venue
+                  </label>
+                  <select
+                    name="venue"
+                    value={form.venue}
+                    onChange={handleChange}
+                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                    required
+                  >
+                    {venues.length === 0 ? (
+                      <option value="">No venues available</option>
+                    ) : (
+                      venues.map((v) => (
+                        <option key={v.name} value={v.name}>
+                          {v.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="font-semibold text-gray-800 mb-1 block">
+                    <span className="text-[#E53935]">*</span> No. of Participants
+                  </label>
+                  <input
+                    type="number"
+                    name="participants"
+                    value={form.participants}
+                    onChange={handleChange}
+                    placeholder="e.g., 50"
+                    min={1}
+                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                    required
+                  />
+                </div>
+              </div>
+
               {/* Row 1: Title & Type */}
               <div className="flex flex-col md:flex-row gap-6 w-full">
                 <div className="flex-1">
@@ -568,15 +635,12 @@ export default function ReserveStep2Modal({
                                 )
                               }
                               className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                              disabled={!dayTime.startTime}
                             >
-                              {getEndTimeOptions(dayTime.startTime).map(
-                                (opt) => (
-                                  <option key={opt.value} value={opt.value}>
-                                    {opt.display}
-                                  </option>
-                                )
-                              )}
+                              {getEndTimeOptions(dayTime.startTime).map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.display}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </div>
@@ -584,80 +648,27 @@ export default function ReserveStep2Modal({
                     ))}
                   </div>
                 )}
-
-              {/* Row 4: Venue, Participants */}
-              <div className="flex flex-col md:flex-row gap-6 w-full">
-                <div className="flex-1 relative">
-                  <label className="font-semibold text-gray-800 mb-1 block">
-                    <span className="text-[#E53935]">*</span> Preferred Venue
-                  </label>
-                  <button
-                    type="button"
-                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base flex items-center justify-between focus:outline-none focus:border-[#0458A9]"
-                    onClick={() => setVenueDropdown((v) => !v)}
-                  >
-                    {form.venue || "Select Venue"}
-                    <ChevronDown size={20} />
-                  </button>
-                  {venueDropdown && (
-                    <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-300 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
-                      {venues.map((v) => (
-                        <div
-                          key={v.name}
-                          className="px-4 py-2 hover:bg-blue-50 cursor-pointer"
-                          onClick={() => handleVenueSelect(v.name)}
-                        >
-                          {v.name}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>{" "}
-                <div className="flex-1">
-                  <label className="font-semibold text-gray-800 mb-1 block">
-                    <span className="text-[#E53935]">*</span> No. of
-                    Participants
-                  </label>
-                  <input
-                    type="number"
-                    name="participants"
-                    value={form.participants}
-                    onChange={handleChange}
-                    placeholder="e.g., 50"
-                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                    required
-                    min={1}
-                  />
-                </div>
-              </div>
             </form>
-            {/* Footer: Previous/Next */}
-            <div className="flex justify-between items-center mt-6 w-full">
+            <div className="flex justify-end mt-8 gap-4">
               <button
-                className="text-gray-400 font-semibold text-base px-6 py-2 rounded-full cursor-pointer hover:text-[#0458A9] hover:bg-gray-100 transition"
+                type="button"
+                className="px-6 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300"
                 onClick={onPrevious}
               >
                 Previous
               </button>
               <button
-                className="bg-[#0458A9] text-white rounded-full px-10 py-2 font-semibold text-base hover:bg-[#03407a] transition"
+                type="button"
+                className="px-6 py-2 rounded-lg bg-[#0458A9] text-white font-semibold hover:bg-[#02396b]"
                 onClick={() => {
-                  const combinedData = prepareStep3Data();
-                  setStep2Data(combinedData);
+                  // Simple validation for required fields
+                  if (!form.title || !form.type || !form.purpose || !form.contactPerson || !form.contactPosition || !form.contactNumber || !form.orgName || (!form.startTime && sameTimeForAllDays) || (!form.endTime && sameTimeForAllDays)) {
+                    alert("Please fill in all required fields.");
+                    return;
+                  }
                   setStep3Open(true);
+                  setStep2Data(prepareStep3Data());
                 }}
-                disabled={
-                  !form.title ||
-                  !form.type ||
-                  !form.purpose ||
-                  ((sameTimeForAllDays || !isMultipleDays) &&
-                    (!form.startTime || !form.endTime)) ||
-                  (isMultipleDays &&
-                    !sameTimeForAllDays &&
-                    dailyTimes.some((dt) => !dt.startTime || !dt.endTime)) ||
-                  !form.venue ||
-                  !form.participants
-                }
               >
                 Next
               </button>
@@ -665,7 +676,6 @@ export default function ReserveStep2Modal({
           </div>
         </div>
       )}
-      {/* Step 3 Modal */}
       {step3Open && (
         <ReserveStep3Modal
           open={step3Open}
@@ -674,12 +684,11 @@ export default function ReserveStep2Modal({
             onClose && onClose();
           }}
           onPrevious={() => setStep3Open(false)}
-          onSubmit={(files) => {
-            setStep3Open(false);
-            onNext && onNext({ ...step2Data, files });
-            if (onReservationSubmitted) onReservationSubmitted(); // <-- refresh requests
-          }}
           reservationData={step2Data}
+          onReservationSubmitted={() => {
+            setStep3Open(false);
+            onClose && onClose();
+          }}
         />
       )}
     </>

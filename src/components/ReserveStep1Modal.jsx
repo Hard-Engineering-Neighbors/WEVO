@@ -113,30 +113,26 @@ export default function ReserveStep1Modal({
     );
   };
   const isDateBooked = (date) => {
+    // Block Sundays
+    if (date.getDay() === 0) return true;
+
+    // For multi-day booking, block all selected days
+    if (bookingType === "multiple" && selectedDays.length > 0) {
+      const dateStr = normalizeDate(date);
+      if (selectedDays.some((d) => d.formattedDate === dateStr)) {
+        return true;
+      }
+    }
+
     const dateStr = normalizeDate(date);
+    // Block if ANY approved booking exists for this date (not just full day)
     const bookingsForDate = bookedSlots.filter(
       (slot) =>
         slot.status &&
         slot.status.toLowerCase() === "approved" &&
         slot.perDayTimes.some((day) => normalizeDate(day.date) === dateStr)
     );
-    // If both morning and afternoon are booked, or a booking covers the whole day, return true
-    let morningBooked = false,
-      afternoonBooked = false,
-      fullDayBooked = false;
-    bookingsForDate.forEach((slot) => {
-      slot.perDayTimes.forEach((day) => {
-        if (normalizeDate(day.date) === dateStr) {
-          const start = parseInt(day.startTime.split(":")[0], 10);
-          const end = parseInt(day.endTime.split(":")[0], 10);
-          // University rule: 7:00 to 13:00 (1pm) or later is a full day
-          if (start === 7 && end >= 13) fullDayBooked = true;
-          else if (start < 13 && end <= 13) morningBooked = true;
-          else if (start >= 13) afternoonBooked = true;
-        }
-      });
-    });
-    return fullDayBooked || (morningBooked && afternoonBooked);
+    return bookingsForDate.length > 0;
   };
 
   if (!open || !venue) return null;
@@ -175,6 +171,7 @@ export default function ReserveStep1Modal({
 
   const handleVenueSelect = (selectedVenue) => {
     onChangeVenue(selectedVenue);
+    setSelectedDays([]);
     setShowVenueSelector(false);
   };
 

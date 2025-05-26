@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, FileText, DownloadCloud } from "lucide-react";
 import RejectionReasonModal from "./RejectionReasonModal";
+import { fetchVenues } from "../api/venues";
 
 export default function AdminReservationReviewModal({
   open,
@@ -10,6 +11,11 @@ export default function AdminReservationReviewModal({
   requestData = {},
 }) {
   const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
+  const [venues, setVenues] = useState([]);
+
+  useEffect(() => {
+    fetchVenues().then(setVenues);
+  }, []);
 
   if (!open) return null;
 
@@ -192,7 +198,15 @@ export default function AdminReservationReviewModal({
                   Event Date
                 </label>
                 <div className="p-2.5 bg-gray-100 rounded-md mt-1">
-                  {displayDate}
+                  {perDayTimes.length > 0 ? (
+                    <div className="flex flex-col gap-1">
+                      {perDayTimes.map((d, i) => (
+                        <span key={i}>{new Date(d.date).toLocaleDateString()}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    displayDate
+                  )}
                 </div>
               </div>
               <div>
@@ -200,7 +214,15 @@ export default function AdminReservationReviewModal({
                   Event Time
                 </label>
                 <div className="p-2.5 bg-gray-100 rounded-md mt-1">
-                  {displayTime}
+                  {perDayTimes.length > 0 ? (
+                    <div className="flex flex-col gap-1">
+                      {perDayTimes.map((d, i) => (
+                        <span key={i}>{d.startTime} - {d.endTime}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    displayTime
+                  )}
                 </div>
               </div>
               <div>

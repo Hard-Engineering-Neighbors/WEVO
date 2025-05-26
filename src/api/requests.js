@@ -601,7 +601,8 @@ export async function fetchStatistics() {
     totalRequests: 0,
     pending: 0,
     approved: 0,
-    rejected: 0
+    rejected: 0,
+    cancelled: 0
   };
   
   // If there are no requests, return default stats
@@ -615,6 +616,7 @@ export async function fetchStatistics() {
     if (status === "pending") stats.pending++;
     else if (status === "approved") stats.approved++;
     else if (status === "rejected") stats.rejected++;
+    else if (status === "cancelled") stats.cancelled++;
   });
   
   return stats;
