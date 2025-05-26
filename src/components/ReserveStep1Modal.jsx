@@ -47,6 +47,8 @@ export default function ReserveStep1Modal({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarDays, setCalendarDays] = useState([]);
   const [bookedSlots, setBookedSlots] = useState([]);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [partialDayInfo, setPartialDayInfo] = useState(null);
 
   // Set initial calendar month to the first available booking month when modal opens
   useEffect(() => {
@@ -116,23 +118,106 @@ export default function ReserveStep1Modal({
     // Block Sundays
     if (date.getDay() === 0) return true;
 
-    // For multi-day booking, block all selected days
-    if (bookingType === "multiple" && selectedDays.length > 0) {
+    // For multi-day booking, block all selected days and any day that is fully blocked in the backend
+    if (bookingType === "multiple") {
       const dateStr = normalizeDate(date);
       if (selectedDays.some((d) => d.formattedDate === dateStr)) {
         return true;
       }
+      // Also block if the day is fully blocked in the backend
+      return getPartialDayInfo(date).blocked;
     }
 
+    if (bookingType === "one") {
+      // Only block if the full day is blocked for single-day booking
+      return getPartialDayInfo(date).blocked;
+    }
+
+    // Default: not blocked
+    return false;
+  };
+
+  // Enhanced blackout logic for single-day bookings
+  const getPartialDayInfo = (date) => {
     const dateStr = normalizeDate(date);
-    // Block if ANY approved booking exists for this date (not just full day)
+    // Find all approved bookings for this date
     const bookingsForDate = bookedSlots.filter(
       (slot) =>
         slot.status &&
         slot.status.toLowerCase() === "approved" &&
         slot.perDayTimes.some((day) => normalizeDate(day.date) === dateStr)
     );
-    return bookingsForDate.length > 0;
+    // If any booking is multi-day (perDayTimes.length > 1), block the whole day
+    if (bookingsForDate.some((slot) => slot.perDayTimes.length > 1)) {
+      return { blocked: true };
+    }
+    // Gather all time ranges for this date
+    const times = bookingsForDate
+      .map((slot) =>
+        slot.perDayTimes
+          .filter((d) => normalizeDate(d.date) === dateStr)
+          .map((d) => ({ start: d.startTime, end: d.endTime }))
+      )
+      .flat();
+    if (times.length === 0) return { blocked: false };
+    // AM: any booking with endTime <= 12:30
+    // PM: any booking with startTime >= 13:00
+    let amBooked = false, pmBooked = false, amEnd = null, pmStart = null;
+    times.forEach(({ start, end }) => {
+      const [sH, sM] = start.split(":").map(Number);
+      const [eH, eM] = end.split(":").map(Number);
+      const startMins = sH * 60 + sM;
+      const endMins = eH * 60 + eM;
+      if (endMins <= 750) { // 12:30 PM or earlier
+        amBooked = true;
+        amEnd = end;
+      }
+      if (startMins >= 780 && endMins > startMins) { // 1:00 PM or later
+        pmBooked = true;
+        pmStart = start;
+      }
+      // If a booking overlaps both (e.g. 11:00–14:00), block the day
+      if (startMins < 780 && endMins > 750) {
+        amBooked = true; pmBooked = true;
+      }
+    });
+    if (amBooked && pmBooked) return { blocked: true };
+    if (amBooked) return { blocked: false, amBooked: true, amEnd: amEnd || "12:30" };
+    if (pmBooked) return { blocked: false, pmBooked: true, pmStart: pmStart || "13:00" };
+    return { blocked: false };
+  };
+
+  // When a single day is selected, compute partialDayInfo
+  useEffect(() => {
+    if (bookingType === "one" && selectedDays.length === 1) {
+      setPartialDayInfo(getPartialDayInfo(selectedDays[0].date));
+    } else {
+      setPartialDayInfo(null);
+    }
+  }, [bookingType, selectedDays, bookedSlots]);
+
+  // Deselect any selected day(s) that become blocked after a booking
+  useEffect(() => {
+    if (bookingType === "one" && selectedDays.length === 1) {
+      const day = selectedDays[0];
+      if (isDateBooked(day.date)) {
+        setSelectedDays([]);
+      }
+    }
+    if (bookingType === "multiple" && selectedDays.length > 0) {
+      const filtered = selectedDays.filter((d) => !isDateBooked(d.date));
+      if (filtered.length !== selectedDays.length) {
+        setSelectedDays(filtered);
+      }
+    }
+  }, [calendarDays, bookingType, selectedDays]);
+
+  // Function to refresh bookings for the current venue
+  const refreshBookings = async () => {
+    if (venue && venue.name) {
+      const data = await getVenueBookings(venue.name);
+      setBookedSlots(data);
+    }
   };
 
   if (!open || !venue) return null;
@@ -156,6 +241,11 @@ export default function ReserveStep1Modal({
   };
 
   const handleNext = () => {
+    if (bookingType === "multiple" && selectedDays.length < 2) {
+      setErrorMsg("Please select at least 2 days for a multiple-day booking.");
+      return;
+    }
+    setErrorMsg("");
     // Prepare data for backend
     const bookingData = {
       venueId: venue.id,
@@ -165,7 +255,6 @@ export default function ReserveStep1Modal({
       rawSelectedDays: selectedDays,
       venue: venue,
     };
-
     setStep2Open(true);
   };
 
@@ -393,11 +482,17 @@ export default function ReserveStep1Modal({
               <button
                 className="bg-[#0458A9] text-white rounded-full px-10 py-2 font-semibold text-base hover:bg-[#03407a] transition"
                 onClick={handleNext}
-                disabled={selectedDays.length === 0}
+                disabled={
+                  (bookingType === "multiple" && selectedDays.length < 2) ||
+                  (bookingType === "one" && selectedDays.length === 0)
+                }
               >
                 Next
               </button>
             </div>
+            {errorMsg && (
+              <div className="text-red-600 text-center mt-2 font-semibold">{errorMsg}</div>
+            )}
           </div>
         </div>
       )}
@@ -409,7 +504,8 @@ export default function ReserveStep1Modal({
           onClose();
         }}
         onPrevious={() => setStep2Open(false)}
-        onNext={(data) => {
+        onNext={async (data) => {
+          await refreshBookings();
           setStep2Open(false);
           onNext && onNext(data);
         }}
@@ -421,6 +517,7 @@ export default function ReserveStep1Modal({
           bookingType,
           rawSelectedDays: selectedDays,
         }}
+        partialDayInfo={partialDayInfo}
       />
       {/* Add Venue Selector Modal */}
       {showVenueSelector && <VenueSelector />}

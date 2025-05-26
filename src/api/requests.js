@@ -325,7 +325,7 @@ export async function cancelApprovedReservation({ bookingRequestId, userId, reas
       createNotification({
         userId: admin.id,
         type: "System",
-        message: `Reservation for ${booking.events?.venue || "venue"} was cancelled by the user.`,
+        message: `Reservation for ${booking.events?.title || booking.events?.venue || "venue"} by ${booking.organization_name || "an organization"} was cancelled by the user. Reason: ${reason}`,
         relatedRequestId: booking.id,
         data: {
           orgName: booking.organization_name,
@@ -335,6 +335,11 @@ export async function cancelApprovedReservation({ bookingRequestId, userId, reas
         role: "admin"
       })
     ));
+    // --- GLOBAL ADMIN NOTIFICATION ---
+    await sendAdminNotification({
+      message: `The reservation for ${booking.events?.title || booking.events?.venue || "venue"} by ${booking.organization_name || "an organization"} has been cancelled. Reason: ${reason}`,
+      related_request_id: booking.id,
+    });
   }
   // 3. Notify the user about the cancellation
   await createNotification({
@@ -582,6 +587,19 @@ export async function updateBookingRequestStatus(requestId, status, reason) {
       },
       role: "user"
     });
+    // --- ADMIN NOTIFICATION ---
+    let adminMsg = "";
+    if (status.toLowerCase() === "approved") {
+      adminMsg = `You have approved ${booking.organization_name || "an organization"}'s event: ${booking.events?.title || "an event"}.`;
+    } else if (status.toLowerCase() === "rejected") {
+      adminMsg = `You have rejected ${booking.organization_name || "an organization"}'s request for ${booking.events?.title || "an event"}. Reason: ${reason || booking.rejection_reason || "No reason provided."}`;
+    }
+    if (adminMsg) {
+      await sendAdminNotification({
+        message: adminMsg,
+        related_request_id: booking.id,
+      });
+    }
   }
 
   return data;
@@ -696,4 +714,31 @@ export async function getVenueBookings(venueName) {
       rejectionReason: req.rejection_reason,
     };
   });
+}
+
+// Fetch a booking request by ID (with event details)
+export async function fetchBookingRequest(requestId) {
+  const { data, error } = await supabase
+    .from('booking_requests')
+    .select('*, events(*)')
+    .eq('id', requestId)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Send a global admin notification
+export async function sendAdminNotification({ message, related_request_id }) {
+  const { error } = await supabase
+    .from("notifications")
+    .insert([
+      {
+        message,
+        related_request_id,
+        role: "admin",
+        status: "unread",
+        type: "admin",
+      },
+    ]);
+  if (error) throw error;
 }

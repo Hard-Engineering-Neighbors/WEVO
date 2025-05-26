@@ -359,7 +359,7 @@ export default function CalendarComponent({
       </div>
 
       {/* Modern Calendar Styles */}
-      <style jsx>{`
+      <style>{`
         .modern-calendar-wrapper {
           --primary-color: ${primaryColor};
           --primary-light: ${primaryColor}20;

@@ -317,9 +317,6 @@ export default function AdminReservationsPage() {
           requestData={selectedRequest}
         />
       )}
-      {selectedNotif && (
-        <NotificationDetailsModal notif={selectedNotif} onClose={() => setSelectedNotif(null)} />
-      )}
     </div>
   );
 }

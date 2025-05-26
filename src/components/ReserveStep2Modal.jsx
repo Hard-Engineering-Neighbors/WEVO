@@ -11,6 +11,7 @@ export default function ReserveStep2Modal({
   initialVenue = "",
   reservationData = {},
   onReservationSubmitted, // <-- add this prop
+  partialDayInfo = null, // <-- new prop
 }) {
   // Debug log
   console.log('ReserveStep2Modal venues:', venues, 'reservationData:', reservationData, 'initialVenue:', initialVenue);
@@ -146,6 +147,17 @@ export default function ReserveStep2Modal({
       }
     }
   }, [sameTimeForAllDays, open, isMultipleDays]); // Only depends on sameTimeForAllDays, open, and isMultipleDays
+
+  // Lock time fields if partialDayInfo is present and not multi-day
+  useEffect(() => {
+    if (!isMultipleDays && partialDayInfo) {
+      if (partialDayInfo.amBooked) {
+        setForm((prev) => ({ ...prev, startTime: "13:00", endTime: prev.endTime < "13:00" ? "19:00" : prev.endTime }));
+      } else if (partialDayInfo.pmBooked) {
+        setForm((prev) => ({ ...prev, startTime: prev.startTime > "12:30" ? "07:00" : prev.startTime, endTime: "12:00" }));
+      }
+    }
+  }, [partialDayInfo, isMultipleDays]);
 
   if (!open && !step3Open) return null;
 
@@ -308,6 +320,13 @@ export default function ReserveStep2Modal({
       {open && !step3Open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
           <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]">
+            {/* Notice for half-day bookings */}
+            {!isMultipleDays && partialDayInfo && (partialDayInfo.amBooked || partialDayInfo.pmBooked) && (
+              <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 mb-4 rounded">
+                Notice: On this date, this venue has been booked {partialDayInfo.amBooked ? `from 7:00 to ${partialDayInfo.amEnd}` : `from ${partialDayInfo.pmStart} to 19:00`}.<br />
+                As such, only {partialDayInfo.amBooked ? "13:00 to 19:00" : "7:00 to 12:00"} is available for booking.
+              </div>
+            )}
             {/* Close Button */}
             <button
               className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
@@ -334,23 +353,13 @@ export default function ReserveStep2Modal({
                   <label className="font-semibold text-gray-800 mb-1 block">
                     <span className="text-[#E53935]">*</span> Preferred Venue
                   </label>
-                  <select
+                  <input
+                    type="text"
                     name="venue"
                     value={form.venue}
-                    onChange={handleChange}
-                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                    required
-                  >
-                    {venues.length === 0 ? (
-                      <option value="">No venues available</option>
-                    ) : (
-                      venues.map((v) => (
-                        <option key={v.name} value={v.name}>
-                          {v.name}
-                        </option>
-                      ))
-                    )}
-                  </select>
+                    disabled
+                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9] cursor-not-allowed"
+                  />
                 </div>
                 <div className="flex-1">
                   <label className="font-semibold text-gray-800 mb-1 block">
@@ -540,12 +549,18 @@ export default function ReserveStep2Modal({
                       onChange={handleChange}
                       className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
                       required
+                      disabled={(!isMultipleDays && partialDayInfo && partialDayInfo.amBooked) || (!isMultipleDays && partialDayInfo && partialDayInfo.pmBooked)}
                     >
-                      {timeOptionsWithFormat.slice(0, -1).map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.display}
-                        </option>
-                      ))}
+                      {timeOptionsWithFormat.slice(0, -1).map((opt) => {
+                        // For half-day logic, filter options
+                        if (!isMultipleDays && partialDayInfo) {
+                          if (partialDayInfo.amBooked && opt.value < "13:00") return null;
+                          if (partialDayInfo.pmBooked && opt.value > "12:00") return null;
+                        }
+                        return (
+                          <option key={opt.value} value={opt.value}>{opt.display}</option>
+                        );
+                      })}
                     </select>
                   </div>
                   <div className="flex-1">
@@ -561,13 +576,22 @@ export default function ReserveStep2Modal({
                       onChange={handleChange}
                       className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
                       required
-                      disabled={!form.startTime}
+                      disabled={(!isMultipleDays && partialDayInfo && partialDayInfo.amBooked) || (!isMultipleDays && partialDayInfo && partialDayInfo.pmBooked) || !form.startTime}
                     >
-                      {getEndTimeOptions(form.startTime).map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.display}
-                        </option>
-                      ))}
+                      {getEndTimeOptions(form.startTime).map((opt) => {
+                        if (!isMultipleDays && partialDayInfo) {
+                          // If AM booked, only allow PM slot
+                          if (partialDayInfo.amBooked && opt.value < "13:00") return null;
+                          // If PM booked, only allow AM slot
+                          if (partialDayInfo.pmBooked && opt.value > "12:30") return null;
+                        }
+                        // Additional logic: If start time is 13:00 or later, only allow end times after start and after 13:00
+                        if (!isMultipleDays && form.startTime >= "13:00" && opt.value < form.startTime) return null;
+                        if (!isMultipleDays && form.startTime < "13:00" && opt.value > "12:30") return null;
+                        return (
+                          <option key={opt.value} value={opt.value}>{opt.display}</option>
+                        );
+                      })}
                     </select>
                   </div>
                 </div>

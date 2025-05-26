@@ -10,6 +10,7 @@ import {
   updateBookingRequestStatus,
   fetchStatistics,
 } from "../api/requests";
+import { supabase } from "../supabase/supabaseClient";
 
 // Helper function to truncate text
 const truncateText = (text, maxLength) => {
@@ -80,30 +81,56 @@ export default function AdminDashboardPage() {
     setSelectedRequest(null);
   };
 
-  const handleApproveRequest = (requestId) => {
-    updateBookingRequestStatus(requestId, "Approved")
-      .then(() =>
-        setRequests((prev) =>
-          prev.map((r) =>
-            r.id === requestId ? { ...r, status: "Approved" } : r
-          )
+  const handleApproveRequest = async (requestId) => {
+    try {
+      await updateBookingRequestStatus(requestId, "Approved");
+      setRequests((prev) =>
+        prev.map((r) =>
+          r.id === requestId ? { ...r, status: "Approved" } : r
         )
-      )
-      .catch((err) => console.error("Error approving on dashboard:", err));
+      );
+      // Send confirmation notification to the admin
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from("notifications").insert([
+        {
+          user_id: user.id,
+          type: "admin",
+          message: `You have approved a booking request (ID: ${requestId}).`,
+          related_request_id: requestId,
+          status: "unread",
+          role: "admin"
+        }
+      ]);
+    } catch (err) {
+      console.error("Error approving on dashboard:", err);
+    }
   };
 
-  const handleRejectRequest = (requestId, reason) => {
-    updateBookingRequestStatus(requestId, "Rejected", reason)
-      .then(() =>
-        setRequests((prev) =>
-          prev.map((r) =>
-            r.id === requestId
-              ? { ...r, status: "Rejected", rejectionReason: reason }
-              : r
-          )
+  const handleRejectRequest = async (requestId, reason) => {
+    try {
+      await updateBookingRequestStatus(requestId, "Rejected", reason);
+      setRequests((prev) =>
+        prev.map((r) =>
+          r.id === requestId
+            ? { ...r, status: "Rejected", rejectionReason: reason }
+            : r
         )
-      )
-      .catch((err) => console.error("Error rejecting on dashboard:", err));
+      );
+      // Send confirmation notification to the admin
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase.from("notifications").insert([
+        {
+          user_id: user.id,
+          type: "admin",
+          message: `You have rejected a booking request (ID: ${requestId}). Reason: ${reason}`,
+          related_request_id: requestId,
+          status: "unread",
+          role: "admin"
+        }
+      ]);
+    } catch (err) {
+      console.error("Error rejecting on dashboard:", err);
+    }
   };
 
   return (
