@@ -171,6 +171,7 @@ export default function ReserveStep1Modal({
 
   const handleVenueSelect = (selectedVenue) => {
     onChangeVenue(selectedVenue);
+    setSelectedDays([]);
     setShowVenueSelector(false);
   };
 

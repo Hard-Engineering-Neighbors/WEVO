@@ -1,12 +1,24 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Users } from "lucide-react";
 import ReserveStep1Modal from "./ReserveStep1Modal";
+import { fetchVenues } from "../api/venues";
 
 export default function VenueDetailsModal({ open, onClose, venue }) {
   const [reserveOpen, setReserveOpen] = useState(false);
   const [current, setCurrent] = useState(0);
   const [step1Open, setStep1Open] = useState(false);
   const [reservationData, setReservationData] = useState({});
+  const [venues, setVenues] = useState([]);
+  const [selectedVenue, setSelectedVenue] = useState(venue);
+
+  useEffect(() => {
+    fetchVenues().then(setVenues);
+  }, []);
+
+  // Reset selectedVenue when modal is opened with a new venue
+  useEffect(() => {
+    if (open && venue) setSelectedVenue(venue);
+  }, [open, venue]);
 
   if (!open || !venue) return null;
 
@@ -113,16 +125,13 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
       <ReserveStep1Modal
         open={reserveOpen}
         onClose={() => setReserveOpen(false)}
-        venue={venue}
-        onChangeVenue={() => {
-          setReserveOpen(false);
-          onClose();
-        }}
+        venue={selectedVenue}
+        onChangeVenue={(newVenue) => setSelectedVenue(newVenue)}
         onNext={(data) => {
-          // TODO: handle next step
           setReserveOpen(false);
           onClose();
         }}
+        venues={venues}
       />
     </>
   );

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, FileText, DownloadCloud } from "lucide-react";
 import RejectionReasonModal from "./RejectionReasonModal";
+import { fetchVenues } from "../api/venues";
 
 export default function AdminReservationReviewModal({
   open,
@@ -10,6 +11,11 @@ export default function AdminReservationReviewModal({
   requestData = {},
 }) {
   const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
+  const [venues, setVenues] = useState([]);
+
+  useEffect(() => {
+    fetchVenues().then(setVenues);
+  }, []);
 
   if (!open) return null;
 
