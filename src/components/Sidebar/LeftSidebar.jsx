@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { CalendarDays, MapPin, RotateCcw, HelpCircle, X } from "lucide-react";
+import {
+  CalendarDays,
+  MapPin,
+  RotateCcw,
+  HelpCircle,
+  X,
+  Wrench,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -7,6 +14,12 @@ export default function LeftSidebar({ active = "calendar" }) {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+
+  // State for individual under construction modals
+  const [isFaqModalOpen, setIsFaqModalOpen] = useState(false);
+  const [isUserManualModalOpen, setIsUserManualModalOpen] = useState(false);
+  const [isPreferencesModalOpen, setIsPreferencesModalOpen] = useState(false);
+  const [isContactAdminModalOpen, setIsContactAdminModalOpen] = useState(false);
 
   // Route guard: block navigation to login/2fa/landing if logged in
   const handleNav = (path) => {
@@ -47,12 +60,12 @@ export default function LeftSidebar({ active = "calendar" }) {
   ];
 
   const supportTools = [
-    { name: "FAQ", action: () => console.log("FAQ clicked") },
-    { name: "User Manual", action: () => console.log("User Manual clicked") },
-    { name: "Preferences", action: () => console.log("Preferences clicked") },
+    { name: "FAQ", action: () => setIsFaqModalOpen(true) },
+    { name: "User Manual", action: () => setIsUserManualModalOpen(true) },
+    { name: "Preferences", action: () => setIsPreferencesModalOpen(true) },
     {
       name: "Contact Admin",
-      action: () => console.log("Contact Admin clicked"),
+      action: () => setIsContactAdminModalOpen(true),
     },
   ];
 
@@ -76,16 +89,43 @@ export default function LeftSidebar({ active = "calendar" }) {
             {supportTools.map((tool) => (
               <button
                 key={tool.name}
-                onClick={() => {
-                  tool.action();
-                  setIsSupportModalOpen(false);
-                }}
+                onClick={tool.action}
                 className="border rounded-full py-2.5 px-4 text-sm text-gray-700 hover:bg-gray-100 w-full font-medium"
               >
                 {tool.name}
               </button>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Generic Under Construction Modal Component
+  const UnderConstructionModal = ({ isOpen, onClose, title }) => {
+    if (!isOpen) return null;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+        <div className="relative bg-white rounded-xl shadow-xl max-w-xs w-full p-6 text-center">
+          <button
+            className="absolute top-3 right-3 text-gray-400 hover:text-gray-700"
+            onClick={onClose}
+            aria-label="Close modal"
+          >
+            <X size={20} />
+          </button>
+          <h3 className="text-xl font-bold text-[#0458A9] mb-4">{title}</h3>
+          <Wrench size={48} className="mx-auto text-gray-400 mb-4" />
+          <p className="text-gray-600">
+            This feature is currently under construction.
+          </p>
+          <p className="text-gray-600">Please check back later!</p>
+          <button
+            onClick={onClose}
+            className="mt-6 bg-[#0458A9] text-white rounded-full py-2 px-6 hover:bg-[#034a8a] transition-colors"
+          >
+            Close
+          </button>
         </div>
       </div>
     );
@@ -140,18 +180,15 @@ export default function LeftSidebar({ active = "calendar" }) {
             Support Tools
           </h3>
           <div className="flex flex-col gap-2 w-full">
-            <button className="border rounded-full py-2 px-4 text-xs md:text-base text-gray-700 hover:bg-gray-100 w-full">
-              FAQ
-            </button>
-            <button className="border rounded-full py-2 px-4 text-xs md:text-base text-gray-700 hover:bg-gray-100 w-full">
-              User Manual
-            </button>
-            <button className="border rounded-full py-2 px-4 text-xs md:text-base text-gray-700 hover:bg-gray-100 w-full">
-              Preferences
-            </button>
-            <button className="border rounded-full py-2 px-4 text-xs md:text-base text-gray-700 hover:bg-gray-100 w-full">
-              Contact Admin
-            </button>
+            {supportTools.map((tool) => (
+              <button
+                key={tool.name}
+                onClick={tool.action}
+                className="border rounded-full py-2 px-4 text-xs md:text-base text-gray-700 hover:bg-gray-100 w-full"
+              >
+                {tool.name}
+              </button>
+            ))}
           </div>
         </div>
       </aside>
@@ -182,6 +219,28 @@ export default function LeftSidebar({ active = "calendar" }) {
 
       {/* Support Modal for Mobile */}
       <SupportModal />
+
+      {/* Individual Under Construction Modals */}
+      <UnderConstructionModal
+        isOpen={isFaqModalOpen}
+        onClose={() => setIsFaqModalOpen(false)}
+        title="FAQ"
+      />
+      <UnderConstructionModal
+        isOpen={isUserManualModalOpen}
+        onClose={() => setIsUserManualModalOpen(false)}
+        title="User Manual"
+      />
+      <UnderConstructionModal
+        isOpen={isPreferencesModalOpen}
+        onClose={() => setIsPreferencesModalOpen(false)}
+        title="Preferences"
+      />
+      <UnderConstructionModal
+        isOpen={isContactAdminModalOpen}
+        onClose={() => setIsContactAdminModalOpen(false)}
+        title="Contact Admin"
+      />
     </>
   );
 }
