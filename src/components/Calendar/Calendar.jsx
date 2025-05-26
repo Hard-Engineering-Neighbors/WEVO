@@ -14,7 +14,7 @@ const dummyEventData = [
   },
   {
     id: 2,
-    date: "2025-04-11",
+    date: "2025-04-10",
     venue: "COM Gym",
     event: "Volleyball Tournament",
     time: "10:00 AM - 4:00 PM",
