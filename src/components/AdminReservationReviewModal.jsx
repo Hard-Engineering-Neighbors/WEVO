@@ -192,7 +192,15 @@ export default function AdminReservationReviewModal({
                   Event Date
                 </label>
                 <div className="p-2.5 bg-gray-100 rounded-md mt-1">
-                  {displayDate}
+                  {perDayTimes.length > 0 ? (
+                    <div className="flex flex-col gap-1">
+                      {perDayTimes.map((d, i) => (
+                        <span key={i}>{new Date(d.date).toLocaleDateString()}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    displayDate
+                  )}
                 </div>
               </div>
               <div>
@@ -200,7 +208,15 @@ export default function AdminReservationReviewModal({
                   Event Time
                 </label>
                 <div className="p-2.5 bg-gray-100 rounded-md mt-1">
-                  {displayTime}
+                  {perDayTimes.length > 0 ? (
+                    <div className="flex flex-col gap-1">
+                      {perDayTimes.map((d, i) => (
+                        <span key={i}>{d.startTime} - {d.endTime}</span>
+                      ))}
+                    </div>
+                  ) : (
+                    displayTime
+                  )}
                 </div>
               </div>
               <div>

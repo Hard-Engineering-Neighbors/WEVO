@@ -244,9 +244,13 @@ export default function AdminReservationsPage() {
                       </td>
                       <td className="px-4 py-3">
                         {res.perDayTimes && res.perDayTimes.length > 0 ? (
-                          <span>
-                            {new Date(res.perDayTimes[0].date).toLocaleDateString()} {res.perDayTimes[0].startTime} - {new Date(res.perDayTimes[res.perDayTimes.length-1].date).toLocaleDateString()} {res.perDayTimes[res.perDayTimes.length-1].endTime}
-                          </span>
+                          <div className="flex flex-col gap-1">
+                            {res.perDayTimes.map((d, i) => (
+                              <span key={i}>
+                                {new Date(d.date).toLocaleDateString()} {d.startTime} - {d.endTime}
+                              </span>
+                            ))}
+                          </div>
                         ) : (
                           <>
                             <div>{res.date}</div>
@@ -264,6 +268,8 @@ export default function AdminReservationsPage() {
                               ? "bg-green-100 text-green-800"
                               : res.status === "Rejected"
                               ? "bg-red-100 text-red-800"
+                              : res.status === "Cancelled"
+                              ? "bg-gray-300 text-gray-700 border border-gray-400"
                               : "bg-gray-100 text-gray-800"
                           }`}
                         >
