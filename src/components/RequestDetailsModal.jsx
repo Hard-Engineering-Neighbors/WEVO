@@ -21,6 +21,7 @@ export default function RequestDetailsModal({
   const [errorMessage, setErrorMessage] = useState("");
   const [isCancellationReasonModalOpen, setIsCancellationReasonModalOpen] =
     useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showAllDates, setShowAllDates] = useState(false);
 
   if (!open || !request) return null;
@@ -43,7 +44,7 @@ export default function RequestDetailsModal({
 
   const handleCancelReservation = async (reason) => {
     if (typeof reason === "string") {
-      // Approved event: cancel with reason
+      setIsSubmitting(true);
       try {
         await cancelApprovedReservation({
           bookingRequestId: request.id,
@@ -56,6 +57,8 @@ export default function RequestDetailsModal({
       } catch (e) {
         setErrorMessage("Failed to cancel reservation: " + (e.message || e));
         setIsCancellationReasonModalOpen(false);
+      } finally {
+        setIsSubmitting(false);
       }
     } else {
       if (request.status && request.status.toLowerCase() === "approved") {
@@ -330,6 +333,7 @@ export default function RequestDetailsModal({
         open={isCancellationReasonModalOpen}
         onClose={() => setIsCancellationReasonModalOpen(false)}
         onSubmit={handleCancelReservation}
+        isSubmitting={isSubmitting}
       />
     </>
   );

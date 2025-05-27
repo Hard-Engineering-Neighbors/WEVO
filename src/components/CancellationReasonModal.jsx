@@ -1,7 +1,12 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 
-export default function CancellationReasonModal({ open, onClose, onSubmit }) {
+export default function CancellationReasonModal({
+  open,
+  onClose,
+  onSubmit,
+  isSubmitting,
+}) {
   const [reason, setReason] = useState("");
 
   if (!open) return null;
@@ -55,11 +60,33 @@ export default function CancellationReasonModal({ open, onClose, onSubmit }) {
           </button>
           <button
             type="button"
-            className="w-full sm:w-auto bg-[#0458A9] text-white rounded-lg px-6 py-2.5 font-medium text-sm hover:bg-[#03407a] transition order-1 sm:order-2"
+            className="w-full sm:w-auto bg-[#0458A9] text-white rounded-full px-6 py-2.5 font-medium text-sm hover:bg-[#03407a] transition order-1 sm:order-2 flex items-center justify-center"
             onClick={handleSubmit}
-            disabled={!reason.trim()}
+            disabled={!reason.trim() || isSubmitting}
           >
-            Submit Reason
+            {isSubmitting ? (
+              <svg
+                className="animate-spin h-5 w-5 mr-2 text-white"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
+              </svg>
+            ) : null}
+            {isSubmitting ? "Submitting..." : "Submit Reason"}
           </button>
         </div>
       </div>
