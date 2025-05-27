@@ -198,16 +198,15 @@ export async function createReservation({ form, files, user }) {
     .select("id")
     .eq("role", "admin");
   if (admins) {
-    await Promise.all(admins.map(admin =>
-      createNotification({
-        userId: admin.id,
-        type: "System",
-        message: `New booking request from ${form.orgName || user.email} for ${form.venue?.name || form.venue}`,
-        relatedRequestId: bookingData.id,
-        data: { orgName: form.orgName, venue: form.venue },
-        role: "admin"
-      })
-    ));
+    // Send a single global admin notification
+    await createNotification({
+      userId: null,
+      type: "System",
+      message: `New booking request from ${form.orgName || user.email} for ${form.venue?.name || form.venue}`,
+      relatedRequestId: bookingData.id,
+      data: { orgName: form.orgName, venue: form.venue },
+      role: "admin"
+    });
   }
   // Notify ONLY the user (not admins)
   await createNotification({
@@ -741,4 +740,44 @@ export async function sendAdminNotification({ message, related_request_id }) {
       },
     ]);
   if (error) throw error;
+}
+
+// Fetch global admin notifications
+export async function fetchGlobalAdminNotifications() {
+  const { data, error } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("role", "admin")
+    .filter("user_id", "is", null)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+// Fetch all approved events (for calendar)
+export async function fetchApprovedEvents() {
+  const { data, error } = await supabase
+    .from("booking_requests")
+    .select("id, status, per_day_times, events(id, title, org, venue, start_time, end_time)")
+    .eq("status", "approved");
+  if (error) throw error;
+  // Flatten and format the data for calendar use
+  return (data || []).map((req) => {
+    const event = req.events || {};
+    let perDayTimes = [];
+    if (req.per_day_times) {
+      try {
+        perDayTimes = typeof req.per_day_times === 'string' ? JSON.parse(req.per_day_times) : req.per_day_times;
+      } catch (e) { perDayTimes = []; }
+    }
+    return {
+      id: event.id || req.id,
+      title: event.title || "",
+      org: event.org || "",
+      venue: event.venue || "",
+      start_time: event.start_time || "",
+      end_time: event.end_time || "",
+      perDayTimes,
+    };
+  });
 }

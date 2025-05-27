@@ -1,77 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-
-// Event data structure for backend integration
-const dummyEventData = [
-  {
-    id: 1,
-    date: "2025-04-10",
-    venue: "COM Gym",
-    event: "Basketball Practice",
-    time: "7:30 AM - 9:30 AM",
-    organization: "Sports Club",
-  },
-  {
-    id: 2,
-    date: "2025-04-10",
-    venue: "COM Gym",
-    event: "Volleyball Tournament",
-    time: "10:00 AM - 4:00 PM",
-    organization: "Athletic Department",
-  },
-  {
-    id: 3,
-    date: "2025-04-12",
-    venue: "COM Gym",
-    event: "Fitness Class",
-    time: "6:00 PM - 7:30 PM",
-    organization: "Fitness Club",
-  },
-  {
-    id: 4,
-    date: "2025-04-17",
-    venue: "Cultural Center",
-    event: "Art Exhibition",
-    time: "9:00 AM - 6:00 PM",
-    organization: "Art Society",
-  },
-  {
-    id: 5,
-    date: "2025-05-11",
-    venue: "COM Gym",
-    event: "Swimming Competition",
-    time: "8:00 AM - 12:00 PM",
-    organization: "Swim Team",
-  },
-  {
-    id: 6,
-    date: "2025-05-12",
-    venue: "Cultural Center",
-    event: "Music Concert",
-    time: "7:00 PM - 9:00 PM",
-    organization: "Music Club",
-  },
-  {
-    id: 7,
-    date: "2025-05-17",
-    venue: "Cultural Center",
-    event: "Dance Performance",
-    time: "6:30 PM - 8:30 PM",
-    organization: "Dance Club",
-  },
-  {
-    id: 8,
-    date: "2025-05-18",
-    venue: "COM Gym",
-    event: "Tennis Match",
-    time: "2:00 PM - 5:00 PM",
-    organization: "Tennis Club",
-  },
-];
+import { fetchApprovedEvents } from "../../api/requests";
 
 export default function CalendarComponent({
-  eventData = dummyEventData,
   primaryColor = "#0458A9",
   onEventClick = null,
   onDateSelect = null,
@@ -79,22 +11,52 @@ export default function CalendarComponent({
 }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeStartDate, setActiveStartDate] = useState(new Date());
+  const [eventData, setEventData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Format date to YYYY-MM-DD for comparison
-  const formatDate = (date) => {
-    return date.toISOString().slice(0, 10);
+  useEffect(() => {
+    setLoading(true);
+    fetchApprovedEvents()
+      .then((data) => {
+        setEventData(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError("Failed to load events");
+        setLoading(false);
+      });
+  }, []);
+
+  // Helper to get YYYY-MM-DD in Asia/Manila
+  const getPHDateString = (date) => {
+    return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }); // 'YYYY-MM-DD'
   };
 
-  // Get events for a specific date
+  // Get events for a specific date (in PH time)
   const getEventsForDate = (date) => {
-    const dateStr = formatDate(date);
-    return eventData.filter((event) => event.date === dateStr);
+    const dateStr = getPHDateString(date);
+    return eventData.filter((event) => {
+      // If perDayTimes is present, check if any entry matches the date
+      if (event.perDayTimes && event.perDayTimes.length > 0) {
+        return event.perDayTimes.some((d) => d.date === dateStr);
+      }
+      // Otherwise, check if the date is between start_time and end_time (in PH time)
+      if (event.start_time && event.end_time) {
+        const start = new Date(new Date(event.start_time).toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+        const end = new Date(new Date(event.end_time).toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+        const d = new Date(dateStr + 'T00:00:00');
+        return d >= new Date(start.getFullYear(), start.getMonth(), start.getDate()) &&
+               d <= new Date(end.getFullYear(), end.getMonth(), end.getDate());
+      }
+      return false;
+    });
   };
 
   // Get events for selected date
   const selectedDateEvents = getEventsForDate(selectedDate);
 
-  // Check if a date has events
+  // Check if a date has events (in PH time)
   const hasEvents = (date) => {
     return getEventsForDate(date).length > 0;
   };
@@ -154,8 +116,8 @@ export default function CalendarComponent({
   // Custom tile className
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
-      const isToday = formatDate(date) === formatDate(new Date());
-      const isSelected = formatDate(date) === formatDate(selectedDate);
+      const isToday = getPHDateString(date) === getPHDateString(new Date());
+      const isSelected = getPHDateString(date) === getPHDateString(selectedDate);
 
       let classes = "calendar-tile";
       if (isToday) classes += " today";
@@ -240,7 +202,11 @@ export default function CalendarComponent({
               </p>
             </div>
 
-            {selectedDateEvents.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-8 text-gray-500">Loading events...</div>
+            ) : error ? (
+              <div className="text-center py-8 text-red-500">{error}</div>
+            ) : selectedDateEvents.length > 0 ? (
               <div className="space-y-3">
                 {selectedDateEvents.map((event) => (
                   <div
@@ -250,7 +216,7 @@ export default function CalendarComponent({
                   >
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-                        {event.event}
+                        {event.title}
                       </h4>
                       <div
                         className="w-3 h-3 rounded-full flex-shrink-0 ml-2"
@@ -294,7 +260,19 @@ export default function CalendarComponent({
                             d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        {event.time}
+                        {event.perDayTimes && event.perDayTimes.length > 0 ? (
+                          event.perDayTimes
+                            .filter((d) => d.date === getPHDateString(selectedDate))
+                            .map((d, idx) => (
+                              <span key={idx}>{d.startTime} - {d.endTime}</span>
+                            ))
+                        ) : (
+                          <span>
+                            {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Manila' })}
+                            {" - "}
+                            {new Date(event.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Manila' })}
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center">
                         <svg
@@ -310,7 +288,7 @@ export default function CalendarComponent({
                             d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                           />
                         </svg>
-                        {event.organization}
+                        {event.org}
                       </div>
                     </div>
                   </div>

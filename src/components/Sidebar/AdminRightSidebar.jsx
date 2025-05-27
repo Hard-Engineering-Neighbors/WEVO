@@ -6,6 +6,7 @@ import {
   fetchNotifications,
   markNotificationAsRead,
   fetchBookingRequest,
+  fetchGlobalAdminNotifications,
 } from "../../api/requests";
 import AdminNotificationDetailsModal from "../AdminNotificationDetailsModal";
 
@@ -48,6 +49,14 @@ function AdminLogoutConfirmModal({ open, onClose, onConfirm }) {
   );
 }
 
+// Helper function to truncate text
+const truncateText = (text, maxLength) => {
+  if (text && typeof text === "string" && text.length > maxLength) {
+    return text.substring(0, maxLength) + "...";
+  }
+  return text;
+};
+
 export default function AdminRightSidebar({ onNotificationClick }) {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
@@ -58,9 +67,11 @@ export default function AdminRightSidebar({ onNotificationClick }) {
   const [booking, setBooking] = useState(null);
 
   useEffect(() => {
-    if (!currentUser) return;
-    fetchNotifications(currentUser.id).then(setNotifications);
-  }, [currentUser]);
+    fetchGlobalAdminNotifications().then((data) => {
+      console.log("Fetched admin notifications:", data);
+      setNotifications(data);
+    });
+  }, []);
 
   useEffect(() => {
     if (selectedNotif && selectedNotif.related_request_id) {
@@ -75,10 +86,10 @@ export default function AdminRightSidebar({ onNotificationClick }) {
   const handleNotificationClick = async (notif) => {
     if (notif.status === "unread") {
       await markNotificationAsRead(notif.id);
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === notif.id ? { ...n, status: "read" } : n))
-      );
+      // Refetch notifications to update unread status
+      fetchGlobalAdminNotifications().then((data) => setNotifications(data));
     }
+    setSelectedNotif(notif);
     if (onNotificationClick) onNotificationClick(notif);
   };
 
@@ -141,33 +152,52 @@ export default function AdminRightSidebar({ onNotificationClick }) {
             className="divide-y divide-gray-200 overflow-y-auto flex-grow pr-1"
             style={{ maxHeight: showAll ? "none" : "calc(100vh - 350px)" }}
           >
-            {visibleNotifications.map((notif) => (
-              <li
-                key={notif.id}
-                className="flex items-center py-2 cursor-pointer hover:bg-gray-50"
-                onClick={() => {
-                  handleNotificationClick(notif);
-                  setSelectedNotif(notif);
-                }}
-              >
-                <div className="flex-1">
-                  <span className="font-bold text-[#56708A]">
-                    {notif.type === "System" || notif.type === "WEVO"
-                      ? "WEVO"
-                      : notif.type === "Admin"
-                      ? "Admin"
-                      : ""}
-                  </span>
-                  <span className="text-gray-400 text-sm ml-1">
-                    {new Date(notif.created_at).toLocaleString()}
-                  </span>
-                  <div className="text-gray-700 text-sm">{notif.message}</div>
-                </div>
-                {notif.status === "unread" && (
-                  <span className="w-3 h-3 bg-yellow-400 rounded-full ml-2 flex-shrink-0"></span>
-                )}
-              </li>
-            ))}
+            {visibleNotifications.length === 0 && (
+              <li className="py-2 text-gray-400 text-center">No notifications</li>
+            )}
+            {visibleNotifications.map((notif) => {
+              // Parse the data if it's a string
+              const data = typeof notif.data === "string" ? JSON.parse(notif.data) : notif.data;
+              const isUnread = notif.status === "unread";
+              // Sender label
+              let sender = "System";
+              // Status badge
+              let statusBadge = null;
+              if (data && data.status && ["approved", "rejected", "cancelled"].includes(data.status.toLowerCase())) {
+                let color = data.status.toLowerCase() === "approved" ? "bg-green-100 text-green-700" : data.status.toLowerCase() === "rejected" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700";
+                statusBadge = (
+                  <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-semibold ${color}`}>{data.status.charAt(0).toUpperCase() + data.status.slice(1)}</span>
+                );
+              }
+              // Remove 'Reason:' from message preview if cancellationReason exists
+              let messagePreview = notif.message;
+              if (data && data.cancellationReason) {
+                messagePreview = notif.message.split('\n')[0];
+              }
+              return (
+                <li
+                  key={notif.id}
+                  className={`flex items-start py-3 cursor-pointer hover:bg-gray-50 transition-all duration-500 ${isUnread ? "font-medium" : ""}`}
+                  onClick={() => handleNotificationClick(notif)}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-[#0458A9] text-base">{sender}</span>
+                        {statusBadge}
+                      </div>
+                      {isUnread && <span className="ml-2 w-2 h-2 bg-yellow-400 rounded-full inline-block"></span>}
+                    </div>
+                    <div className="text-xs text-gray-400 mb-1">
+                      {new Date(notif.created_at).toLocaleString()}
+                    </div>
+                    <div className={`text-gray-700 ${isUnread ? "font-medium" : ""} text-sm`}>
+                      {truncateText(messagePreview, 85)}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
           <div className="flex justify-center mt-4 mb-1">
             <button
@@ -192,6 +222,7 @@ export default function AdminRightSidebar({ onNotificationClick }) {
         <AdminNotificationDetailsModal
           notif={selectedNotif}
           booking={booking}
+          data={typeof selectedNotif.data === "string" ? JSON.parse(selectedNotif.data) : selectedNotif.data}
           onClose={() => setSelectedNotif(null)}
         />
       )}

@@ -55,6 +55,37 @@ export default function ReserveStep2Modal({
   const [sameTimeForAllDays, setSameTimeForAllDays] = useState(true);
   const [dailyTimes, setDailyTimes] = useState([]);
 
+  // Helper to generate time options in 15-min increments from 7:00 to 19:00
+  const generateTimeOptions = () => {
+    const options = [];
+    for (let h = 7; h <= 19; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        // Changed increment to 30 minutes
+        if (h === 19 && m > 0) break;
+        const hour24 = h.toString().padStart(2, "0");
+        const min = m.toString().padStart(2, "0");
+        const timeValue = `${hour24}:${min}`; // Value will be 24-hour format
+
+        // Format for display (AM/PM)
+        let displayHour = h;
+        const suffix = displayHour >= 12 ? "PM" : "AM";
+        if (displayHour === 0) {
+          displayHour = 12; // Midnight
+        } else if (displayHour > 12) {
+          displayHour -= 12;
+        }
+        const timeDisplay = `${displayHour
+          .toString()
+          .padStart(2, "0")}:${min} ${suffix}`;
+
+        options.push({ value: timeValue, display: timeDisplay });
+      }
+    }
+    return options;
+  };
+  const timeOptionsWithFormat = generateTimeOptions();
+  const timeOptions = timeOptionsWithFormat.map((opt) => opt.value);
+
   // Initialize dailyTimes and manage main form times based on booking type
   useEffect(() => {
     if (open) {
@@ -174,24 +205,56 @@ export default function ReserveStep2Modal({
     }
   }, [sameTimeForAllDays, open, isMultipleDays]); // Only depends on sameTimeForAllDays, open, and isMultipleDays
 
-  // Lock time fields if partialDayInfo is present and not multi-day
-  useEffect(() => {
+  // Helper to get valid start time options based on partialDayInfo
+  const getStartTimeOptions = () => {
     if (!isMultipleDays && partialDayInfo) {
       if (partialDayInfo.amBooked) {
-        setForm((prev) => ({
-          ...prev,
-          startTime: "13:00",
-          endTime: prev.endTime < "13:00" ? "19:00" : prev.endTime,
-        }));
+        // Only PM available
+        return timeOptionsWithFormat.slice(0, -1).filter(opt => opt.value >= "13:00" && opt.value <= "18:30");
       } else if (partialDayInfo.pmBooked) {
-        setForm((prev) => ({
-          ...prev,
-          startTime: prev.startTime > "12:30" ? "07:00" : prev.startTime,
-          endTime: "12:00",
-        }));
+        // Only AM available
+        return timeOptionsWithFormat.slice(0, -1).filter(opt => opt.value >= "07:00" && opt.value <= "12:00");
+      }
+    }
+    // Whole day available
+    return timeOptionsWithFormat.slice(0, -1);
+  };
+
+  // Helper to get valid end time options based on selected start time and partialDayInfo
+  const getFilteredEndTimeOptions = (selectedStartTime) => {
+    if (!isMultipleDays && partialDayInfo) {
+      if (partialDayInfo.amBooked) {
+        // Only PM available
+        return timeOptionsWithFormat.filter(opt => opt.value > selectedStartTime && opt.value >= "13:30" && opt.value <= "19:00");
+      } else if (partialDayInfo.pmBooked) {
+        // Only AM available
+        return timeOptionsWithFormat.filter(opt => opt.value > selectedStartTime && opt.value >= "07:30" && opt.value <= "12:30");
+      }
+    }
+    // Whole day available
+    return timeOptionsWithFormat.filter(opt => opt.value > selectedStartTime);
+  };
+
+  // Ensure startTime and endTime are always valid when available window changes
+  useEffect(() => {
+    if (!isMultipleDays) {
+      const validStartOptions = getStartTimeOptions();
+      if (!validStartOptions.some(opt => opt.value === form.startTime)) {
+        // If current startTime is not valid, set to first valid
+        setForm(prev => ({ ...prev, startTime: validStartOptions[0]?.value || "" }));
       }
     }
   }, [partialDayInfo, isMultipleDays]);
+
+  useEffect(() => {
+    if (!isMultipleDays) {
+      const validEndOptions = getFilteredEndTimeOptions(form.startTime);
+      if (!validEndOptions.some(opt => opt.value === form.endTime)) {
+        // If current endTime is not valid, set to first valid
+        setForm(prev => ({ ...prev, endTime: validEndOptions[0]?.value || "" }));
+      }
+    }
+  }, [form.startTime, partialDayInfo, isMultipleDays]);
 
   if (!open && !step3Open) return null;
 
@@ -276,38 +339,6 @@ export default function ReserveStep2Modal({
     );
   };
 
-  // Helper to generate time options in 15-min increments from 7:00 to 19:00
-  const generateTimeOptions = () => {
-    const options = [];
-    for (let h = 7; h <= 19; h++) {
-      for (let m = 0; m < 60; m += 30) {
-        // Changed increment to 30 minutes
-        if (h === 19 && m > 0) break;
-        const hour24 = h.toString().padStart(2, "0");
-        const min = m.toString().padStart(2, "0");
-        const timeValue = `${hour24}:${min}`; // Value will be 24-hour format
-
-        // Format for display (AM/PM)
-        let displayHour = h;
-        const suffix = displayHour >= 12 ? "PM" : "AM";
-        if (displayHour === 0) {
-          displayHour = 12; // Midnight
-        } else if (displayHour > 12) {
-          displayHour -= 12;
-        }
-        const timeDisplay = `${displayHour
-          .toString()
-          .padStart(2, "0")}:${min} ${suffix}`;
-
-        options.push({ value: timeValue, display: timeDisplay });
-      }
-    }
-    return options;
-  };
-  const timeOptionsWithFormat = generateTimeOptions();
-  // Keep a simple array of 24-hour values for internal logic if needed, though getEndTimeOptions will use the objects
-  const timeOptions = timeOptionsWithFormat.map((opt) => opt.value);
-
   // Helper to get valid end time options based on selected start time
   const getEndTimeOptions = (selectedStartTime) => {
     if (!selectedStartTime) return timeOptionsWithFormat; // Return all if no start time selected
@@ -378,6 +409,8 @@ export default function ReserveStep2Modal({
       contactPosition: form.contactPosition || "",
       contactNumber: form.contactNumber || "",
       orgName: form.orgName || "",
+      perDayTimes: timeDetails.eventTimesPerDay || [],
+      per_day_times: timeDetails.eventTimesPerDay || [],
     };
   };
 
@@ -672,29 +705,12 @@ export default function ReserveStep2Modal({
                       onChange={handleChange}
                       className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
                       required
-                      disabled={
-                        (!isMultipleDays &&
-                          partialDayInfo &&
-                          partialDayInfo.amBooked) ||
-                        (!isMultipleDays &&
-                          partialDayInfo &&
-                          partialDayInfo.pmBooked)
-                      }
                     >
-                      {timeOptionsWithFormat.slice(0, -1).map((opt) => {
-                        // For half-day logic, filter options
-                        if (!isMultipleDays && partialDayInfo) {
-                          if (partialDayInfo.amBooked && opt.value < "13:00")
-                            return null;
-                          if (partialDayInfo.pmBooked && opt.value > "12:00")
-                            return null;
-                        }
-                        return (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.display}
-                          </option>
-                        );
-                      })}
+                      {getStartTimeOptions().map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.display}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="flex-1">
@@ -710,44 +726,12 @@ export default function ReserveStep2Modal({
                       onChange={handleChange}
                       className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
                       required
-                      disabled={
-                        (!isMultipleDays &&
-                          partialDayInfo &&
-                          partialDayInfo.amBooked) ||
-                        (!isMultipleDays &&
-                          partialDayInfo &&
-                          partialDayInfo.pmBooked) ||
-                        !form.startTime
-                      }
                     >
-                      {getEndTimeOptions(form.startTime).map((opt) => {
-                        if (!isMultipleDays && partialDayInfo) {
-                          // If AM booked, only allow PM slot
-                          if (partialDayInfo.amBooked && opt.value < "13:00")
-                            return null;
-                          // If PM booked, only allow AM slot
-                          if (partialDayInfo.pmBooked && opt.value > "12:30")
-                            return null;
-                        }
-                        // Additional logic: If start time is 13:00 or later, only allow end times after start and after 13:00
-                        if (
-                          !isMultipleDays &&
-                          form.startTime >= "13:00" &&
-                          opt.value < form.startTime
-                        )
-                          return null;
-                        if (
-                          !isMultipleDays &&
-                          form.startTime < "13:00" &&
-                          opt.value > "12:30"
-                        )
-                          return null;
-                        return (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.display}
-                          </option>
-                        );
-                      })}
+                      {getFilteredEndTimeOptions(form.startTime).map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.display}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>

@@ -100,7 +100,7 @@ export default function ReserveStep1Modal({
     });
 
     setCalendarDays(days);
-  }, [currentDate, bookedSlots]);
+  }, [currentDate, bookedSlots, bookingType]);
 
   // Blackout logic for calendar
   // Normalize to local date (YYYY-MM-DD)
@@ -118,14 +118,15 @@ export default function ReserveStep1Modal({
     // Block Sundays
     if (date.getDay() === 0) return true;
 
-    // For multi-day booking, block all selected days and any day that is fully blocked in the backend
+    // For multi-day booking, block all selected days and any day that is fully or partially blocked in the backend
     if (bookingType === "multiple") {
       const dateStr = normalizeDate(date);
       if (selectedDays.some((d) => d.formattedDate === dateStr)) {
         return true;
       }
-      // Also block if the day is fully blocked in the backend
-      return getPartialDayInfo(date).blocked;
+      // Block if the day is fully or partially booked (AM or PM)
+      const partial = getPartialDayInfo(date);
+      return partial.blocked || partial.amBooked || partial.pmBooked;
     }
 
     if (bookingType === "one") {
@@ -204,12 +205,12 @@ export default function ReserveStep1Modal({
         setSelectedDays([]);
       }
     }
-    if (bookingType === "multiple" && selectedDays.length > 0) {
-      const filtered = selectedDays.filter((d) => !isDateBooked(d.date));
-      if (filtered.length !== selectedDays.length) {
-        setSelectedDays(filtered);
-      }
-    }
+    // if (bookingType === "multiple" && selectedDays.length > 0) {
+    //   const filtered = selectedDays.filter((d) => !isDateBooked(d.date));
+    //   if (filtered.length !== selectedDays.length) {
+    //     setSelectedDays(filtered);
+    //   }
+    // }
   }, [calendarDays, bookingType, selectedDays]);
 
   // Function to refresh bookings for the current venue
