@@ -13,7 +13,8 @@ export default function NotificationDetailsModal({ notif, onClose }) {
   let rejectionReason = "";
   if (notif.data) {
     try {
-      const data = typeof notif.data === "string" ? JSON.parse(notif.data) : notif.data;
+      const data =
+        typeof notif.data === "string" ? JSON.parse(notif.data) : notif.data;
       venue = data.venue?.name || data.venue || "";
       orgName = data.orgName || "";
       eventName = data.eventName || data.event || "";
@@ -36,11 +37,14 @@ export default function NotificationDetailsModal({ notif, onClose }) {
           ×
         </button>
         {venue && (
-          <div className="text-2xl font-bold text-[#0458A9] mb-1">{venue}</div>
+          <div className="text-2xl font-bold text-[#56708A] mb-1 text-left">
+            {venue}
+          </div>
         )}
-        <div className="flex flex-wrap gap-4 mb-2">
+        <div className="flex flex-wrap gap-4 mb-2 justify-start">
           <div className="bg-gray-100 rounded-lg px-4 py-2 text-sm text-gray-700">
-            <span className="font-semibold">Date:</span> {new Date(notif.created_at).toLocaleString()}
+            <span className="font-semibold">Date:</span>{" "}
+            {new Date(notif.created_at).toLocaleString()}
           </div>
           {orgName && (
             <div className="bg-gray-100 rounded-lg px-4 py-2 text-sm text-gray-700">
@@ -48,9 +52,14 @@ export default function NotificationDetailsModal({ notif, onClose }) {
             </div>
           )}
         </div>
-        {(!eventName && !participants && !type && !purpose && !cancellationReason && !rejectionReason) && (
-          <div className="text-gray-700 text-base mb-2">{notif.message}</div>
-        )}
+        {!eventName &&
+          !participants &&
+          !type &&
+          !purpose &&
+          !cancellationReason &&
+          !rejectionReason && (
+            <div className="text-gray-700 text-base mb-2">{notif.message}</div>
+          )}
         {eventName && (
           <div className="bg-gray-100 rounded-lg px-4 py-2 text-sm text-gray-700">
             <span className="font-semibold">Event Name:</span> {eventName}
@@ -88,10 +97,17 @@ export default function NotificationDetailsModal({ notif, onClose }) {
             <div>{cancellationReason}</div>
           </div>
         )}
-        {!venue && !eventName && !date && !participants && !type && !purpose && !cancellationReason && !rejectionReason && (
-          <div className="text-gray-700 text-base mb-2">{notif.message}</div>
-        )}
+        {!venue &&
+          !eventName &&
+          !date &&
+          !participants &&
+          !type &&
+          !purpose &&
+          !cancellationReason &&
+          !rejectionReason && (
+            <div className="text-gray-700 text-base mb-2">{notif.message}</div>
+          )}
       </div>
     </div>
   );
-} 
+}
