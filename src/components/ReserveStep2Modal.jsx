@@ -14,7 +14,14 @@ export default function ReserveStep2Modal({
   partialDayInfo = null, // <-- new prop
 }) {
   // Debug log
-  console.log('ReserveStep2Modal venues:', venues, 'reservationData:', reservationData, 'initialVenue:', initialVenue);
+  console.log(
+    "ReserveStep2Modal venues:",
+    venues,
+    "reservationData:",
+    reservationData,
+    "initialVenue:",
+    initialVenue
+  );
 
   // Initialize form state with all needed fields
   const [form, setForm] = useState({
@@ -23,7 +30,10 @@ export default function ReserveStep2Modal({
     purpose: "",
     startTime: "07:00",
     endTime: "08:00",
-    venue: reservationData?.venue?.name || initialVenue || (venues[0] ? venues[0].name : ""),
+    venue:
+      reservationData?.venue?.name ||
+      initialVenue ||
+      (venues[0] ? venues[0].name : ""),
     participants: reservationData?.participants || "",
     contactPerson: "",
     contactPosition: "",
@@ -33,6 +43,10 @@ export default function ReserveStep2Modal({
   const [venueDropdown, setVenueDropdown] = useState(false);
   const [step3Open, setStep3Open] = useState(false);
   const [step2Data, setStep2Data] = useState(null);
+  const [errors, setErrors] = useState({
+    participants: "",
+    contactNumber: "",
+  });
 
   // State for multi-day time handling
   const isMultipleDays =
@@ -103,19 +117,31 @@ export default function ReserveStep2Modal({
       }
       setForm((prev) => ({
         ...prev,
-        venue: reservationData?.venue?.name || initialVenue || (venues[0] ? venues[0].name : ""),
+        venue:
+          reservationData?.venue?.name ||
+          initialVenue ||
+          (venues[0] ? venues[0].name : ""),
         participants: reservationData?.participants || prev.participants || "",
       }));
     }
-  }, [open, reservationData?.bookingType, reservationData?.rawSelectedDays, reservationData?.venue?.name, initialVenue, venues]); // Removed isMultipleDays, sameTimeForAllDays, form.startTime, form.endTime from main dependencies
+  }, [
+    open,
+    reservationData?.bookingType,
+    reservationData?.rawSelectedDays,
+    reservationData?.venue?.name,
+    initialVenue,
+    venues,
+  ]); // Removed isMultipleDays, sameTimeForAllDays, form.startTime, form.endTime from main dependencies
 
   // Effect to handle changes when 'sameTimeForAllDays' toggle changes for multi-day
   useEffect(() => {
     if (open && isMultipleDays) {
       if (sameTimeForAllDays) {
         // When toggling TO sameTimeForAllDays, set main form times from the first dailyTime or defaults
-        const firstDailyStartTime = dailyTimes[0]?.startTime || form.startTime || "07:00";
-        const firstDailyEndTime = dailyTimes[0]?.endTime || form.endTime || "08:00";
+        const firstDailyStartTime =
+          dailyTimes[0]?.startTime || form.startTime || "07:00";
+        const firstDailyEndTime =
+          dailyTimes[0]?.endTime || form.endTime || "08:00";
         setForm((prev) => ({
           ...prev,
           startTime: firstDailyStartTime,
@@ -152,29 +178,70 @@ export default function ReserveStep2Modal({
   useEffect(() => {
     if (!isMultipleDays && partialDayInfo) {
       if (partialDayInfo.amBooked) {
-        setForm((prev) => ({ ...prev, startTime: "13:00", endTime: prev.endTime < "13:00" ? "19:00" : prev.endTime }));
+        setForm((prev) => ({
+          ...prev,
+          startTime: "13:00",
+          endTime: prev.endTime < "13:00" ? "19:00" : prev.endTime,
+        }));
       } else if (partialDayInfo.pmBooked) {
-        setForm((prev) => ({ ...prev, startTime: prev.startTime > "12:30" ? "07:00" : prev.startTime, endTime: "12:00" }));
+        setForm((prev) => ({
+          ...prev,
+          startTime: prev.startTime > "12:30" ? "07:00" : prev.startTime,
+          endTime: "12:00",
+        }));
       }
     }
   }, [partialDayInfo, isMultipleDays]);
 
   if (!open && !step3Open) return null;
 
+  const validateParticipants = (value) => {
+    if (!value) return "Number of participants is required";
+    if (!/^\d+$/.test(value)) return "Please enter a valid number";
+    if (parseInt(value) <= 0)
+      return "Number of participants must be greater than 0";
+    return "";
+  };
+
+  const validateContactNumber = (value) => {
+    if (!value) return "Contact number is required";
+    // Allow numbers, spaces, +, -, and () for phone numbers
+    if (!/^[\d\s+\-()]+$/.test(value))
+      return "Please enter a valid phone number";
+    // Remove all non-digit characters and check length
+    const digitsOnly = value.replace(/\D/g, "");
+    if (digitsOnly.length < 10)
+      return "Phone number must have at least 10 digits";
+    return "";
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // Special handling for participants and contact number
+    if (name === "participants") {
+      // Only allow digits
+      if (value && !/^\d*$/.test(value)) return;
+      const error = validateParticipants(value);
+      setErrors((prev) => ({ ...prev, participants: error }));
+    } else if (name === "contactNumber") {
+      // Allow numbers, spaces, +, -, and ()
+      if (value && !/^[\d\s+\-()]*$/.test(value)) return;
+      const error = validateContactNumber(value);
+      setErrors((prev) => ({ ...prev, contactNumber: error }));
+    }
+
     setForm((prev) => {
       const newForm = { ...prev, [name]: value };
       // If startTime is changed, update endTime accordingly
       if (name === "startTime") {
         const validEndTimes = getEndTimeOptions(value);
         if (validEndTimes.length > 0) {
-          // Check if current endTime is still valid
           if (!validEndTimes.includes(newForm.endTime)) {
-            newForm.endTime = validEndTimes[0]; // Set to first valid endTime
+            newForm.endTime = validEndTimes[0];
           }
         } else {
-          newForm.endTime = ""; // No valid end times
+          newForm.endTime = "";
         }
       }
       return newForm;
@@ -268,7 +335,7 @@ export default function ReserveStep2Modal({
     if (isMultipleDays) {
       // Always set eventTimesPerDay for multi-day, regardless of sameTimeForAllDays
       timeDetails = {
-        eventTimesPerDay: (sameTimeForAllDays
+        eventTimesPerDay: sameTimeForAllDays
           ? reservationData.rawSelectedDays.map((day) => ({
               date: day.formattedDate,
               startTime: formatTimeForDisplay(form.startTime),
@@ -287,7 +354,7 @@ export default function ReserveStep2Modal({
               })(),
               startTime: formatTimeForDisplay(dt.startTime),
               endTime: formatTimeForDisplay(dt.endTime),
-            }))),
+            })),
         startTime: null,
         endTime: null,
       };
@@ -314,6 +381,36 @@ export default function ReserveStep2Modal({
     };
   };
 
+  const validateForm = () => {
+    const newErrors = {
+      participants: validateParticipants(form.participants),
+      contactNumber: validateContactNumber(form.contactNumber),
+    };
+    setErrors(newErrors);
+
+    // Check if there are any errors
+    const hasErrors = Object.values(newErrors).some((error) => error !== "");
+
+    // Check other required fields
+    const missingFields =
+      !form.title ||
+      !form.type ||
+      !form.purpose ||
+      !form.contactPerson ||
+      !form.contactPosition ||
+      !form.orgName ||
+      (!form.startTime && sameTimeForAllDays) ||
+      (!form.endTime && sameTimeForAllDays);
+
+    if (hasErrors || missingFields) {
+      if (missingFields) {
+        alert("Please fill in all required fields.");
+      }
+      return false;
+    }
+    return true;
+  };
+
   return (
     <>
       {/* Step 2 Modal */}
@@ -321,12 +418,22 @@ export default function ReserveStep2Modal({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
           <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]">
             {/* Notice for half-day bookings */}
-            {!isMultipleDays && partialDayInfo && (partialDayInfo.amBooked || partialDayInfo.pmBooked) && (
-              <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 mb-4 rounded">
-                Notice: On this date, this venue has been booked {partialDayInfo.amBooked ? `from 7:00 to ${partialDayInfo.amEnd}` : `from ${partialDayInfo.pmStart} to 19:00`}.<br />
-                As such, only {partialDayInfo.amBooked ? "13:00 to 19:00" : "7:00 to 12:00"} is available for booking.
-              </div>
-            )}
+            {!isMultipleDays &&
+              partialDayInfo &&
+              (partialDayInfo.amBooked || partialDayInfo.pmBooked) && (
+                <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 mb-4 rounded">
+                  Notice: On this date, this venue has been booked{" "}
+                  {partialDayInfo.amBooked
+                    ? `from 7:00 to ${partialDayInfo.amEnd}`
+                    : `from ${partialDayInfo.pmStart} to 19:00`}
+                  .<br />
+                  As such, only{" "}
+                  {partialDayInfo.amBooked
+                    ? "13:00 to 19:00"
+                    : "7:00 to 12:00"}{" "}
+                  is available for booking.
+                </div>
+              )}
             {/* Close Button */}
             <button
               className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
@@ -363,18 +470,25 @@ export default function ReserveStep2Modal({
                 </div>
                 <div className="flex-1">
                   <label className="font-semibold text-gray-800 mb-1 block">
-                    <span className="text-[#E53935]">*</span> No. of Participants
+                    <span className="text-[#E53935]">*</span> No. of
+                    Participants
                   </label>
                   <input
-                    type="number"
+                    type="text"
                     name="participants"
                     value={form.participants}
                     onChange={handleChange}
                     placeholder="e.g., 50"
-                    min={1}
-                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                    className={`w-full rounded-xl border ${
+                      errors.participants ? "border-red-500" : "border-gray-300"
+                    } bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]`}
                     required
                   />
+                  {errors.participants && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.participants}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -482,9 +596,18 @@ export default function ReserveStep2Modal({
                     value={form.contactNumber || ""}
                     onChange={handleChange}
                     placeholder="e.g., +63 912 345 6789"
-                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                    className={`w-full rounded-xl border ${
+                      errors.contactNumber
+                        ? "border-red-500"
+                        : "border-gray-300"
+                    } bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]`}
                     required
                   />
+                  {errors.contactNumber && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.contactNumber}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -549,16 +672,27 @@ export default function ReserveStep2Modal({
                       onChange={handleChange}
                       className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
                       required
-                      disabled={(!isMultipleDays && partialDayInfo && partialDayInfo.amBooked) || (!isMultipleDays && partialDayInfo && partialDayInfo.pmBooked)}
+                      disabled={
+                        (!isMultipleDays &&
+                          partialDayInfo &&
+                          partialDayInfo.amBooked) ||
+                        (!isMultipleDays &&
+                          partialDayInfo &&
+                          partialDayInfo.pmBooked)
+                      }
                     >
                       {timeOptionsWithFormat.slice(0, -1).map((opt) => {
                         // For half-day logic, filter options
                         if (!isMultipleDays && partialDayInfo) {
-                          if (partialDayInfo.amBooked && opt.value < "13:00") return null;
-                          if (partialDayInfo.pmBooked && opt.value > "12:00") return null;
+                          if (partialDayInfo.amBooked && opt.value < "13:00")
+                            return null;
+                          if (partialDayInfo.pmBooked && opt.value > "12:00")
+                            return null;
                         }
                         return (
-                          <option key={opt.value} value={opt.value}>{opt.display}</option>
+                          <option key={opt.value} value={opt.value}>
+                            {opt.display}
+                          </option>
                         );
                       })}
                     </select>
@@ -576,20 +710,42 @@ export default function ReserveStep2Modal({
                       onChange={handleChange}
                       className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
                       required
-                      disabled={(!isMultipleDays && partialDayInfo && partialDayInfo.amBooked) || (!isMultipleDays && partialDayInfo && partialDayInfo.pmBooked) || !form.startTime}
+                      disabled={
+                        (!isMultipleDays &&
+                          partialDayInfo &&
+                          partialDayInfo.amBooked) ||
+                        (!isMultipleDays &&
+                          partialDayInfo &&
+                          partialDayInfo.pmBooked) ||
+                        !form.startTime
+                      }
                     >
                       {getEndTimeOptions(form.startTime).map((opt) => {
                         if (!isMultipleDays && partialDayInfo) {
                           // If AM booked, only allow PM slot
-                          if (partialDayInfo.amBooked && opt.value < "13:00") return null;
+                          if (partialDayInfo.amBooked && opt.value < "13:00")
+                            return null;
                           // If PM booked, only allow AM slot
-                          if (partialDayInfo.pmBooked && opt.value > "12:30") return null;
+                          if (partialDayInfo.pmBooked && opt.value > "12:30")
+                            return null;
                         }
                         // Additional logic: If start time is 13:00 or later, only allow end times after start and after 13:00
-                        if (!isMultipleDays && form.startTime >= "13:00" && opt.value < form.startTime) return null;
-                        if (!isMultipleDays && form.startTime < "13:00" && opt.value > "12:30") return null;
+                        if (
+                          !isMultipleDays &&
+                          form.startTime >= "13:00" &&
+                          opt.value < form.startTime
+                        )
+                          return null;
+                        if (
+                          !isMultipleDays &&
+                          form.startTime < "13:00" &&
+                          opt.value > "12:30"
+                        )
+                          return null;
                         return (
-                          <option key={opt.value} value={opt.value}>{opt.display}</option>
+                          <option key={opt.value} value={opt.value}>
+                            {opt.display}
+                          </option>
                         );
                       })}
                     </select>
@@ -660,11 +816,13 @@ export default function ReserveStep2Modal({
                               }
                               className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
                             >
-                              {getEndTimeOptions(dayTime.startTime).map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                  {opt.display}
-                                </option>
-                              ))}
+                              {getEndTimeOptions(dayTime.startTime).map(
+                                (opt) => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.display}
+                                  </option>
+                                )
+                              )}
                             </select>
                           </div>
                         </div>
@@ -685,13 +843,10 @@ export default function ReserveStep2Modal({
                 type="button"
                 className="px-6 py-2 rounded-lg bg-[#0458A9] text-white font-semibold hover:bg-[#02396b]"
                 onClick={() => {
-                  // Simple validation for required fields
-                  if (!form.title || !form.type || !form.purpose || !form.contactPerson || !form.contactPosition || !form.contactNumber || !form.orgName || (!form.startTime && sameTimeForAllDays) || (!form.endTime && sameTimeForAllDays)) {
-                    alert("Please fill in all required fields.");
-                    return;
+                  if (validateForm()) {
+                    setStep3Open(true);
+                    setStep2Data(prepareStep3Data());
                   }
-                  setStep3Open(true);
-                  setStep2Data(prepareStep3Data());
                 }}
               >
                 Next
