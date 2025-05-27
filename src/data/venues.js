@@ -11,14 +11,14 @@ const venues = [
     description:
       "Dedicated to fostering educational innovation and professional growth, the CTE is a modern facility designed for workshops, seminars, and collaborative discussions. Ideal for faculty development programs, curriculum planning sessions, and intimate academic gatherings. Equipped with flexible learning spaces and presentation tools.",
     participants: 100,
-    image: "src/assets/cultural_center.webp",
+    image: "src/assets/cte.png",
   },
   {
     name: "NAB Hall Function",
     description:
       "A versatile multi-purpose hall within the New Academic Building, the NAB Hall Function offers a spacious and adaptable setting for a wide array of university events. Perfect for large lectures, departmental assemblies, student orientations, and mid-sized conferences. Features flexible seating arrangements to suit your event's needs.",
     participants: 500,
-    image: "src/assets/cultural_center.webp",
+    image: "src/assets/nab_hall.jpg",
   },
   // Add more venues as needed
 ];
