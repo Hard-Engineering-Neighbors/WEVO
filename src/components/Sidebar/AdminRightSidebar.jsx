@@ -2,7 +2,12 @@ import React, { useState, useEffect } from "react";
 import { User, Menu, LogOut, X, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { fetchNotifications, markNotificationAsRead, fetchBookingRequest } from "../../api/requests";
+import {
+  fetchNotifications,
+  markNotificationAsRead,
+  fetchBookingRequest,
+} from "../../api/requests";
+import AdminNotificationDetailsModal from "../AdminNotificationDetailsModal";
 
 // Re-styled Logout Modal for Admin theme, aligned with User's modal text
 function AdminLogoutConfirmModal({ open, onClose, onConfirm }) {
@@ -59,7 +64,9 @@ export default function AdminRightSidebar({ onNotificationClick }) {
 
   useEffect(() => {
     if (selectedNotif && selectedNotif.related_request_id) {
-      fetchBookingRequest(selectedNotif.related_request_id).then((data) => setBooking(data));
+      fetchBookingRequest(selectedNotif.related_request_id).then((data) =>
+        setBooking(data)
+      );
     } else {
       setBooking(null);
     }
@@ -69,9 +76,7 @@ export default function AdminRightSidebar({ onNotificationClick }) {
     if (notif.status === "unread") {
       await markNotificationAsRead(notif.id);
       setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notif.id ? { ...n, status: "read" } : n
-        )
+        prev.map((n) => (n.id === notif.id ? { ...n, status: "read" } : n))
       );
     }
     if (onNotificationClick) onNotificationClick(notif);
@@ -86,7 +91,9 @@ export default function AdminRightSidebar({ onNotificationClick }) {
   const adminNotifications = notifications.filter(
     (notif) => notif.role === "admin"
   );
-  const visibleNotifications = showAll ? adminNotifications : adminNotifications.slice(0, 5);
+  const visibleNotifications = showAll
+    ? adminNotifications
+    : adminNotifications.slice(0, 5);
 
   return (
     <>
@@ -145,7 +152,11 @@ export default function AdminRightSidebar({ onNotificationClick }) {
               >
                 <div className="flex-1">
                   <span className="font-bold text-[#56708A]">
-                    {notif.type === "System" || notif.type === "WEVO" ? "WEVO" : notif.type === "Admin" ? "Admin" : ""}
+                    {notif.type === "System" || notif.type === "WEVO"
+                      ? "WEVO"
+                      : notif.type === "Admin"
+                      ? "Admin"
+                      : ""}
                   </span>
                   <span className="text-gray-400 text-sm ml-1">
                     {new Date(notif.created_at).toLocaleString()}
@@ -178,45 +189,11 @@ export default function AdminRightSidebar({ onNotificationClick }) {
 
       {/* Notification Details Modal */}
       {selectedNotif && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-          <div className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-fade-in">
-            <button
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700"
-              onClick={() => setSelectedNotif(null)}
-              aria-label="Close notification popup"
-            >
-              <X size={24} />
-            </button>
-            <h2 className="text-2xl font-extrabold text-[#56708A] mb-2 text-center">
-              {booking?.venue || booking?.event || booking?.event_name || "Event Notification"}
-            </h2>
-            <div className="flex justify-center gap-2 mb-4 flex-wrap">
-              {selectedNotif?.created_at && (
-                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold">
-                  Date: {new Date(selectedNotif.created_at).toLocaleString()}
-                </span>
-              )}
-              {(booking?.organization_name || booking?.organization) && (
-                <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-semibold">
-                  Organization: {booking?.organization_name || booking?.organization}
-                </span>
-              )}
-            </div>
-            <div className="mb-4 text-center text-lg text-gray-700 whitespace-pre-line">
-              {selectedNotif.message}
-            </div>
-            {booking?.rejection_reason && (
-              <div className="mb-2 text-center text-red-600 font-semibold">
-                Rejection Reason: {booking.rejection_reason}
-              </div>
-            )}
-            {booking?.cancellation_reason && (
-              <div className="mb-2 text-center text-yellow-600 font-semibold">
-                Cancellation Reason: {booking.cancellation_reason}
-              </div>
-            )}
-          </div>
-        </div>
+        <AdminNotificationDetailsModal
+          notif={selectedNotif}
+          booking={booking}
+          onClose={() => setSelectedNotif(null)}
+        />
       )}
     </>
   );
