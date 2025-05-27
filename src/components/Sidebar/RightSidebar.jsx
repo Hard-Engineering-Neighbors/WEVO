@@ -56,30 +56,34 @@ function useRealtimeNotifications(userId, setNotifications, setHighlightedId) {
   React.useEffect(() => {
     if (!userId) return;
     const channel = supabase
-      .channel('user_notifications')
+      .channel("user_notifications")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
+          event: "*",
+          schema: "public",
+          table: "notifications",
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          if (payload.eventType === 'INSERT') {
+          if (payload.eventType === "INSERT") {
             setNotifications((prev) => {
               // Prevent duplicates
-              if (prev.some(n => n.id === payload.new.id)) return prev;
+              if (prev.some((n) => n.id === payload.new.id)) return prev;
               return [payload.new, ...prev];
             });
             setHighlightedId(payload.new.id);
             setTimeout(() => setHighlightedId(null), 2000);
           }
-          if (payload.eventType === 'DELETE') {
-            setNotifications((prev) => prev.filter(n => n.id !== payload.old.id));
+          if (payload.eventType === "DELETE") {
+            setNotifications((prev) =>
+              prev.filter((n) => n.id !== payload.old.id)
+            );
           }
-          if (payload.eventType === 'UPDATE') {
-            setNotifications((prev) => prev.map(n => n.id === payload.new.id ? payload.new : n));
+          if (payload.eventType === "UPDATE") {
+            setNotifications((prev) =>
+              prev.map((n) => (n.id === payload.new.id ? payload.new : n))
+            );
           }
         }
       )
@@ -110,9 +114,7 @@ export default function RightSidebar({ onNotificationClick }) {
     if (notif.status === "unread") {
       await markNotificationAsRead(notif.id);
       setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notif.id ? { ...n, status: "read" } : n
-        )
+        prev.map((n) => (n.id === notif.id ? { ...n, status: "read" } : n))
       );
     }
     if (onNotificationClick) onNotificationClick(notif);
@@ -138,7 +140,9 @@ export default function RightSidebar({ onNotificationClick }) {
   const userNotifications = notifications.filter(
     (notif) => notif.role === "user"
   );
-  const visibleNotifications = showAll ? userNotifications : userNotifications.slice(0, 5);
+  const visibleNotifications = showAll
+    ? userNotifications
+    : userNotifications.slice(0, 5);
 
   return (
     <>
@@ -184,31 +188,124 @@ export default function RightSidebar({ onNotificationClick }) {
             className="divide-y divide-gray-200 overflow-y-auto flex-grow pr-1"
             style={{ maxHeight: showAll ? "none" : "calc(100vh - 350px)" }}
           >
-            {visibleNotifications.map((notif) => (
-              <li
-                key={notif.id}
-                className={`flex items-center py-2 cursor-pointer hover:bg-gray-50 transition-all duration-500 ${highlightedId === notif.id ? "bg-yellow-50" : ""}`}
-                onClick={() => { handleNotificationClick(notif); setSelectedNotif(notif); }}
-              >
-                <div className="flex-1">
-                  <span className="font-bold text-[#0458A9]">
-                    {notif.type === "System" || notif.type === "WEVO" ? "WEVO" : notif.type === "Admin" ? "Admin" : ""}
-                  </span>
-                  <span className="text-gray-400 text-sm ml-1">
-                    {new Date(notif.created_at).toLocaleString()}
-                  </span>
-                  <div className="text-gray-700 text-sm">{truncateText(notif.message, 60)}</div>
-                </div>
-                {notif.status === "unread" && (
-                  <span className="w-3 h-3 bg-yellow-400 rounded-full ml-2 flex-shrink-0"></span>
-                )}
-              </li>
-            ))}
+            {visibleNotifications.map((notif) => {
+              // Parse the data if it's a string
+              const data =
+                typeof notif.data === "string"
+                  ? JSON.parse(notif.data)
+                  : notif.data;
+              const isUnread = notif.status === "unread";
+
+              return (
+                <li
+                  key={notif.id}
+                  className={`flex items-start py-3 cursor-pointer hover:bg-gray-50 transition-all duration-500 ${
+                    highlightedId === notif.id ? "bg-yellow-50" : ""
+                  }`}
+                  onClick={() => {
+                    handleNotificationClick(notif);
+                    setSelectedNotif(notif);
+                  }}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`font-bold text-[#0458A9] ${
+                            isUnread ? "text-base" : "text-sm"
+                          }`}
+                        >
+                          {notif.type === "System" || notif.type === "WEVO"
+                            ? "WEVO"
+                            : notif.type === "Admin"
+                            ? "Admin"
+                            : ""}
+                        </span>
+                        {(() => {
+                          let status = "";
+                          // Try to get status from different possible locations in the data
+                          if (data) {
+                            // Debug log to see what status we're getting
+                            console.log("Notification status data:", data);
+                            status = (
+                              data.status ||
+                              data.requestStatus ||
+                              data.reservationStatus ||
+                              ""
+                            ).toLowerCase();
+                            // Debug log to see the extracted status
+                            console.log("Extracted status:", status);
+                          }
+                          const statusStyles = {
+                            submitted:
+                              "bg-yellow-100 text-yellow-800 border border-yellow-200",
+                            approved:
+                              "bg-green-100 text-green-800 border border-green-200",
+                            cancelled:
+                              "bg-red-100 text-red-800 border border-red-200",
+                            rejected:
+                              "bg-red-100 text-red-800 border border-red-200",
+                          };
+
+                          // Normalize the status to handle different variations
+                          const normalizeStatus = (status) => {
+                            if (!status) return "";
+                            status = status.toLowerCase().trim();
+                            // Map various status formats to our standard ones
+                            const statusMap = {
+                              pending: "submitted",
+                              submitted: "submitted",
+                              approve: "approved",
+                              approved: "approved",
+                              cancel: "cancelled",
+                              cancelled: "cancelled",
+                              canceled: "cancelled",
+                              reject: "rejected",
+                              rejected: "rejected",
+                            };
+                            return statusMap[status] || status;
+                          };
+
+                          const normalizedStatus = normalizeStatus(status);
+                          // Debug log to see the normalized status
+                          console.log("Normalized status:", normalizedStatus);
+
+                          const style = statusStyles[normalizedStatus] || "";
+                          return normalizedStatus ? (
+                            <span
+                              className={`text-xs px-2 py-0.5 rounded-full font-medium ${style} capitalize`}
+                            >
+                              {normalizedStatus}
+                            </span>
+                          ) : null;
+                        })()}
+                      </div>
+                      {isUnread && (
+                        <span className="w-2.5 h-2.5 bg-yellow-400 rounded-full flex-shrink-0"></span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-400 mb-1">
+                      {new Date(notif.created_at).toLocaleString()}
+                    </div>
+                    <div
+                      className={`text-gray-700 ${
+                        isUnread ? "font-medium" : ""
+                      } text-sm`}
+                    >
+                      {truncateText(notif.message, 85)}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
           {/* Show All/Show Less button for both desktop and mobile */}
           {userNotifications.length > 5 && (
             <div className="flex justify-center mt-auto pt-2 lg:mt-4 mb-1">
-              <button className="w-full py-2.5 bg-white rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-50 transition-colors" onClick={() => setShowAll((v) => !v)}>
+              <button
+                className="w-full py-2.5 bg-white rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                onClick={() => setShowAll((v) => !v)}
+              >
                 {showAll ? "Show Less" : "Show All Notifications"}
               </button>
             </div>
@@ -217,7 +314,10 @@ export default function RightSidebar({ onNotificationClick }) {
       </aside>
 
       {selectedNotif && (
-        <NotificationDetailsModal notif={selectedNotif} onClose={() => setSelectedNotif(null)} />
+        <NotificationDetailsModal
+          notif={selectedNotif}
+          onClose={() => setSelectedNotif(null)}
+        />
       )}
 
       <LogoutConfirmModal
