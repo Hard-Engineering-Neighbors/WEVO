@@ -113,7 +113,7 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
 
             {/* Reserve Button - MOVED HERE & MODIFIED */}
             <button
-              className="bg-[#0458A9] text-white rounded-full px-10 py-3 font-semibold text-base w-full hover:bg-[#03407a] transition mt-auto"
+              className="bg-[#0458A9] text-white rounded-full px-10 py-3 font-semibold text-base w-full hover:bg-[#03407a] transition mt-6 md:mt-auto"
               onClick={() => setReserveOpen(true)}
             >
               Reserve

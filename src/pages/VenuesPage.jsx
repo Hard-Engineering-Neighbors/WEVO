@@ -48,6 +48,13 @@ export default function VenuesPage() {
   const [venues, setVenues] = useState([]);
   const [selectedVenue, setSelectedVenue] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const venuesPerPage = 8;
+  const totalPages = Math.ceil(venues.length / venuesPerPage);
+  const paginatedVenues = venues.slice(
+    (currentPage - 1) * venuesPerPage,
+    currentPage * venuesPerPage
+  );
 
   useEffect(() => {
     // TODO: Replace with real API call
@@ -59,12 +66,17 @@ export default function VenuesPage() {
     setModalOpen(true);
   };
 
+  const goToPage = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
+
   return (
     <div className="flex flex-col min-h-screen font-sans">
       <div className="flex flex-col lg:flex-row flex-1">
         <LeftSidebar active="venues" />
         {/* Center Content */}
-        <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 space-y-4 order-2 lg:order-none min-h-screen">
+        <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 space-y-4 order-2 lg:order-none min-h-screen flex flex-col">
           {/* Search Bar */}
           <SearchBar />
           {/* Title and Sort/Filter Row */}
@@ -81,15 +93,53 @@ export default function VenuesPage() {
               </button>
             </div>
           </div>
-          {/* Venue Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-            {venues.map((venue, idx) => (
-              <VenueCard
-                key={idx}
-                venue={venue}
-                onClick={() => handleCardClick(venue)}
-              />
-            ))}
+          {/* Venue Cards Grid and Pagination */}
+          <div className="flex-1 flex flex-col justify-between">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+              {paginatedVenues.map((venue, idx) => (
+                <VenueCard
+                  key={idx + (currentPage - 1) * venuesPerPage}
+                  venue={venue}
+                  onClick={() => handleCardClick(venue)}
+                />
+              ))}
+            </div>
+            {/* Pagination Controls - always at the bottom */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8 mb-2 pb-20 lg:pb-2 sticky bottom-0 bg-gray-50 pt-6 z-10">
+                <button
+                  className="px-4 py-2 rounded-full border border-gray-300 bg-white text-gray-700 font-semibold transition hover:bg-gray-100 disabled:opacity-50"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  Prev
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      className={`px-4 py-2 rounded-full border font-semibold transition
+                      ${
+                        page === currentPage
+                          ? "bg-[#0458A9] text-white border-[#0458A9] shadow"
+                          : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }
+                    `}
+                      onClick={() => goToPage(page)}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
+                <button
+                  className="px-4 py-2 rounded-full border border-gray-300 bg-white text-gray-700 font-semibold transition hover:bg-gray-100 disabled:opacity-50"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         </main>
         {/* Right Sidebar */}

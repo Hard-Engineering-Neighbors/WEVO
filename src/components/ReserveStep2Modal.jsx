@@ -210,10 +210,14 @@ export default function ReserveStep2Modal({
     if (!isMultipleDays && partialDayInfo) {
       if (partialDayInfo.amBooked) {
         // Only PM available
-        return timeOptionsWithFormat.slice(0, -1).filter(opt => opt.value >= "13:00" && opt.value <= "18:30");
+        return timeOptionsWithFormat
+          .slice(0, -1)
+          .filter((opt) => opt.value >= "13:00" && opt.value <= "18:30");
       } else if (partialDayInfo.pmBooked) {
         // Only AM available
-        return timeOptionsWithFormat.slice(0, -1).filter(opt => opt.value >= "07:00" && opt.value <= "12:00");
+        return timeOptionsWithFormat
+          .slice(0, -1)
+          .filter((opt) => opt.value >= "07:00" && opt.value <= "12:00");
       }
     }
     // Whole day available
@@ -225,23 +229,36 @@ export default function ReserveStep2Modal({
     if (!isMultipleDays && partialDayInfo) {
       if (partialDayInfo.amBooked) {
         // Only PM available
-        return timeOptionsWithFormat.filter(opt => opt.value > selectedStartTime && opt.value >= "13:30" && opt.value <= "19:00");
+        return timeOptionsWithFormat.filter(
+          (opt) =>
+            opt.value > selectedStartTime &&
+            opt.value >= "13:30" &&
+            opt.value <= "19:00"
+        );
       } else if (partialDayInfo.pmBooked) {
         // Only AM available
-        return timeOptionsWithFormat.filter(opt => opt.value > selectedStartTime && opt.value >= "07:30" && opt.value <= "12:30");
+        return timeOptionsWithFormat.filter(
+          (opt) =>
+            opt.value > selectedStartTime &&
+            opt.value >= "07:30" &&
+            opt.value <= "12:30"
+        );
       }
     }
     // Whole day available
-    return timeOptionsWithFormat.filter(opt => opt.value > selectedStartTime);
+    return timeOptionsWithFormat.filter((opt) => opt.value > selectedStartTime);
   };
 
   // Ensure startTime and endTime are always valid when available window changes
   useEffect(() => {
     if (!isMultipleDays) {
       const validStartOptions = getStartTimeOptions();
-      if (!validStartOptions.some(opt => opt.value === form.startTime)) {
+      if (!validStartOptions.some((opt) => opt.value === form.startTime)) {
         // If current startTime is not valid, set to first valid
-        setForm(prev => ({ ...prev, startTime: validStartOptions[0]?.value || "" }));
+        setForm((prev) => ({
+          ...prev,
+          startTime: validStartOptions[0]?.value || "",
+        }));
       }
     }
   }, [partialDayInfo, isMultipleDays]);
@@ -249,9 +266,12 @@ export default function ReserveStep2Modal({
   useEffect(() => {
     if (!isMultipleDays) {
       const validEndOptions = getFilteredEndTimeOptions(form.startTime);
-      if (!validEndOptions.some(opt => opt.value === form.endTime)) {
+      if (!validEndOptions.some((opt) => opt.value === form.endTime)) {
         // If current endTime is not valid, set to first valid
-        setForm(prev => ({ ...prev, endTime: validEndOptions[0]?.value || "" }));
+        setForm((prev) => ({
+          ...prev,
+          endTime: validEndOptions[0]?.value || "",
+        }));
       }
     }
   }, [form.startTime, partialDayInfo, isMultipleDays]);
@@ -349,12 +369,19 @@ export default function ReserveStep2Modal({
 
   // Format time for display (24-hour to 12-hour with AM/PM)
   const formatTimeForDisplay = (time24) => {
-    if (!time24) return "";
-    const [hour, minute] = time24.split(":");
-    const hourNum = parseInt(hour);
-    const suffix = hourNum >= 12 ? "PM" : "AM";
-    const hour12 = hourNum > 12 ? hourNum - 12 : hourNum === 0 ? 12 : hourNum;
-    return `${hour12}:${minute} ${suffix}`;
+    if (!time24 || typeof time24 !== "string") return "";
+    try {
+      const [hour, minute] = time24.split(":");
+      if (!hour || !minute) return "";
+      const hourNum = parseInt(hour);
+      if (isNaN(hourNum)) return "";
+      const suffix = hourNum >= 12 ? "PM" : "AM";
+      const hour12 = hourNum > 12 ? hourNum - 12 : hourNum === 0 ? 12 : hourNum;
+      return `${hour12}:${minute} ${suffix}`;
+    } catch (error) {
+      console.error("Error formatting time:", error);
+      return "";
+    }
   };
   // Prepare combined data for Step 3
   const prepareStep3Data = () => {

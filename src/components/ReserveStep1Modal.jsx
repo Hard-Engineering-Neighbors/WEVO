@@ -163,28 +163,36 @@ export default function ReserveStep1Modal({
     if (times.length === 0) return { blocked: false };
     // AM: any booking with endTime <= 12:30
     // PM: any booking with startTime >= 13:00
-    let amBooked = false, pmBooked = false, amEnd = null, pmStart = null;
+    let amBooked = false,
+      pmBooked = false,
+      amEnd = null,
+      pmStart = null;
     times.forEach(({ start, end }) => {
       const [sH, sM] = start.split(":").map(Number);
       const [eH, eM] = end.split(":").map(Number);
       const startMins = sH * 60 + sM;
       const endMins = eH * 60 + eM;
-      if (endMins <= 750) { // 12:30 PM or earlier
+      if (endMins <= 750) {
+        // 12:30 PM or earlier
         amBooked = true;
         amEnd = end;
       }
-      if (startMins >= 780 && endMins > startMins) { // 1:00 PM or later
+      if (startMins >= 780 && endMins > startMins) {
+        // 1:00 PM or later
         pmBooked = true;
         pmStart = start;
       }
       // If a booking overlaps both (e.g. 11:00–14:00), block the day
       if (startMins < 780 && endMins > 750) {
-        amBooked = true; pmBooked = true;
+        amBooked = true;
+        pmBooked = true;
       }
     });
     if (amBooked && pmBooked) return { blocked: true };
-    if (amBooked) return { blocked: false, amBooked: true, amEnd: amEnd || "12:30" };
-    if (pmBooked) return { blocked: false, pmBooked: true, pmStart: pmStart || "13:00" };
+    if (amBooked)
+      return { blocked: false, amBooked: true, amEnd: amEnd || "12:30" };
+    if (pmBooked)
+      return { blocked: false, pmBooked: true, pmStart: pmStart || "13:00" };
     return { blocked: false };
   };
 
@@ -274,39 +282,175 @@ export default function ReserveStep1Modal({
   };
 
   // Venue Selector Modal
-  const VenueSelector = () => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full mx-4 p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-2xl font-bold text-[#0458A9]">Select a Venue</h3>
-          <button
-            onClick={() => setShowVenueSelector(false)}
-            className="text-gray-400 hover:text-gray-700"
-          >
-            <X size={24} />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {venues.map((v) => (
+  const VenueSelector = () => {
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const filteredVenues = venues.filter(
+      (v) =>
+        v.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2">
+        <div className="bg-white rounded-2xl shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 md:p-6 border-b border-gray-200">
+            <div className="mb-2 sm:mb-0">
+              <h3 className="text-xl md:text-2xl font-bold text-[#0458A9]">
+                Select a Venue
+              </h3>
+              <p className="text-gray-600 text-sm">
+                Choose from {venues.length} available venues
+              </p>
+            </div>
             <button
-              key={v.id}
-              onClick={() => handleVenueSelect(v)}
-              className="flex flex-col items-center p-4 border rounded-xl hover:border-[#0458A9] transition"
+              onClick={() => setShowVenueSelector(false)}
+              className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors self-end sm:self-auto"
             >
-              <div className="w-full aspect-video rounded-lg overflow-hidden mb-2">
-                <img
-                  src={v.images ? v.images[0] : v.image}
-                  alt={v.name}
-                  className="object-cover w-full h-full"
-                />
-              </div>
-              <h4 className="font-semibold text-[#0458A9]">{v.name}</h4>
+              <X size={24} />
             </button>
-          ))}
+          </div>
+
+          {/* Search Bar */}
+          <div className="p-4 md:p-6 pb-2 md:pb-4 border-b border-gray-100">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg
+                  className="h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Search venues by name or description..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#0458A9] focus:border-transparent text-base placeholder-gray-500"
+              />
+            </div>
+          </div>
+
+          {/* Venues Grid */}
+          <div className="flex-1 p-4 md:p-6 overflow-y-auto">
+            {filteredVenues.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                {filteredVenues.map((v) => (
+                  <button
+                    key={v.name}
+                    onClick={() => handleVenueSelect(v)}
+                    className="group flex flex-col bg-white border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-[#0458A9] hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#0458A9] focus:border-transparent"
+                  >
+                    <div className="relative w-full aspect-video overflow-hidden">
+                      <img
+                        src={v.images ? v.images[0] : v.image}
+                        alt={v.name}
+                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+                      />
+                      {/* Gradient overlay for better text readability if needed */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                    </div>
+                    <div className="p-4 flex-1 flex flex-col">
+                      <h4 className="font-bold text-[#0458A9] text-base md:text-lg mb-2 group-hover:text-[#03407a] transition-colors line-clamp-2">
+                        {v.name}
+                      </h4>
+                      {v.description && (
+                        <p className="text-gray-600 text-sm line-clamp-2 mb-3 flex-1">
+                          {v.description}
+                        </p>
+                      )}
+                      {v.participants && (
+                        <div className="flex items-center text-gray-500 text-sm">
+                          <svg
+                            className="w-4 h-4 mr-1"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                            />
+                          </svg>
+                          {v.participants} max
+                        </div>
+                      )}
+                      {/* Selected indicator for current venue */}
+                      {v.name === venue.name && (
+                        <div className="mt-3 text-center">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#0458A9] text-white">
+                            Currently Selected
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <svg
+                  className="w-16 h-16 text-gray-300 mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                  />
+                </svg>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No venues found
+                </h3>
+                <p className="text-gray-500 max-w-sm">
+                  Try adjusting your search terms or clearing the search to see
+                  all available venues.
+                </p>
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="mt-4 px-4 py-2 bg-[#0458A9] text-white rounded-lg hover:bg-[#03407a] transition-colors text-sm font-medium"
+                  >
+                    Clear Search
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="p-4 md:p-6 border-t border-gray-200 bg-gray-50">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+              <p className="text-sm text-gray-600 text-center sm:text-left">
+                {filteredVenues.length} of {venues.length} venues{" "}
+                {searchTerm ? "match your search" : "available"}
+              </p>
+              <button
+                onClick={() => setShowVenueSelector(false)}
+                className="w-full sm:w-auto px-6 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-100 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <>
@@ -492,7 +636,9 @@ export default function ReserveStep1Modal({
               </button>
             </div>
             {errorMsg && (
-              <div className="text-red-600 text-center mt-2 font-semibold">{errorMsg}</div>
+              <div className="text-red-600 text-center mt-2 font-semibold">
+                {errorMsg}
+              </div>
             )}
           </div>
         </div>
