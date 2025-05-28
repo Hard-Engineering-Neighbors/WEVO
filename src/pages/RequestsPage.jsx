@@ -14,6 +14,7 @@ import {
 import { useAuth } from "../contexts/AuthContext";
 import { fetchRequests } from "../api/requests";
 import { supabase } from "../supabase/supabaseClient";
+import venuesList from "../data/venues";
 
 import venueSample from "../assets/cultural_center.webp";
 
@@ -25,12 +26,12 @@ const truncateText = (text, maxLength) => {
   return text;
 };
 
-function RequestCard({ request, onDetails }) {
+function RequestCard({ request, onDetails, image }) {
   return (
     <div className="flex bg-white rounded-xl shadow border border-[#C0C0C0] overflow-hidden max-w-2xl w-full">
       <div className="h-auto w-40 flex-shrink-0">
         <img
-          src={request.image}
+          src={image}
           alt={request.venue}
           className="w-full h-full object-cover rounded-l-xl"
         />
@@ -66,7 +67,12 @@ function RequestCard({ request, onDetails }) {
           <Clock size={14} />
           {request.perDayTimes && request.perDayTimes.length > 0 ? (
             <span>
-              {new Date(request.perDayTimes[0].date).toLocaleDateString()} {request.perDayTimes[0].startTime} - {new Date(request.perDayTimes[request.perDayTimes.length-1].date).toLocaleDateString()} {request.perDayTimes[request.perDayTimes.length-1].endTime}
+              {new Date(request.perDayTimes[0].date).toLocaleDateString()}{" "}
+              {request.perDayTimes[0].startTime} -{" "}
+              {new Date(
+                request.perDayTimes[request.perDayTimes.length - 1].date
+              ).toLocaleDateString()}{" "}
+              {request.perDayTimes[request.perDayTimes.length - 1].endTime}
             </span>
           ) : (
             request.date
@@ -86,18 +92,35 @@ function RequestCard({ request, onDetails }) {
 }
 
 function RequestsGrid({ requests, onDetails }) {
-  // Responsive grid: 2 per row on md+, 1 per row on mobile
+  // Helper to get venue image by name
+  const getVenueImage = (venueName) => {
+    const venue = venuesList.find(
+      (v) => v.name.toLowerCase() === venueName?.toLowerCase()
+    );
+    return venue?.image || venueSample;
+  };
+  // Responsive grid: 2 per row on sm+, 1 per row on mobile
   if (requests.length === 1) {
     return (
-      <div className="w-full">
-        <RequestCard request={requests[0]} onDetails={onDetails} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <RequestCard
+          request={requests[0]}
+          onDetails={onDetails}
+          image={getVenueImage(requests[0].venue)}
+        />
+        <div aria-hidden className="hidden sm:block" />
       </div>
     );
   }
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {requests.map((request) => (
-        <RequestCard key={request.id} request={request} onDetails={onDetails} />
+        <RequestCard
+          key={request.id}
+          request={request}
+          onDetails={onDetails}
+          image={getVenueImage(request.venue)}
+        />
       ))}
     </div>
   );
@@ -107,10 +130,15 @@ function useRealtimeRequests(userId, refetch) {
   React.useEffect(() => {
     if (!userId) return;
     const channel = supabase
-      .channel('user_requests')
+      .channel("user_requests")
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'booking_requests', filter: `requested_by=eq.${userId}` },
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "booking_requests",
+          filter: `requested_by=eq.${userId}`,
+        },
         () => {
           refetch();
         }
@@ -128,7 +156,7 @@ export default function RequestsPage() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const requestsPerPage = 5;
+  const requestsPerPage = 6;
   const totalPages = Math.ceil(requests.length / requestsPerPage);
   const paginatedRequests = requests.slice(
     (currentPage - 1) * requestsPerPage,
@@ -168,7 +196,7 @@ export default function RequestsPage() {
       <div className="flex flex-col lg:flex-row flex-1">
         <LeftSidebar active="requests" />
         {/* Center Content */}
-        <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 space-y-4 order-2 lg:order-none min-h-screen">
+        <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 space-y-4 order-2 lg:order-none min-h-screen flex flex-col">
           {/* Search Bar */}
           <SearchBar />
           {/* Title and Sort/Filter Row */}
@@ -186,35 +214,46 @@ export default function RequestsPage() {
             </div>
           </div>
           {/* Requests List with Pagination */}
-          <RequestsGrid requests={paginatedRequests} onDetails={handleDetails} />
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-6">
+          <div className="flex-1 flex flex-col justify-between">
+            <RequestsGrid
+              requests={paginatedRequests}
+              onDetails={handleDetails}
+            />
+            {/* Pagination Controls - always at the bottom */}
+            <div className="flex justify-center items-center gap-2 mt-8 mb-2 pb-20 lg:pb-2 sticky bottom-0 bg-gray-50 pt-6 z-10">
               <button
-                className="px-3 py-1 rounded border bg-white text-gray-700 disabled:opacity-50"
+                className="px-4 py-2 rounded-full border border-gray-300 bg-white text-gray-700 font-semibold transition hover:bg-gray-100 disabled:opacity-50"
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
               >
                 Prev
               </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  className={`px-3 py-1 rounded border ${page === currentPage ? "bg-[#0458A9] text-white" : "bg-white text-gray-700"}`}
-                  onClick={() => goToPage(page)}
-                >
-                  {page}
-                </button>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    className={`px-4 py-2 rounded-full border font-semibold transition
+                    ${
+                      page === currentPage
+                        ? "bg-[#0458A9] text-white border-[#0458A9] shadow"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                    }
+                  `}
+                    onClick={() => goToPage(page)}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
               <button
-                className="px-3 py-1 rounded border bg-white text-gray-700 disabled:opacity-50"
+                className="px-4 py-2 rounded-full border border-gray-300 bg-white text-gray-700 font-semibold transition hover:bg-gray-100 disabled:opacity-50"
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
                 Next
               </button>
             </div>
-          )}
+          </div>
         </main>
         {/* Right Sidebar */}
         <RightSidebar />
