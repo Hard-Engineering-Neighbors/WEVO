@@ -21,6 +21,13 @@ import Calendar from "../components/Calendar/Calendar";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    totalRequests: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    cancelled: 0,
+  });
 
   useEffect(() => {
     // Trap user on dashboard: disable back/forward navigation
@@ -43,7 +50,7 @@ export default function DashboardPage() {
         <LeftSidebar />
 
         {/* Center Content */}
-        <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 space-y-4 order-2 lg:order-none">
+        <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 space-y-4 order-2 lg:order-none pb-20 lg:pb-6">
           {/* Search Bar */}
           <SearchBar />
 

@@ -140,9 +140,12 @@ export default function RightSidebar({ onNotificationClick }) {
   const userNotifications = notifications.filter(
     (notif) => notif.role === "user"
   );
+
+  // For desktop: show 5 notifications normally or all if showAll is true
+  // For mobile: show only latest notification or all if showAll is true
   const visibleNotifications = showAll
     ? userNotifications
-    : userNotifications.slice(0, 5);
+    : userNotifications.slice(0, 1); // Changed from 5 to 1 for mobile-first approach
 
   return (
     <>
@@ -183,133 +186,269 @@ export default function RightSidebar({ onNotificationClick }) {
               className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-[#0458A9] focus:border-[#0458A9]"
             />
           </div>
-          {/* Desktop & Mobile: Full Notifications List */}
+
+          {/* Mobile and Desktop: Notifications List */}
           <ul
             className="divide-y divide-gray-200 overflow-y-auto flex-grow pr-1"
             style={{ maxHeight: showAll ? "none" : "calc(100vh - 350px)" }}
           >
-            {visibleNotifications.map((notif) => {
-              // Parse the data if it's a string
-              const data =
-                typeof notif.data === "string"
-                  ? JSON.parse(notif.data)
-                  : notif.data;
-              const isUnread = notif.status === "unread";
+            {/* Desktop: Show normal behavior (5 or all) */}
+            {/* Mobile: Show latest or all */}
+            <div className="hidden lg:block">
+              {(showAll
+                ? userNotifications
+                : userNotifications.slice(0, 5)
+              ).map((notif) => {
+                // Parse the data if it's a string
+                const data =
+                  typeof notif.data === "string"
+                    ? JSON.parse(notif.data)
+                    : notif.data;
+                const isUnread = notif.status === "unread";
 
-              return (
-                <li
-                  key={notif.id}
-                  className={`flex items-start py-3 cursor-pointer hover:bg-gray-50 transition-all duration-500 ${
-                    highlightedId === notif.id ? "bg-yellow-50" : ""
-                  }`}
-                  onClick={() => {
-                    handleNotificationClick(notif);
-                    setSelectedNotif(notif);
-                  }}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`font-bold text-[#0458A9] ${
-                            isUnread ? "text-base" : "text-sm"
-                          }`}
-                        >
-                          {notif.type === "System" || notif.type === "WEVO"
-                            ? "WEVO"
-                            : notif.type === "Admin"
-                            ? "Admin"
-                            : ""}
-                        </span>
-                        {(() => {
-                          let status = "";
-                          // Try to get status from different possible locations in the data
-                          if (data) {
-                            // Debug log to see what status we're getting
-                            console.log("Notification status data:", data);
-                            status = (
-                              data.status ||
-                              data.requestStatus ||
-                              data.reservationStatus ||
-                              ""
-                            ).toLowerCase();
-                            // Debug log to see the extracted status
-                            console.log("Extracted status:", status);
-                          }
-                          const statusStyles = {
-                            submitted:
-                              "bg-yellow-100 text-yellow-800 border border-yellow-200",
-                            approved:
-                              "bg-green-100 text-green-800 border border-green-200",
-                            cancelled:
-                              "bg-red-100 text-red-800 border border-red-200",
-                            rejected:
-                              "bg-red-100 text-red-800 border border-red-200",
-                          };
-
-                          // Normalize the status to handle different variations
-                          const normalizeStatus = (status) => {
-                            if (!status) return "";
-                            status = status.toLowerCase().trim();
-                            // Map various status formats to our standard ones
-                            const statusMap = {
-                              pending: "submitted",
-                              submitted: "submitted",
-                              approve: "approved",
-                              approved: "approved",
-                              cancel: "cancelled",
-                              cancelled: "cancelled",
-                              canceled: "cancelled",
-                              reject: "rejected",
-                              rejected: "rejected",
+                return (
+                  <li
+                    key={notif.id}
+                    className={`flex items-start py-3 cursor-pointer hover:bg-gray-50 transition-all duration-500 ${
+                      highlightedId === notif.id ? "bg-yellow-50" : ""
+                    }`}
+                    onClick={() => {
+                      handleNotificationClick(notif);
+                      setSelectedNotif(notif);
+                    }}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`font-bold text-[#0458A9] ${
+                              isUnread ? "text-base" : "text-sm"
+                            }`}
+                          >
+                            {notif.type === "System" || notif.type === "WEVO"
+                              ? "WEVO"
+                              : notif.type === "Admin"
+                              ? "Admin"
+                              : ""}
+                          </span>
+                          {(() => {
+                            let status = "";
+                            // Try to get status from different possible locations in the data
+                            if (data) {
+                              // Debug log to see what status we're getting
+                              console.log("Notification status data:", data);
+                              status = (
+                                data.status ||
+                                data.requestStatus ||
+                                data.reservationStatus ||
+                                ""
+                              ).toLowerCase();
+                              // Debug log to see the extracted status
+                              console.log("Extracted status:", status);
+                            }
+                            const statusStyles = {
+                              submitted:
+                                "bg-yellow-100 text-yellow-800 border border-yellow-200",
+                              approved:
+                                "bg-green-100 text-green-800 border border-green-200",
+                              cancelled:
+                                "bg-red-100 text-red-800 border border-red-200",
+                              rejected:
+                                "bg-red-100 text-red-800 border border-red-200",
                             };
-                            return statusMap[status] || status;
-                          };
 
-                          const normalizedStatus = normalizeStatus(status);
-                          // Debug log to see the normalized status
-                          console.log("Normalized status:", normalizedStatus);
+                            // Normalize the status to handle different variations
+                            const normalizeStatus = (status) => {
+                              if (!status) return "";
+                              status = status.toLowerCase().trim();
+                              // Map various status formats to our standard ones
+                              const statusMap = {
+                                pending: "submitted",
+                                submitted: "submitted",
+                                approve: "approved",
+                                approved: "approved",
+                                cancel: "cancelled",
+                                cancelled: "cancelled",
+                                canceled: "cancelled",
+                                reject: "rejected",
+                                rejected: "rejected",
+                              };
+                              return statusMap[status] || status;
+                            };
 
-                          const style = statusStyles[normalizedStatus] || "";
-                          return normalizedStatus ? (
-                            <span
-                              className={`text-xs px-2 py-0.5 rounded-full font-medium ${style} capitalize`}
-                            >
-                              {normalizedStatus}
-                            </span>
-                          ) : null;
-                        })()}
+                            const normalizedStatus = normalizeStatus(status);
+                            // Debug log to see the normalized status
+                            console.log("Normalized status:", normalizedStatus);
+
+                            const style = statusStyles[normalizedStatus] || "";
+                            return normalizedStatus ? (
+                              <span
+                                className={`text-xs px-2 py-0.5 rounded-full font-medium ${style} capitalize`}
+                              >
+                                {normalizedStatus}
+                              </span>
+                            ) : null;
+                          })()}
+                        </div>
+                        {isUnread && (
+                          <span className="w-2.5 h-2.5 bg-yellow-400 rounded-full flex-shrink-0"></span>
+                        )}
                       </div>
-                      {isUnread && (
-                        <span className="w-2.5 h-2.5 bg-yellow-400 rounded-full flex-shrink-0"></span>
-                      )}
+                      <div className="text-xs text-gray-400 mb-1">
+                        {new Date(notif.created_at).toLocaleString()}
+                      </div>
+                      <div
+                        className={`text-gray-700 ${
+                          isUnread ? "font-medium" : ""
+                        } text-sm`}
+                      >
+                        {truncateText(notif.message, 85)}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-400 mb-1">
-                      {new Date(notif.created_at).toLocaleString()}
-                    </div>
-                    <div
-                      className={`text-gray-700 ${
-                        isUnread ? "font-medium" : ""
-                      } text-sm`}
-                    >
-                      {truncateText(notif.message, 85)}
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          {/* Show All/Show Less button for both desktop and mobile */}
-          {userNotifications.length > 5 && (
-            <div className="flex justify-center mt-auto pt-2 lg:mt-4 mb-1">
-              <button
-                className="w-full py-2.5 bg-white rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-                onClick={() => setShowAll((v) => !v)}
-              >
-                {showAll ? "Show Less" : "Show All Notifications"}
-              </button>
+                  </li>
+                );
+              })}
             </div>
-          )}
+
+            {/* Mobile: Show only latest notification or all */}
+            <div className="block lg:hidden">
+              {visibleNotifications.map((notif) => {
+                // Parse the data if it's a string
+                const data =
+                  typeof notif.data === "string"
+                    ? JSON.parse(notif.data)
+                    : notif.data;
+                const isUnread = notif.status === "unread";
+
+                return (
+                  <li
+                    key={notif.id}
+                    className={`flex items-start py-3 cursor-pointer hover:bg-gray-50 transition-all duration-500 ${
+                      highlightedId === notif.id ? "bg-yellow-50" : ""
+                    }`}
+                    onClick={() => {
+                      handleNotificationClick(notif);
+                      setSelectedNotif(notif);
+                    }}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`font-bold text-[#0458A9] ${
+                              isUnread ? "text-base" : "text-sm"
+                            }`}
+                          >
+                            {notif.type === "System" || notif.type === "WEVO"
+                              ? "WEVO"
+                              : notif.type === "Admin"
+                              ? "Admin"
+                              : ""}
+                          </span>
+                          {(() => {
+                            let status = "";
+                            // Try to get status from different possible locations in the data
+                            if (data) {
+                              status = (
+                                data.status ||
+                                data.requestStatus ||
+                                data.reservationStatus ||
+                                ""
+                              ).toLowerCase();
+                            }
+                            const statusStyles = {
+                              submitted:
+                                "bg-yellow-100 text-yellow-800 border border-yellow-200",
+                              approved:
+                                "bg-green-100 text-green-800 border border-green-200",
+                              cancelled:
+                                "bg-red-100 text-red-800 border border-red-200",
+                              rejected:
+                                "bg-red-100 text-red-800 border border-red-200",
+                            };
+
+                            // Normalize the status to handle different variations
+                            const normalizeStatus = (status) => {
+                              if (!status) return "";
+                              status = status.toLowerCase().trim();
+                              // Map various status formats to our standard ones
+                              const statusMap = {
+                                pending: "submitted",
+                                submitted: "submitted",
+                                approve: "approved",
+                                approved: "approved",
+                                cancel: "cancelled",
+                                cancelled: "cancelled",
+                                canceled: "cancelled",
+                                reject: "rejected",
+                                rejected: "rejected",
+                              };
+                              return statusMap[status] || status;
+                            };
+
+                            const normalizedStatus = normalizeStatus(status);
+
+                            const style = statusStyles[normalizedStatus] || "";
+                            return normalizedStatus ? (
+                              <span
+                                className={`text-xs px-2 py-0.5 rounded-full font-medium ${style} capitalize`}
+                              >
+                                {normalizedStatus}
+                              </span>
+                            ) : null;
+                          })()}
+                        </div>
+                        {isUnread && (
+                          <span className="w-2.5 h-2.5 bg-yellow-400 rounded-full flex-shrink-0"></span>
+                        )}
+                      </div>
+                      <div className="text-xs text-gray-400 mb-1">
+                        {new Date(notif.created_at).toLocaleString()}
+                      </div>
+                      <div
+                        className={`text-gray-700 ${
+                          isUnread ? "font-medium" : ""
+                        } text-sm`}
+                      >
+                        {truncateText(notif.message, 85)}
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </div>
+          </ul>
+
+          {/* Show All/Show Less button - Different behavior for mobile vs desktop */}
+          {/* Desktop: Show button if more than 5 notifications */}
+          <div className="hidden lg:block">
+            {userNotifications.length > 5 && (
+              <div className="flex justify-center mt-auto pt-2 lg:mt-4 mb-1">
+                <button
+                  className="w-full py-2.5 bg-white rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                  onClick={() => setShowAll((v) => !v)}
+                >
+                  {showAll ? "Show Less" : "Show All Notifications"}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile: Show button if more than 1 notification */}
+          <div className="block lg:hidden">
+            {userNotifications.length > 1 && (
+              <div className="flex justify-center mt-auto pt-2 mb-1">
+                <button
+                  className="w-full py-2.5 bg-white rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                  onClick={() => setShowAll((v) => !v)}
+                >
+                  {showAll
+                    ? "Show Less"
+                    : `Show All (${userNotifications.length})`}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </aside>
 

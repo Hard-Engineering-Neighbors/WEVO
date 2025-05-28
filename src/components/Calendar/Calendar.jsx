@@ -8,6 +8,8 @@ export default function CalendarComponent({
   onEventClick = null,
   onDateSelect = null,
   onFullViewClick = null,
+  layout = "default",
+  showReserveButton = true,
 }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activeStartDate, setActiveStartDate] = useState(new Date());
@@ -30,7 +32,7 @@ export default function CalendarComponent({
 
   // Helper to get YYYY-MM-DD in Asia/Manila
   const getPHDateString = (date) => {
-    return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }); // 'YYYY-MM-DD'
+    return date.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" }); // 'YYYY-MM-DD'
   };
 
   // Get events for a specific date (in PH time)
@@ -43,11 +45,22 @@ export default function CalendarComponent({
       }
       // Otherwise, check if the date is between start_time and end_time (in PH time)
       if (event.start_time && event.end_time) {
-        const start = new Date(new Date(event.start_time).toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
-        const end = new Date(new Date(event.end_time).toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
-        const d = new Date(dateStr + 'T00:00:00');
-        return d >= new Date(start.getFullYear(), start.getMonth(), start.getDate()) &&
-               d <= new Date(end.getFullYear(), end.getMonth(), end.getDate());
+        const start = new Date(
+          new Date(event.start_time).toLocaleString("en-US", {
+            timeZone: "Asia/Manila",
+          })
+        );
+        const end = new Date(
+          new Date(event.end_time).toLocaleString("en-US", {
+            timeZone: "Asia/Manila",
+          })
+        );
+        const d = new Date(dateStr + "T00:00:00");
+        return (
+          d >=
+            new Date(start.getFullYear(), start.getMonth(), start.getDate()) &&
+          d <= new Date(end.getFullYear(), end.getMonth(), end.getDate())
+        );
       }
       return false;
     });
@@ -95,6 +108,13 @@ export default function CalendarComponent({
     }
   };
 
+  // Add a handler for reserve button
+  const handleReserveClick = () => {
+    // If using react-router, you can use navigate('/venues')
+    // For now, fallback to window.location
+    window.location.href = "/venues";
+  };
+
   // Tile content to show event indicators
   const tileContent = ({ date, view }) => {
     if (view === "month" && hasEvents(date)) {
@@ -117,7 +137,8 @@ export default function CalendarComponent({
   const tileClassName = ({ date, view }) => {
     if (view === "month") {
       const isToday = getPHDateString(date) === getPHDateString(new Date());
-      const isSelected = getPHDateString(date) === getPHDateString(selectedDate);
+      const isSelected =
+        getPHDateString(date) === getPHDateString(selectedDate);
 
       let classes = "calendar-tile";
       if (isToday) classes += " today";
@@ -138,10 +159,18 @@ export default function CalendarComponent({
         </h2>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col lg:flex-row min-h-0">
+      {/* Main Content - Different layouts based on layout prop */}
+      <div
+        className={`flex-1 flex ${
+          layout === "admin" ? "flex-col" : "flex-col lg:flex-row"
+        } min-h-0`}
+      >
         {/* Calendar Section */}
-        <div className="flex-1 lg:flex-[2_1_0%] p-6">
+        <div
+          className={`${
+            layout === "admin" ? "flex-1" : "flex-1 lg:flex-[2_1_0%]"
+          } p-6`}
+        >
           <div className="modern-calendar-wrapper h-full">
             <Calendar
               onChange={handleDateChange}
@@ -186,8 +215,18 @@ export default function CalendarComponent({
         </div>
 
         {/* Event Details Section */}
-        <div className="w-full lg:flex-[1_1_0%] border-t lg:border-t-0 lg:border-l border-gray-100 bg-gray-50">
-          <div className="p-6 h-full overflow-y-auto">
+        <div
+          className={`w-full ${
+            layout === "admin"
+              ? "border-t"
+              : "lg:flex-[1_1_0%] border-t lg:border-t-0 lg:border-l"
+          } border-gray-100 bg-gray-50`}
+        >
+          <div
+            className={`p-6 h-full flex flex-col ${
+              layout === "admin" ? "min-h-[200px]" : "min-h-[300px]"
+            }`}
+          >
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-1">
                 {selectedDate.toLocaleDateString("en-US", {
@@ -203,11 +242,17 @@ export default function CalendarComponent({
             </div>
 
             {loading ? (
-              <div className="text-center py-8 text-gray-500">Loading events...</div>
+              <div className="text-center py-8 text-gray-500">
+                Loading events...
+              </div>
             ) : error ? (
               <div className="text-center py-8 text-red-500">{error}</div>
             ) : selectedDateEvents.length > 0 ? (
-              <div className="space-y-3">
+              <div
+                className={`space-y-3 ${
+                  layout === "admin" ? "max-h-[150px]" : "max-h-[220px]"
+                } overflow-y-auto pr-1`}
+              >
                 {selectedDateEvents.map((event) => (
                   <div
                     key={event.id}
@@ -262,15 +307,27 @@ export default function CalendarComponent({
                         </svg>
                         {event.perDayTimes && event.perDayTimes.length > 0 ? (
                           event.perDayTimes
-                            .filter((d) => d.date === getPHDateString(selectedDate))
+                            .filter(
+                              (d) => d.date === getPHDateString(selectedDate)
+                            )
                             .map((d, idx) => (
-                              <span key={idx}>{d.startTime} - {d.endTime}</span>
+                              <span key={idx}>
+                                {d.startTime} - {d.endTime}
+                              </span>
                             ))
                         ) : (
                           <span>
-                            {new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Manila' })}
+                            {new Date(event.start_time).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              timeZone: "Asia/Manila",
+                            })}
                             {" - "}
-                            {new Date(event.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Manila' })}
+                            {new Date(event.end_time).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              timeZone: "Asia/Manila",
+                            })}
                           </span>
                         )}
                       </div>
@@ -285,7 +342,7 @@ export default function CalendarComponent({
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth="2"
-                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                           />
                         </svg>
                         {event.org}
@@ -295,7 +352,7 @@ export default function CalendarComponent({
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
+              <div className="text-center py-8 flex flex-col items-center gap-4">
                 <svg
                   className="w-12 h-12 mx-auto text-gray-300 mb-4"
                   fill="none"
@@ -309,8 +366,20 @@ export default function CalendarComponent({
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                <p className="text-gray-500">No events scheduled</p>
+                <p className="text-gray-500 mb-2">No events scheduled</p>
               </div>
+            )}
+            {/* Conditionally show Reserve button based on showReserveButton prop */}
+            {showReserveButton && (
+              <>
+                <div className="flex-1" />
+                <button
+                  className="bg-[#0458A9] hover:bg-[#03407a] text-white font-semibold rounded-full px-6 py-2 text-base transition mt-6 w-full"
+                  onClick={handleReserveClick}
+                >
+                  Reserve
+                </button>
+              </>
             )}
           </div>
         </div>
