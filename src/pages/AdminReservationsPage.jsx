@@ -29,10 +29,10 @@ const truncateText = (text, maxLength) => {
 function useRealtimeRequests(refetch) {
   React.useEffect(() => {
     const channel = supabase
-      .channel('admin_requests')
+      .channel("admin_requests")
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'booking_requests' },
+        "postgres_changes",
+        { event: "*", schema: "public", table: "booking_requests" },
         () => {
           refetch();
         }
@@ -52,6 +52,8 @@ export default function AdminReservationsPage() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState(null);
+  // Track expanded rows for date/time
+  const [expandedRows, setExpandedRows] = useState({});
 
   // 1. Define loadRequests at the top level
   const loadRequests = async () => {
@@ -134,8 +136,8 @@ export default function AdminReservationsPage() {
     <div className="flex flex-col min-h-screen font-sans bg-gray-50">
       <div className="flex flex-col lg:flex-row flex-1">
         <AdminLeftSidebar active="Reservations" /> {/* Set active prop */}
-        <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 space-y-6 order-2 lg:order-none">
-          {/* Top Search Bar (copied from AdminDashboardPage) */}
+        <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 space-y-4 order-2 lg:order-none pb-20 lg:pb-6">
+          {/* Main Search Bar */}
           <div className="flex justify-center">
             <div className="relative w-full max-w-full sm:max-w-2xl md:max-w-3xl border border-gray-300 rounded-full">
               <Search
@@ -245,16 +247,39 @@ export default function AdminReservationsPage() {
                       <td className="px-4 py-3">
                         {res.perDayTimes && res.perDayTimes.length > 0 ? (
                           <div className="flex flex-col gap-1">
-                            {res.perDayTimes.map((d, i) => (
+                            {(expandedRows[res.id]
+                              ? res.perDayTimes
+                              : res.perDayTimes.slice(0, 2)
+                            ).map((d, i) => (
                               <span key={i}>
-                                {new Date(d.date).toLocaleDateString()} {d.startTime} - {d.endTime}
+                                {new Date(d.date).toLocaleDateString()}{" "}
+                                {d.startTime} - {d.endTime}
                               </span>
                             ))}
+                            {res.perDayTimes.length > 2 && (
+                              <button
+                                className="text-xs text-blue-600 hover:underline mt-1 self-start"
+                                onClick={() =>
+                                  setExpandedRows((prev) => ({
+                                    ...prev,
+                                    [res.id]: !prev[res.id],
+                                  }))
+                                }
+                              >
+                                {expandedRows[res.id]
+                                  ? "Show less"
+                                  : `Show more (${
+                                      res.perDayTimes.length - 2
+                                    } more)`}
+                              </button>
+                            )}
                           </div>
                         ) : (
                           <>
                             <div>{res.date}</div>
-                            <div className="text-xs text-gray-500">{res.time}</div>
+                            <div className="text-xs text-gray-500">
+                              {res.time}
+                            </div>
                           </>
                         )}
                       </td>

@@ -85,12 +85,12 @@ export default function AdminDashboardPage() {
     try {
       await updateBookingRequestStatus(requestId, "Approved");
       setRequests((prev) =>
-        prev.map((r) =>
-          r.id === requestId ? { ...r, status: "Approved" } : r
-        )
+        prev.map((r) => (r.id === requestId ? { ...r, status: "Approved" } : r))
       );
       // Send confirmation notification to the admin
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       await supabase.from("notifications").insert([
         {
           user_id: user.id,
@@ -98,8 +98,8 @@ export default function AdminDashboardPage() {
           message: `You have approved a booking request (ID: ${requestId}).`,
           related_request_id: requestId,
           status: "unread",
-          role: "admin"
-        }
+          role: "admin",
+        },
       ]);
     } catch (err) {
       console.error("Error approving on dashboard:", err);
@@ -117,7 +117,9 @@ export default function AdminDashboardPage() {
         )
       );
       // Send confirmation notification to the admin
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       await supabase.from("notifications").insert([
         {
           user_id: user.id,
@@ -125,8 +127,8 @@ export default function AdminDashboardPage() {
           message: `You have rejected a booking request (ID: ${requestId}). Reason: ${reason}`,
           related_request_id: requestId,
           status: "unread",
-          role: "admin"
-        }
+          role: "admin",
+        },
       ]);
     } catch (err) {
       console.error("Error rejecting on dashboard:", err);
@@ -354,7 +356,9 @@ export default function AdminDashboardPage() {
                       <div
                         className="h-full bg-gray-400"
                         style={{
-                          width: `${(stats.cancelled / stats.totalRequests) * 100}%`,
+                          width: `${
+                            (stats.cancelled / stats.totalRequests) * 100
+                          }%`,
                         }}
                       ></div>
                     </div>
@@ -370,7 +374,11 @@ export default function AdminDashboardPage() {
               {/* Calendar Section */}
               <div className="bg-white rounded-xl shadow p-4">
                 {/* Minimal Calendar - details inside Calendar component */}
-                <Calendar primaryColor="#56708A" />
+                <Calendar
+                  primaryColor="#56708A"
+                  layout="admin"
+                  showReserveButton={false}
+                />
                 {/* Optional: Add a "Full View" for calendar if needed, similar to mockup */}
                 <div className="flex justify-end mt-2"></div>
               </div>
