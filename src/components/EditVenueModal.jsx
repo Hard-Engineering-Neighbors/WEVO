@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { X, Upload, Image as ImageIcon, Trash2 } from "lucide-react";
+import { X, Upload, MapPin, Image as ImageIcon, Trash2 } from "lucide-react";
 import { editVenue } from "../api/venues";
 import {
   uploadVenueImage,
   validateImageFile,
   formatFileSize,
   uploadVenueImageToStorage,
+  uploadLocationImageToStorage,
 } from "../utils/imageUpload";
 
 export default function EditVenueModal({ open, onClose, venue, onSave }) {
@@ -16,6 +17,7 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
     image_url: "",
     department: "",
     location: "",
+    location_image_url: "",
     features: [],
     status: "active",
   });
@@ -28,8 +30,15 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
     file: null,
     error: null,
   });
+  const [locationImageUpload, setLocationImageUpload] = useState({
+    isUploading: false,
+    preview: null,
+    file: null,
+    error: null,
+  });
 
   const fileInputRef = useRef(null);
+  const locationFileInputRef = useRef(null);
 
   const availableFeatures = [
     "Air Conditioning",
@@ -58,6 +67,7 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
         image_url: venue.image_url || "",
         department: venue.department || "",
         location: venue.location || "",
+        location_image_url: venue.location_image_url || "",
         features: venue.features || [],
         status: venue.status || "active",
       });
@@ -67,10 +77,19 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
         file: null,
         error: null,
       });
+      setLocationImageUpload({
+        isUploading: false,
+        preview: venue.location_image_url || null,
+        file: null,
+        error: null,
+      });
       setErrors({});
       setNewFeature("");
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
+      }
+      if (locationFileInputRef.current) {
+        locationFileInputRef.current.value = "";
       }
     }
   }, [open, venue]);
@@ -83,6 +102,7 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
       image_url: "",
       department: "",
       location: "",
+      location_image_url: "",
       features: [],
       status: "active",
     });
@@ -94,8 +114,17 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
       file: null,
       error: null,
     });
+    setLocationImageUpload({
+      isUploading: false,
+      preview: null,
+      file: null,
+      error: null,
+    });
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+    if (locationFileInputRef.current) {
+      locationFileInputRef.current.value = "";
     }
   };
 
@@ -199,6 +228,70 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
     }
   };
 
+  const handleLocationImageSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const validationErrors = validateImageFile(file);
+    if (validationErrors.length > 0) {
+      setLocationImageUpload((prev) => ({
+        ...prev,
+        error: validationErrors[0],
+        file: null,
+        preview: formData.location_image_url || null,
+      }));
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      setLocationImageUpload((prev) => ({
+        ...prev,
+        preview: event.target.result,
+        file: file,
+        error: null,
+        isUploading: true,
+      }));
+      
+      try {
+        const uploadResult = await uploadVenueImage(file);
+        const publicUrl = await uploadLocationImageToStorage(uploadResult.file);
+        
+        setFormData((prev) => ({
+          ...prev,
+          location_image_url: publicUrl,
+        }));
+        
+        setLocationImageUpload((prev) => ({
+          ...prev,
+          isUploading: false,
+          preview: publicUrl,
+          file: null,
+        }));
+      } catch (error) {
+        setLocationImageUpload((prev) => ({
+          ...prev,
+          isUploading: false,
+          error: error.message,
+        }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleLocationImageRemove = () => {
+    setFormData((prev) => ({ ...prev, location_image_url: "" }));
+    setLocationImageUpload({
+      isUploading: false,
+      preview: null,
+      file: null,
+      error: null,
+    });
+    if (locationFileInputRef.current) {
+      locationFileInputRef.current.value = "";
+    }
+  };
+
   const handleAddFeature = (feature) => {
     if (feature && !formData.features.includes(feature)) {
       setFormData((prev) => ({
@@ -250,6 +343,7 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
         image_url: formData.image_url,
         department: formData.department.trim(),
         location: formData.location.trim() || "TBD",
+        location_image_url: formData.location_image_url,
         features: formData.features,
         status: formData.status,
       };
@@ -271,7 +365,7 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
   };
 
   const handleClose = () => {
-    if (isSubmitting || imageUpload.isUploading) return; // Prevent closing while submitting
+    if (isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading) return; // Prevent closing while submitting
     resetForm();
     onClose();
   };
@@ -290,7 +384,7 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
           <button
             className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
             onClick={handleClose}
-            disabled={isSubmitting || imageUpload.isUploading}
+            disabled={isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading}
             aria-label="Close modal"
           >
             <X size={24} />
@@ -511,6 +605,113 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
             </div>
           </div>
 
+          {/* Location Image Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Location Image
+            </label>
+
+            {/* URL Input */}
+            <div className="space-y-3">
+              <input
+                type="url"
+                name="location_image_url"
+                value={formData.location_image_url}
+                onChange={handleInputChange}
+                disabled={isSubmitting}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#56708A] focus:border-[#56708A] disabled:bg-gray-100 disabled:cursor-not-allowed"
+                placeholder="https://example.com/location-image.jpg (or upload below)"
+              />
+
+              <div className="text-center text-gray-500 text-sm">OR</div>
+
+              {/* File Upload Area */}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                {locationImageUpload.preview ? (
+                  <div className="space-y-4">
+                    <div className="relative inline-block">
+                      <img
+                        src={locationImageUpload.preview}
+                        alt="Location preview"
+                        className="w-32 h-32 object-cover rounded-lg border"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleLocationImageRemove}
+                        disabled={isSubmitting || locationImageUpload.isUploading}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                    {locationImageUpload.file && (
+                      <div className="text-center">
+                        <p className="text-sm text-gray-600 mb-2">
+                          {locationImageUpload.file.name} (
+                          {formatFileSize(locationImageUpload.file.size)})
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleLocationImageSelect}
+                          disabled={isSubmitting || locationImageUpload.isUploading}
+                          className="px-4 py-2 bg-[#56708A] text-white rounded-lg hover:bg-[#455b74] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {locationImageUpload.isUploading ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Uploading...
+                            </>
+                          ) : (
+                            <>
+                              <Upload size={16} />
+                              Replace Image
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <input
+                      ref={locationFileInputRef}
+                      type="file"
+                      accept="image/webp"
+                      onChange={handleLocationImageSelect}
+                      disabled={isSubmitting}
+                      className="hidden"
+                    />
+                    <MapPin
+                      size={48}
+                      className="mx-auto text-gray-400 mb-4"
+                    />
+                    <p className="text-gray-600 mb-2">
+                      Drop an image here or click to browse
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => locationFileInputRef.current?.click()}
+                      disabled={isSubmitting}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Select Image
+                    </button>
+                  </div>
+                )}
+
+                {locationImageUpload.error && (
+                  <p className="mt-2 text-sm text-red-600 text-center">
+                    {locationImageUpload.error}
+                  </p>
+                )}
+              </div>
+
+              <p className="text-xs text-gray-500">
+                Supported format: WebP only (.webp). Maximum size: 5MB.
+              </p>
+            </div>
+          </div>
+
           {/* Features */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -617,14 +818,14 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
             <button
               type="button"
               onClick={handleClose}
-              disabled={isSubmitting || imageUpload.isUploading}
+              disabled={isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading}
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || imageUpload.isUploading}
+              disabled={isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading}
               className="flex-1 px-4 py-2 bg-[#56708A] text-white rounded-lg hover:bg-[#455b74] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSubmitting ? (

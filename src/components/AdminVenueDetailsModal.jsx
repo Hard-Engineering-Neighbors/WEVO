@@ -148,13 +148,28 @@ export default function AdminVenueDetailsModal({
           <div className="flex-grow">
             <h3 className="text-lg font-bold mb-2">Location</h3>
             <div className="w-full aspect-video rounded-xl overflow-hidden border">
-              <iframe
-                src="https://www.openstreetmap.org/export/embed.html?bbox=122.545%2C10.720%2C122.550%2C10.725&amp;layer=mapnik"
-                title="Venue Location"
-                className="w-full h-full border-0"
-                allowFullScreen=""
-                loading="lazy"
-              ></iframe>
+              {venue.location_image_url ? (
+                <img
+                  src={venue.location_image_url}
+                  alt={`${venue.name} location map`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.log("Location image failed to load:", e.target.src);
+                    e.target.onerror = null;
+                    e.target.src = "/images/placeholder_location.png";
+                  }}
+                />
+              ) : (
+                <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                  <div className="text-center text-gray-500">
+                    <MapPin size={48} className="mx-auto mb-2 text-gray-400" />
+                    <p className="text-sm">Location map not available</p>
+                    {venue.location && (
+                      <p className="text-xs mt-1">{venue.location}</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

@@ -13,6 +13,7 @@ import {
   validateImageFile,
   formatFileSize,
   uploadVenueImageToStorage,
+  uploadLocationImageToStorage,
 } from "../utils/imageUpload";
 
 export default function AddVenueModal({ open, onClose, onSave }) {
@@ -23,6 +24,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
     image_url: "",
     department: "",
     location: "",
+    location_image_url: "",
     features: [],
     status: "active",
   });
@@ -35,8 +37,15 @@ export default function AddVenueModal({ open, onClose, onSave }) {
     file: null,
     error: null,
   });
+  const [locationImageUpload, setLocationImageUpload] = useState({
+    isUploading: false,
+    preview: null,
+    file: null,
+    error: null,
+  });
 
   const fileInputRef = useRef(null);
+  const locationFileInputRef = useRef(null);
 
   const availableFeatures = [
     "Air Conditioning",
@@ -63,6 +72,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
       image_url: "",
       department: "",
       location: "",
+      location_image_url: "",
       features: [],
       status: "active",
     });
@@ -74,8 +84,17 @@ export default function AddVenueModal({ open, onClose, onSave }) {
       file: null,
       error: null,
     });
+    setLocationImageUpload({
+      isUploading: false,
+      preview: null,
+      file: null,
+      error: null,
+    });
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+    if (locationFileInputRef.current) {
+      locationFileInputRef.current.value = "";
     }
   };
 
@@ -155,6 +174,72 @@ export default function AddVenueModal({ open, onClose, onSave }) {
     }
   };
 
+  const handleLocationImageSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validate the file
+    const validationErrors = validateImageFile(file);
+    if (validationErrors.length > 0) {
+      setLocationImageUpload((prev) => ({
+        ...prev,
+        error: validationErrors[0],
+        file: null,
+        preview: formData.location_image_url || null,
+      }));
+      return;
+    }
+    
+    // Create preview and auto-upload
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      setLocationImageUpload((prev) => ({
+        ...prev,
+        preview: event.target.result,
+        file: file,
+        error: null,
+        isUploading: true,
+      }));
+      
+      try {
+        const uploadResult = await uploadVenueImage(file);
+        const publicUrl = await uploadLocationImageToStorage(uploadResult.file);
+        
+        setFormData((prev) => ({
+          ...prev,
+          location_image_url: publicUrl,
+        }));
+        
+        setLocationImageUpload((prev) => ({
+          ...prev,
+          isUploading: false,
+          preview: publicUrl,
+          file: null,
+        }));
+      } catch (error) {
+        setLocationImageUpload((prev) => ({
+          ...prev,
+          isUploading: false,
+          error: error.message,
+        }));
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleLocationImageRemove = () => {
+    setFormData((prev) => ({ ...prev, location_image_url: "" }));
+    setLocationImageUpload({
+      isUploading: false,
+      preview: null,
+      file: null,
+      error: null,
+    });
+    if (locationFileInputRef.current) {
+      locationFileInputRef.current.value = "";
+    }
+  };
+
   const handleAddFeature = (feature) => {
     if (feature && !formData.features.includes(feature)) {
       setFormData((prev) => ({
@@ -215,6 +300,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
         image_url: formData.image_url,
         department: formData.department.trim(),
         location: formData.location.trim() || "TBD",
+        location_image_url: formData.location_image_url,
         features: formData.features,
         status: formData.status,
       };
@@ -236,7 +322,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
   };
 
   const handleClose = () => {
-    if (isSubmitting || imageUpload.isUploading) return; // Prevent closing while submitting
+    if (isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading) return; // Prevent closing while submitting
     resetForm();
     onClose();
   };
@@ -252,7 +338,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
           <button
             className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
             onClick={handleClose}
-            disabled={isSubmitting || imageUpload.isUploading}
+            disabled={isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading}
             aria-label="Close modal"
           >
             <X size={24} />
@@ -352,7 +438,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Location
+                Location Address
               </label>
               <input
                 type="text"
@@ -364,6 +450,80 @@ export default function AddVenueModal({ open, onClose, onSave }) {
                 placeholder="Building and floor/room number"
               />
             </div>
+          </div>
+
+          {/* Location Map Image */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Location Map Image
+            </label>
+
+            {/* File Upload Area for Location */}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+              {locationImageUpload.preview ? (
+                <div className="space-y-4">
+                  <div className="relative inline-block">
+                    <img
+                      src={locationImageUpload.preview}
+                      alt="Location map preview"
+                      className="w-32 h-32 object-cover rounded-lg border"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleLocationImageRemove}
+                      disabled={isSubmitting || locationImageUpload.isUploading}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors disabled:opacity-50"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                  {locationImageUpload.file && !formData.location_image_url && (
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600 mb-2">
+                        {locationImageUpload.file.name} (
+                        {formatFileSize(locationImageUpload.file.size)})
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center">
+                  <input
+                    ref={locationFileInputRef}
+                    type="file"
+                    accept="image/webp"
+                    onChange={handleLocationImageSelect}
+                    disabled={isSubmitting}
+                    className="hidden"
+                  />
+                  <MapPin
+                    size={48}
+                    className="mx-auto text-gray-400 mb-4"
+                  />
+                  <p className="text-gray-600 mb-2">
+                    Drop a location map image here or click to browse
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => locationFileInputRef.current?.click()}
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Select Map Image
+                  </button>
+                </div>
+              )}
+
+              {locationImageUpload.error && (
+                <p className="mt-2 text-sm text-red-600 text-center">
+                  {locationImageUpload.error}
+                </p>
+              )}
+            </div>
+
+            <p className="text-xs text-gray-500 mt-2">
+              Supported format: WebP only (.webp). Maximum size: 5MB. Upload a map or layout image of the venue location.
+            </p>
           </div>
 
           {/* Image Upload */}
@@ -557,14 +717,14 @@ export default function AddVenueModal({ open, onClose, onSave }) {
             <button
               type="button"
               onClick={handleClose}
-              disabled={isSubmitting || imageUpload.isUploading}
+              disabled={isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading}
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || imageUpload.isUploading}
+              disabled={isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading}
               className="flex-1 px-4 py-2 bg-[#56708A] text-white rounded-lg hover:bg-[#455b74] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSubmitting ? (

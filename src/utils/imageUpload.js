@@ -136,4 +136,26 @@ export async function uploadVenueImageToStorage(file, venueId = null) {
     .getPublicUrl(filePath);
 
   return data.publicUrl;
+}
+
+// Upload a location image to Supabase Storage and return the public URL
+export async function uploadLocationImageToStorage(file, venueId = null) {
+  const fileExt = file.name.split('.').pop();
+  const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+  const fileName = `location-${venueId || Date.now()}-${Date.now()}.${fileExt}`;
+  const filePath = `${fileName}`;
+
+  // Upload the file to the 'location-images' bucket with upsert: true
+  let { error } = await supabase.storage
+    .from('location-images')
+    .upload(filePath, file, { upsert: true });
+
+  if (error) throw error;
+
+  // Get the public URL
+  const { data } = supabase.storage
+    .from('location-images')
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
 } 
