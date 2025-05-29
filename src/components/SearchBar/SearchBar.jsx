@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, Bookmark } from "lucide-react";
+import { Search } from "lucide-react";
 
 export default function SearchBar({
   value = "",
@@ -7,7 +7,6 @@ export default function SearchBar({
   onSearch,
   placeholder = "Search for event venues, locations, or keywords to get started...",
   className = "",
-  showBookmark = true,
   disabled = false,
 }) {
   const handleSubmit = (e) => {
@@ -35,18 +34,6 @@ export default function SearchBar({
           size={25}
         />
 
-        {/* Right Icon */}
-        {showBookmark && (
-          <Bookmark
-            className="absolute right-3 md:right-4 top-1/2 transform -translate-y-1/2 text-[#0458A9] hover:text-[#0458A9]/80 cursor-pointer transition-colors"
-            size={25}
-            onClick={() => {
-              // Add bookmark functionality here if needed
-              console.log("Bookmark clicked");
-            }}
-          />
-        )}
-
         {/* Input */}
         <input
           type="text"
@@ -55,9 +42,7 @@ export default function SearchBar({
           onChange={(e) => onChange && onChange(e.target.value)}
           onKeyPress={handleKeyPress}
           disabled={disabled}
-          className={`w-full pl-12 ${
-            showBookmark ? "pr-12" : "pr-4"
-          } py-4 border border-gray-400 rounded-full shadow-sm focus:outline-none focus:border-[#0458A9] focus:ring-2 focus:ring-[#0458A9]/20 text-xs md:text-base transition-all duration-200 ${
+          className={`w-full pl-12 pr-4 py-4 border border-gray-400 rounded-full shadow-sm focus:outline-none focus:border-[#0458A9] focus:ring-2 focus:ring-[#0458A9]/20 text-xs md:text-base transition-all duration-200 ${
             disabled ? "bg-gray-100 cursor-not-allowed" : ""
           }`}
         />

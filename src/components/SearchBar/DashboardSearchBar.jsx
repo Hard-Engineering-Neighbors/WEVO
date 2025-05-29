@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Search, Bookmark, MapPin, Users } from "lucide-react";
+import { Search, MapPin, Users } from "lucide-react";
 import { fetchVenues } from "../../api/venues";
 
 export default function DashboardSearchBar({
@@ -344,15 +344,6 @@ export default function DashboardSearchBar({
             size={25}
           />
 
-          {/* Right Icon */}
-          <Bookmark
-            className="absolute right-3 md:right-4 top-1/2 transform -translate-y-1/2 text-[#0458A9] hover:text-[#0458A9]/80 cursor-pointer transition-colors z-10"
-            size={25}
-            onClick={() => {
-              console.log("Bookmark clicked");
-            }}
-          />
-
           {/* Input */}
           <input
             ref={searchRef}
@@ -363,7 +354,7 @@ export default function DashboardSearchBar({
             onKeyDown={handleKeyDown}
             onFocus={() => value.length > 0 && setIsOpen(true)}
             disabled={disabled}
-            className={`w-full pl-12 pr-12 py-4 border border-gray-400 rounded-full shadow-sm focus:outline-none focus:border-[#0458A9] focus:ring-2 focus:ring-[#0458A9]/20 text-xs md:text-base transition-all duration-200 ${
+            className={`w-full pl-12 pr-4 py-4 border border-gray-400 rounded-full shadow-sm focus:outline-none focus:border-[#0458A9] focus:ring-2 focus:ring-[#0458A9]/20 text-xs md:text-base transition-all duration-200 ${
               disabled ? "bg-gray-100 cursor-not-allowed" : ""
             }`}
           />
