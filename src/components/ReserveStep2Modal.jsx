@@ -475,13 +475,13 @@ export default function ReserveStep2Modal({
     <>
       {/* Step 2 Modal */}
       {open && !step3Open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]">
+        <div className="fixed inset-0 z-[1400] flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 md:p-4">
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-auto my-2 md:my-8 flex flex-col gap-4 md:gap-6 px-4 pt-4 pb-24 md:p-10 overflow-y-auto max-h-[95vh]">
             {/* Notice for half-day bookings */}
             {!isMultipleDays &&
               partialDayInfo &&
               (partialDayInfo.amBooked || partialDayInfo.pmBooked) && (
-                <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 mb-4 rounded">
+                <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-3 md:p-4 mb-3 md:mb-4 rounded text-sm md:text-base">
                   Notice: On this date, this venue has been booked{" "}
                   {partialDayInfo.amBooked
                     ? `from 7:00 to ${partialDayInfo.amEnd}`
@@ -496,28 +496,30 @@ export default function ReserveStep2Modal({
               )}
             {/* Close Button */}
             <button
-              className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
+              className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100 transition-colors"
               onClick={onClose}
               aria-label="Close modal"
             >
               <X size={20} />
             </button>
             {/* Step 2 label */}
-            <div className="flex justify-end w-full">
-              <span className="text-[#0458A9] font-semibold text-lg md:text-xl">
+            <div className="flex justify-end w-full pr-8 md:pr-12">
+              <span className="text-[#0458A9] font-semibold text-base md:text-lg lg:text-xl">
                 Step 2
               </span>
             </div>
             {/* Title */}
-            <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9] mb-2">
-              Event Details
-            </h2>
+            <div className="pr-8 md:pr-12">
+              <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-[#0458A9] mb-2">
+                Event Details
+              </h2>
+            </div>
             {/* Form */}
-            <form className="flex flex-col gap-8 w-full">
+            <form className="flex flex-col gap-6 md:gap-8 w-full">
               {/* Row 0: Preferred Venue & Participants */}
-              <div className="flex flex-col md:flex-row gap-6 w-full">
+              <div className="flex flex-col lg:flex-row gap-4 md:gap-6 w-full">
                 <div className="flex-1">
-                  <label className="font-semibold text-gray-800 mb-1 block">
+                  <label className="font-semibold text-gray-800 mb-1 block text-sm md:text-base">
                     <span className="text-[#E53935]">*</span> Preferred Venue
                   </label>
                   <input
@@ -525,11 +527,11 @@ export default function ReserveStep2Modal({
                     name="venue"
                     value={form.venue}
                     disabled
-                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9] cursor-not-allowed"
+                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base focus:outline-none focus:border-[#0458A9] cursor-not-allowed"
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="font-semibold text-gray-800 mb-1 block">
+                  <label className="font-semibold text-gray-800 mb-1 block text-sm md:text-base">
                     <span className="text-[#E53935]">*</span> No. of
                     Participants
                   </label>
@@ -541,11 +543,11 @@ export default function ReserveStep2Modal({
                     placeholder="e.g., 50"
                     className={`w-full rounded-xl border ${
                       errors.participants ? "border-red-500" : "border-gray-300"
-                    } bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]`}
+                    } bg-gray-100 px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base focus:outline-none focus:border-[#0458A9]`}
                     required
                   />
                   {errors.participants && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="text-red-500 text-xs md:text-sm mt-1">
                       {errors.participants}
                     </p>
                   )}
@@ -553,9 +555,9 @@ export default function ReserveStep2Modal({
               </div>
 
               {/* Row 1: Title & Type */}
-              <div className="flex flex-col md:flex-row gap-6 w-full">
+              <div className="flex flex-col lg:flex-row gap-4 md:gap-6 w-full">
                 <div className="flex-1">
-                  <label className="font-semibold text-gray-800 mb-1 block">
+                  <label className="font-semibold text-gray-800 mb-1 block text-sm md:text-base">
                     <span className="text-[#E53935]">*</span> Title of the Event
                   </label>
                   <input
@@ -564,12 +566,12 @@ export default function ReserveStep2Modal({
                     value={form.title}
                     onChange={handleChange}
                     placeholder="e.g., Artikulo: Voices in Motion"
-                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base focus:outline-none focus:border-[#0458A9]"
                     required
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="font-semibold text-gray-800 mb-1 block">
+                  <label className="font-semibold text-gray-800 mb-1 block text-sm md:text-base">
                     <span className="text-[#E53935]">*</span> Type of Activity
                   </label>
                   <input
@@ -578,7 +580,7 @@ export default function ReserveStep2Modal({
                     value={form.type}
                     onChange={handleChange}
                     placeholder="e.g., Workshop"
-                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base focus:outline-none focus:border-[#0458A9]"
                     required
                   />
                 </div>
@@ -586,7 +588,7 @@ export default function ReserveStep2Modal({
 
               {/* Row 1.5: Organization Name */}
               <div className="w-full">
-                <label className="font-semibold text-gray-800 mb-1 block">
+                <label className="font-semibold text-gray-800 mb-1 block text-sm md:text-base">
                   <span className="text-[#E53935]">*</span> Organization Name
                 </label>
                 <input
@@ -595,14 +597,14 @@ export default function ReserveStep2Modal({
                   value={form.orgName}
                   onChange={handleChange}
                   placeholder="e.g., CIPHER, WVSU Spark Hub"
-                  className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                  className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base focus:outline-none focus:border-[#0458A9]"
                   required
                 />
               </div>
 
               {/* Row 2: Purpose */}
               <div>
-                <label className="font-semibold text-gray-800 mb-1 block">
+                <label className="font-semibold text-gray-800 mb-1 block text-sm md:text-base">
                   <span className="text-[#E53935]">*</span> Purpose of the Event
                 </label>
                 <input
@@ -611,43 +613,45 @@ export default function ReserveStep2Modal({
                   value={form.purpose}
                   onChange={handleChange}
                   placeholder="e.g., Team-building and skill development"
-                  className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                  className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base focus:outline-none focus:border-[#0458A9]"
                   required
                 />
               </div>
 
               {/* Row 3: Contact Information */}
-              <div className="flex flex-col md:flex-row gap-6 w-full">
-                <div className="flex-1">
-                  <label className="font-semibold text-gray-800 mb-1 block">
-                    <span className="text-[#E53935]">*</span> Contact Person
-                  </label>
-                  <input
-                    type="text"
-                    name="contactPerson"
-                    value={form.contactPerson || ""}
-                    onChange={handleChange}
-                    placeholder="e.g., Juan Dela Cruz"
-                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                    required
-                  />
+              <div className="flex flex-col gap-4 md:gap-6 w-full">
+                <div className="flex flex-col sm:flex-row gap-4 md:gap-6 w-full">
+                  <div className="flex-1">
+                    <label className="font-semibold text-gray-800 mb-1 block text-sm md:text-base">
+                      <span className="text-[#E53935]">*</span> Contact Person
+                    </label>
+                    <input
+                      type="text"
+                      name="contactPerson"
+                      value={form.contactPerson || ""}
+                      onChange={handleChange}
+                      placeholder="e.g., Juan Dela Cruz"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base focus:outline-none focus:border-[#0458A9]"
+                      required
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="font-semibold text-gray-800 mb-1 block text-sm md:text-base">
+                      <span className="text-[#E53935]">*</span> Position
+                    </label>
+                    <input
+                      type="text"
+                      name="contactPosition"
+                      value={form.contactPosition || ""}
+                      onChange={handleChange}
+                      placeholder="e.g., President"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base focus:outline-none focus:border-[#0458A9]"
+                      required
+                    />
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <label className="font-semibold text-gray-800 mb-1 block">
-                    <span className="text-[#E53935]">*</span> Position
-                  </label>
-                  <input
-                    type="text"
-                    name="contactPosition"
-                    value={form.contactPosition || ""}
-                    onChange={handleChange}
-                    placeholder="e.g., President"
-                    className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
-                    required
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="font-semibold text-gray-800 mb-1 block">
+                <div className="w-full sm:w-auto sm:flex-1">
+                  <label className="font-semibold text-gray-800 mb-1 block text-sm md:text-base">
                     <span className="text-[#E53935]">*</span> Contact Number
                   </label>
                   <input
@@ -660,11 +664,11 @@ export default function ReserveStep2Modal({
                       errors.contactNumber
                         ? "border-red-500"
                         : "border-gray-300"
-                    } bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]`}
+                    } bg-gray-100 px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base focus:outline-none focus:border-[#0458A9]`}
                     required
                   />
                   {errors.contactNumber && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="text-red-500 text-xs md:text-sm mt-1">
                       {errors.contactNumber}
                     </p>
                   )}
@@ -673,7 +677,7 @@ export default function ReserveStep2Modal({
 
               {/* Conditional Time Inputs based on booking type and toggle */}
               {isMultipleDays && (
-                <div className="my-4 p-4 border border-gray-200 rounded-lg">
+                <div className="my-4 p-3 md:p-4 border border-gray-200 rounded-lg">
                   <div className="flex items-center mb-3">
                     <input
                       type="checkbox"
@@ -681,10 +685,8 @@ export default function ReserveStep2Modal({
                       checked={sameTimeForAllDays}
                       onChange={(e) => {
                         setSameTimeForAllDays(e.target.checked);
-                        // If unchecking, might need to re-initialize dailyTimes or form times if logic demands
                         if (
                           !e.target.checked &&
-                          dailyTimes.length === 0 &&
                           reservationData.rawSelectedDays
                         ) {
                           // Initialize dailyTimes if it's empty and we are unchecking
@@ -704,11 +706,11 @@ export default function ReserveStep2Modal({
                           }));
                         }
                       }}
-                      className="h-4 w-4 text-[#0458A9] border-gray-300 rounded focus:ring-[#0458A9] mr-2"
+                      className="h-4 w-4 text-[#0458A9] border-gray-300 rounded focus:ring-[#0458A9] mr-2 flex-shrink-0"
                     />
                     <label
                       htmlFor="sameTimeToggle"
-                      className="font-medium text-gray-700"
+                      className="font-medium text-gray-700 text-sm md:text-base leading-relaxed"
                     >
                       Use the same start and end time for all selected days
                     </label>
@@ -718,9 +720,9 @@ export default function ReserveStep2Modal({
 
               {/* Main Start Time / End Time (conditionally shown or used for all days) */}
               {(sameTimeForAllDays || !isMultipleDays) && (
-                <div className="flex flex-col md:flex-row gap-6 w-full">
+                <div className="flex flex-col lg:flex-row gap-4 md:gap-6 w-full">
                   <div className="flex-1">
-                    <label className="font-semibold text-gray-800 mb-1 block">
+                    <label className="font-semibold text-gray-800 mb-1 block text-sm md:text-base">
                       <span className="text-[#E53935]">*</span> Start Time{" "}
                       {isMultipleDays && sameTimeForAllDays
                         ? "(for all days)"
@@ -730,7 +732,7 @@ export default function ReserveStep2Modal({
                       name="startTime"
                       value={form.startTime}
                       onChange={handleChange}
-                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base focus:outline-none focus:border-[#0458A9]"
                       required
                     >
                       {getStartTimeOptions().map((opt) => (
@@ -741,7 +743,7 @@ export default function ReserveStep2Modal({
                     </select>
                   </div>
                   <div className="flex-1">
-                    <label className="font-semibold text-gray-800 mb-1 block">
+                    <label className="font-semibold text-gray-800 mb-1 block text-sm md:text-base">
                       <span className="text-[#E53935]">*</span> End Time{" "}
                       {isMultipleDays && sameTimeForAllDays
                         ? "(for all days)"
@@ -751,7 +753,7 @@ export default function ReserveStep2Modal({
                       name="endTime"
                       value={form.endTime}
                       onChange={handleChange}
-                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                      className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base focus:outline-none focus:border-[#0458A9]"
                       required
                     >
                       {getFilteredEndTimeOptions(form.startTime).map((opt) => (
@@ -768,16 +770,16 @@ export default function ReserveStep2Modal({
               {isMultipleDays &&
                 !sameTimeForAllDays &&
                 reservationData.rawSelectedDays && (
-                  <div className="space-y-6 my-4 p-4 border border-gray-200 rounded-lg">
-                    <h3 class="text-lg font-semibold text-[#0458A9] mb-2">
+                  <div className="space-y-4 md:space-y-6 my-4 p-3 md:p-4 border border-gray-200 rounded-lg">
+                    <h3 className="text-base md:text-lg font-semibold text-[#0458A9] mb-2">
                       Set Time for Each Day:
                     </h3>
                     {dailyTimes.map((dayTime, index) => (
                       <div
                         key={dayTime.date}
-                        className="p-3 bg-gray-50 rounded-md"
+                        className="p-3 bg-gray-50 rounded-lg"
                       >
-                        <label className="font-semibold text-gray-700 mb-2 block">
+                        <label className="font-semibold text-gray-700 mb-2 block text-sm md:text-base">
                           Date:{" "}
                           {new Date(
                             dayTime.date + "T00:00:00"
@@ -787,9 +789,9 @@ export default function ReserveStep2Modal({
                             day: "numeric",
                           })}
                         </label>
-                        <div className="flex flex-col md:flex-row gap-4">
+                        <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                           <div className="flex-1">
-                            <label className="text-sm text-gray-600 mb-1 block">
+                            <label className="text-xs md:text-sm text-gray-600 mb-1 block">
                               Start Time
                             </label>
                             <select
@@ -802,7 +804,7 @@ export default function ReserveStep2Modal({
                                   e.target.value
                                 )
                               }
-                              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base focus:outline-none focus:border-[#0458A9]"
                             >
                               {timeOptionsWithFormat.slice(0, -1).map((opt) => (
                                 <option key={opt.value} value={opt.value}>
@@ -812,7 +814,7 @@ export default function ReserveStep2Modal({
                             </select>
                           </div>
                           <div className="flex-1">
-                            <label className="text-sm text-gray-600 mb-1 block">
+                            <label className="text-xs md:text-sm text-gray-600 mb-1 block">
                               End Time
                             </label>
                             <select
@@ -825,7 +827,7 @@ export default function ReserveStep2Modal({
                                   e.target.value
                                 )
                               }
-                              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-4 py-3 text-base focus:outline-none focus:border-[#0458A9]"
+                              className="w-full rounded-xl border border-gray-300 bg-gray-100 px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base focus:outline-none focus:border-[#0458A9]"
                             >
                               {getEndTimeOptions(dayTime.startTime).map(
                                 (opt) => (
@@ -842,17 +844,17 @@ export default function ReserveStep2Modal({
                   </div>
                 )}
             </form>
-            <div className="flex justify-end mt-8 gap-4">
+            <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-3 mt-6 md:mt-8">
               <button
                 type="button"
-                className="px-6 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300"
+                className="px-6 py-3 sm:py-2 rounded-full bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition text-sm md:text-base order-2 sm:order-1"
                 onClick={onPrevious}
               >
                 Previous
               </button>
               <button
                 type="button"
-                className="px-6 py-2 rounded-lg bg-[#0458A9] text-white font-semibold hover:bg-[#02396b]"
+                className="px-8 py-3 sm:py-2 rounded-full bg-[#0458A9] text-white font-semibold hover:bg-[#02396b] transition text-sm md:text-base order-1 sm:order-2"
                 onClick={() => {
                   if (validateForm()) {
                     setStep3Open(true);

@@ -4,10 +4,8 @@ import ReserveStep1Modal from "./ReserveStep1Modal";
 import { fetchVenues } from "../api/venues";
 
 export default function VenueDetailsModal({ open, onClose, venue }) {
-  const [reserveOpen, setReserveOpen] = useState(false);
   const [current, setCurrent] = useState(0);
   const [step1Open, setStep1Open] = useState(false);
-  const [reservationData, setReservationData] = useState({});
   const [venues, setVenues] = useState([]);
   const [selectedVenue, setSelectedVenue] = useState(venue);
 
@@ -20,6 +18,28 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
     if (open && venue) setSelectedVenue(venue);
   }, [open, venue]);
 
+  // Reset step1Open when this modal closes
+  useEffect(() => {
+    if (!open) {
+      setStep1Open(false);
+    }
+  }, [open]);
+
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    const body = document.body;
+    if (open || step1Open) {
+      body.style.overflow = "hidden";
+    } else {
+      body.style.overflow = "unset";
+    }
+
+    // Cleanup on unmount
+    return () => {
+      body.style.overflow = "unset";
+    };
+  }, [open, step1Open]);
+
   if (!open || !venue) return null;
 
   // Carousel state
@@ -28,10 +48,23 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
   const next = () => setCurrent((c) => (c + 1) % images.length);
   const prev = () => setCurrent((c) => (c - 1 + images.length) % images.length);
 
+  const handleReserveClick = () => {
+    setStep1Open(true);
+  };
+
+  const handleStep1Close = () => {
+    setStep1Open(false);
+  };
+
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-        <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col md:flex-row p-4 md:p-8 gap-6 overflow-y-auto max-h-[95vh]">
+      {/* Venue details modal - always show when open, adjust z-index based on step1 state */}
+      <div
+        className={`fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm ${
+          step1Open ? "z-[999]" : "z-[1000]"
+        }`}
+      >
+        <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col md:flex-row px-4 pt-4 pb-24 md:p-8 gap-6 overflow-y-auto max-h-[95vh]">
           {/* Close Button */}
           <button
             className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
@@ -114,22 +147,24 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
             {/* Reserve Button - MOVED HERE & MODIFIED */}
             <button
               className="bg-[#0458A9] text-white rounded-full px-10 py-3 font-semibold text-base w-full hover:bg-[#03407a] transition mt-6 md:mt-auto"
-              onClick={() => setReserveOpen(true)}
+              onClick={handleReserveClick}
             >
               Reserve
             </button>
           </div>
         </div>
       </div>
+
       {/* Reserve Step 1 Modal */}
       <ReserveStep1Modal
-        open={reserveOpen}
-        onClose={() => setReserveOpen(false)}
+        open={step1Open}
+        onClose={handleStep1Close}
         venue={selectedVenue}
         onChangeVenue={(newVenue) => setSelectedVenue(newVenue)}
-        onNext={(data) => {
-          setReserveOpen(false);
-          onClose();
+        onNext={() => {
+          // Step1Modal will handle opening Step2Modal
+          // We just need to close this step1
+          setStep1Open(false);
         }}
         venues={venues}
       />

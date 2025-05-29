@@ -17,8 +17,8 @@ export default function RejectionReasonModal({ open, onClose, onSubmit }) {
   };
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+      <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6 pb-24 md:p-6">
         <button
           className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
           onClick={onClose}

@@ -27,8 +27,8 @@ export default function NotificationDetailsModal({ notif, onClose }) {
     } catch (e) {}
   }
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-8 flex flex-col gap-2">
+    <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+      <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 px-8 pt-8 pb-20 md:p-8 flex flex-col gap-2">
         <button
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
           onClick={onClose}

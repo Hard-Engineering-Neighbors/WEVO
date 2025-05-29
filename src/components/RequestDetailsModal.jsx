@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X } from "lucide-react";
+import { X, ChevronDownIcon } from "lucide-react";
 import { cancelReservation, cancelApprovedReservation } from "../api/requests";
 import CancellationReasonModal from "./CancellationReasonModal";
 
@@ -93,8 +93,8 @@ export default function RequestDetailsModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-        <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col md:flex-row px-4 pb-4 pt-14 md:px-8 md:pb-8 md:pt-16 gap-6 overflow-y-auto max-h-[95vh]">
+      <div className="fixed inset-0 z-[1050] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+        <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col md:flex-row px-4 pb-24 pt-14 md:px-8 md:pb-8 md:pt-16 gap-6 overflow-y-auto max-h-[95vh]">
           {/* Close Button */}
           <button
             className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
@@ -185,50 +185,62 @@ export default function RequestDetailsModal({
 
               {/* Per-day times display with toggle */}
               <div className="bg-gray-100 rounded-lg px-6 py-3 md:col-span-2">
-                <div className="text-gray-500 text-sm flex items-center gap-2">
+                <div className="text-gray-500 text-sm flex items-center gap-2 mb-1">
                   Event Date and Time
-                  {request.perDayTimes && request.perDayTimes.length > 1 && (
-                    <button
-                      type="button"
-                      className="ml-2 text-xs text-[#0458A9] hover:underline focus:outline-none"
-                      onClick={() => setShowAllDates((prev) => !prev)}
-                    >
-                      {showAllDates ? "▲" : "▼"}
-                    </button>
-                  )}
                 </div>
                 <div className="font-semibold">
                   {request.perDayTimes && request.perDayTimes.length > 0 ? (
-                    showAllDates ? (
-                      <div className="flex flex-col space-y-1 mt-1 pl-2">
-                        {request.perDayTimes.map((item, idx) => (
-                          <div key={idx} className="flex">
-                            <span>
-                              {new Date(item.date).toLocaleDateString()} —{" "}
-                              {item.startTime} - {item.endTime}
-                            </span>
+                    <div className="flex flex-col">
+                      {request.perDayTimes.length > 1 && !showAllDates && (
+                        <span className="text-xs text-gray-700 italic mb-0.5">
+                          Multiple Dates Scheduled
+                        </span>
+                      )}
+                      {showAllDates ? (
+                        // Expanded view: show all dates
+                        request.perDayTimes.map((item, idx) => (
+                          <div
+                            key={idx}
+                            className="text-sm py-1 whitespace-nowrap"
+                          >
+                            {new Date(item.date).toLocaleDateString()} —{" "}
+                            {item.startTime} - {item.endTime}
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <span>
-                        {new Date(
-                          request.perDayTimes[0].date
-                        ).toLocaleDateString()}{" "}
-                        {request.perDayTimes[0].startTime} -{" "}
-                        {new Date(
-                          request.perDayTimes[
-                            request.perDayTimes.length - 1
-                          ].date
-                        ).toLocaleDateString()}{" "}
-                        {
-                          request.perDayTimes[request.perDayTimes.length - 1]
-                            .endTime
-                        }
-                      </span>
-                    )
+                        ))
+                      ) : (
+                        // Collapsed view: show first date (or range summary, simplified to first date now)
+                        <span className="text-sm py-0.5 whitespace-nowrap">
+                          {new Date(
+                            request.perDayTimes[0].date
+                          ).toLocaleDateString()}{" "}
+                          {request.perDayTimes[0].startTime} -{" "}
+                          {request.perDayTimes[0].endTime}
+                          {request.perDayTimes.length > 1 ? " (first day)" : ""}
+                        </span>
+                      )}
+                      {request.perDayTimes.length > 1 && (
+                        <button
+                          type="button"
+                          className="text-sm text-[#0458A9] hover:underline focus:outline-none mt-1.5 self-start flex items-center px-1 py-0.5 rounded hover:bg-blue-50 transition-colors"
+                          onClick={() => setShowAllDates((prev) => !prev)}
+                          aria-expanded={showAllDates}
+                        >
+                          {showAllDates
+                            ? "Show less"
+                            : `+${request.perDayTimes.length - 1} more dates`}
+                          <ChevronDownIcon
+                            size={16}
+                            className={`ml-1 transform transition-transform duration-150 ${
+                              showAllDates ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                      )}
+                    </div>
                   ) : (
-                    <span>{request.date || request.event}</span>
+                    <span className="text-sm whitespace-nowrap">
+                      {request.date || "N/A"}
+                    </span>
                   )}
                 </div>
               </div>

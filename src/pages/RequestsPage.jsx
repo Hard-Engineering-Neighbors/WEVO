@@ -15,6 +15,20 @@ import { useAuth } from "../contexts/AuthContext";
 import { fetchRequests } from "../api/requests";
 import { supabase } from "../supabase/supabaseClient";
 import venuesList from "../data/venues";
+import {
+  PageTransition,
+  FadeIn,
+  StaggerContainer,
+  ScaleOnHover,
+  ButtonPress,
+  ProgressiveLoad,
+} from "../components/AnimationWrapper";
+import {
+  CardSkeleton,
+  PageHeaderSkeleton,
+  SearchBarSkeleton,
+  ContentSkeleton,
+} from "../components/LoadingSkeletons";
 
 import venueSample from "../assets/cultural_center.webp";
 
@@ -28,20 +42,29 @@ const truncateText = (text, maxLength) => {
 
 function RequestCard({ request, onDetails, image }) {
   return (
-    <div className="flex bg-white rounded-xl shadow border border-[#C0C0C0] overflow-hidden max-w-2xl w-full">
-      <div className="h-auto w-40 flex-shrink-0">
-        <img
-          src={image}
-          alt={request.venue}
-          className="w-full h-full object-cover rounded-l-xl"
-        />
-      </div>
-      <div className="flex flex-col flex-1 p-4 gap-1">
-        {/* Status Badge */}
-        <div className="flex justify-end mb-1">
-          {request.status && (
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase shadow-sm 
+    <ScaleOnHover>
+      <div
+        className="flex bg-white rounded-xl shadow border border-[#C0C0C0] overflow-hidden max-w-2xl w-full cursor-pointer active:scale-[0.99] active:shadow-inner transition-all duration-150 ease-in-out"
+        onClick={() => onDetails(request)}
+        role="button"
+        tabIndex={0}
+        onKeyPress={(e) =>
+          (e.key === "Enter" || e.key === " ") && onDetails(request)
+        }
+      >
+        <div className="h-auto w-40 flex-shrink-0">
+          <img
+            src={image}
+            alt={request.venue}
+            className="w-full h-full object-cover rounded-l-xl"
+          />
+        </div>
+        <div className="flex flex-col flex-1 p-4 gap-1">
+          {/* Status Badge */}
+          <div className="flex justify-end mb-1">
+            {request.status && (
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase shadow-sm 
                 ${
                   request.status === "pending"
                     ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
@@ -52,42 +75,52 @@ function RequestCard({ request, onDetails, image }) {
                     : "bg-gray-100 text-gray-700 border border-gray-300"
                 }
               `}
-              style={{ minWidth: 70, textAlign: "center" }}
-            >
-              {request.status}
-            </span>
-          )}
-        </div>
-        <h3 className="font-bold text-base md:text-lg mb-1">{request.venue}</h3>
-        <div className="flex items-center text-xs text-gray-700 gap-2 mb-1">
-          <Calendar size={14} /> {truncateText(request.event, 15)}
-          <FileText size={14} className="ml-2" /> {request.type}
-        </div>
-        <div className="flex items-center text-xs text-gray-500 gap-2 mb-2">
-          <Clock size={14} />
-          {request.perDayTimes && request.perDayTimes.length > 0 ? (
-            <span>
-              {new Date(request.perDayTimes[0].date).toLocaleDateString()}{" "}
-              {request.perDayTimes[0].startTime} -{" "}
-              {new Date(
-                request.perDayTimes[request.perDayTimes.length - 1].date
-              ).toLocaleDateString()}{" "}
-              {request.perDayTimes[request.perDayTimes.length - 1].endTime}
-            </span>
-          ) : (
-            request.date
-          )}
-        </div>
-        <div className="flex justify-end mt-auto">
-          <button
-            className="bg-[#0458A9] text-white rounded-full px-6 py-2 text-xs font-semibold hover:bg-[#03407a]"
-            onClick={() => onDetails(request)}
-          >
-            Details
-          </button>
+                style={{ minWidth: 70, textAlign: "center" }}
+              >
+                {request.status}
+              </span>
+            )}
+          </div>
+          <h3 className="font-bold text-base md:text-lg mb-1">
+            {request.venue}
+          </h3>
+          <div className="flex items-center text-sm text-gray-800 gap-2 mb-1 font-semibold">
+            <Calendar size={15} /> {truncateText(request.event, 20)}
+          </div>
+          <div className="flex items-center text-xs text-gray-600 gap-2 mb-1">
+            <FileText size={14} /> {request.type}
+          </div>
+          <div className="flex items-center text-xs text-gray-500 gap-2 mb-2">
+            <Clock size={14} />
+            {request.perDayTimes && request.perDayTimes.length > 0 ? (
+              <span>
+                {new Date(request.perDayTimes[0].date).toLocaleDateString()}{" "}
+                {request.perDayTimes[0].startTime} -{" "}
+                {new Date(
+                  request.perDayTimes[request.perDayTimes.length - 1].date
+                ).toLocaleDateString()}{" "}
+                {request.perDayTimes[request.perDayTimes.length - 1].endTime}
+              </span>
+            ) : (
+              request.date
+            )}
+          </div>
+          <div className="flex justify-end mt-auto">
+            <ButtonPress>
+              <button
+                className="bg-[#0458A9] text-white rounded-full px-6 py-2 text-xs font-semibold hover:bg-[#03407a] transition-colors pointer-events-none"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDetails(request);
+                }}
+              >
+                Details
+              </button>
+            </ButtonPress>
+          </div>
         </div>
       </div>
-    </div>
+    </ScaleOnHover>
   );
 }
 
@@ -113,7 +146,10 @@ function RequestsGrid({ requests, onDetails }) {
     );
   }
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <StaggerContainer
+      className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+      staggerDelay={25}
+    >
       {requests.map((request) => (
         <RequestCard
           key={request.id}
@@ -122,7 +158,7 @@ function RequestsGrid({ requests, onDetails }) {
           image={getVenueImage(request.venue)}
         />
       ))}
-    </div>
+    </StaggerContainer>
   );
 }
 
@@ -153,20 +189,44 @@ function useRealtimeRequests(userId, refetch) {
 export default function RequestsPage() {
   const { currentUser } = useAuth();
   const [requests, setRequests] = useState([]);
+  const [filteredRequests, setFilteredRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
   const requestsPerPage = 6;
-  const totalPages = Math.ceil(requests.length / requestsPerPage);
-  const paginatedRequests = requests.slice(
+  const totalPages = Math.ceil(filteredRequests.length / requestsPerPage);
+  const paginatedRequests = filteredRequests.slice(
     (currentPage - 1) * requestsPerPage,
     currentPage * requestsPerPage
   );
 
-  const loadRequests = async () => {
+  const loadRequests = async (isBackgroundRefresh = false) => {
     if (!currentUser) return;
-    const reqs = await fetchRequests(currentUser.id);
-    setRequests(reqs);
+
+    try {
+      // Only show loading for initial load, not background refreshes
+      if (!isBackgroundRefresh) {
+        setIsLoading(true);
+      }
+      const reqs = await fetchRequests(currentUser.id);
+      // Sort requests by creation date, newest first
+      const sortedReqs = reqs.sort((a, b) => {
+        const dateA = new Date(a.created_at || 0);
+        const dateB = new Date(b.created_at || 0);
+        return dateB - dateA; // Descending order (newest first)
+      });
+      setRequests(sortedReqs);
+      setFilteredRequests(sortedReqs); // Initialize filtered requests
+    } catch (error) {
+      console.error("Error loading requests:", error);
+    } finally {
+      if (!isBackgroundRefresh) {
+        setIsLoading(false);
+      }
+    }
   };
 
   useEffect(() => {
@@ -174,16 +234,42 @@ export default function RequestsPage() {
     // eslint-disable-next-line
   }, [currentUser]);
 
-  useRealtimeRequests(currentUser?.id, loadRequests);
+  // Filter requests based on search term
+  useEffect(() => {
+    if (!searchTerm.trim()) {
+      setFilteredRequests(requests);
+    } else {
+      const filtered = requests.filter(
+        (request) =>
+          request.event?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          request.venue?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          request.status?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          request.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredRequests(filtered);
+    }
+    // Reset to first page when search changes
+    setCurrentPage(1);
+  }, [searchTerm, requests]);
+
+  useRealtimeRequests(currentUser?.id, () => loadRequests(true));
 
   const handleDetails = (request) => {
     setSelectedRequest(request);
     setModalOpen(true);
   };
 
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+  };
+
+  const clearSearch = () => {
+    setSearchTerm("");
+  };
+
   // Handler to refresh requests after reservation
   const handleReservationSubmitted = () => {
-    loadRequests();
+    loadRequests(true);
   };
 
   const goToPage = (page) => {
@@ -192,67 +278,185 @@ export default function RequestsPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen font-sans">
+    <PageTransition>
       <div className="flex flex-col lg:flex-row flex-1">
         <LeftSidebar active="requests" />
         {/* Center Content */}
         <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 space-y-4 order-2 lg:order-none min-h-screen flex flex-col">
           {/* Search Bar */}
-          <SearchBar />
+          <ProgressiveLoad
+            isLoading={isLoading}
+            skeleton={<SearchBarSkeleton />}
+          >
+            <FadeIn delay={50}>
+              <SearchBar
+                value={searchTerm}
+                onChange={setSearchTerm}
+                onSearch={handleSearch}
+                placeholder="Search your requests by event, venue, or status..."
+                disabled={isLoading}
+              />
+            </FadeIn>
+          </ProgressiveLoad>
+
           {/* Title and Sort/Filter Row */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-2 mb-4 gap-2">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9] py-6">
-              Your Requests
-            </h2>
-            <div className="flex gap-2">
-              <button className="px-2 md:px-3 py-2 border rounded-md">
-                <ListFilter size={16} />
-              </button>
-              <button className="px-2 md:px-3 py-2 border rounded-md">
-                <Filter size={16} />
-              </button>
-            </div>
-          </div>
+          <ProgressiveLoad
+            isLoading={isLoading}
+            skeleton={<PageHeaderSkeleton />}
+          >
+            <FadeIn delay={75}>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-2 mb-4 gap-2">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9] py-6">
+                    {searchTerm
+                      ? `Your Requests (${filteredRequests.length})`
+                      : "Your Requests"}
+                  </h2>
+                  {searchTerm && (
+                    <div className="flex items-center gap-2 -mt-4 mb-2">
+                      <span className="text-sm text-gray-600">
+                        Searching for: "{searchTerm}"
+                      </span>
+                      <ButtonPress>
+                        <button
+                          onClick={clearSearch}
+                          className="text-sm text-[#0458A9] hover:text-[#03407a] underline transition-colors"
+                        >
+                          Clear search
+                        </button>
+                      </ButtonPress>
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <ButtonPress>
+                    <button className="px-2 md:px-3 py-2 border rounded-md hover:bg-gray-50 transition-colors">
+                      <ListFilter size={16} />
+                    </button>
+                  </ButtonPress>
+                  <ButtonPress>
+                    <button className="px-2 md:px-3 py-2 border rounded-md hover:bg-gray-50 transition-colors">
+                      <Filter size={16} />
+                    </button>
+                  </ButtonPress>
+                </div>
+              </div>
+            </FadeIn>
+          </ProgressiveLoad>
+
           {/* Requests List with Pagination */}
           <div className="flex-1 flex flex-col justify-between">
-            <RequestsGrid
-              requests={paginatedRequests}
-              onDetails={handleDetails}
-            />
-            {/* Pagination Controls - always at the bottom */}
-            <div className="flex justify-center items-center gap-2 mt-8 mb-2 pb-20 lg:pb-2 sticky bottom-0 bg-gray-50 pt-6 z-10">
-              <button
-                className="px-4 py-2 rounded-full border border-gray-300 bg-white text-gray-700 font-semibold transition hover:bg-gray-100 disabled:opacity-50"
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Prev
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (page) => (
-                  <button
-                    key={page}
-                    className={`px-4 py-2 rounded-full border font-semibold transition
-                    ${
-                      page === currentPage
-                        ? "bg-[#0458A9] text-white border-[#0458A9] shadow"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                    }
-                  `}
-                    onClick={() => goToPage(page)}
-                  >
-                    {page}
-                  </button>
-                )
+            <ProgressiveLoad
+              isLoading={isLoading}
+              skeleton={
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <CardSkeleton key={i} className="h-32" />
+                  ))}
+                </div>
+              }
+            >
+              {paginatedRequests.length > 0 ? (
+                <FadeIn delay={100}>
+                  <RequestsGrid
+                    requests={paginatedRequests}
+                    onDetails={handleDetails}
+                  />
+                </FadeIn>
+              ) : (
+                <FadeIn delay={100}>
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                      <FileText size={32} className="text-gray-400" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                      No requests found
+                    </h3>
+                    <p className="text-gray-500 mb-4 max-w-md">
+                      {searchTerm
+                        ? `No requests match your search for "${searchTerm}". Try different keywords or clear your search.`
+                        : "You haven't made any venue booking requests yet."}
+                    </p>
+                    {searchTerm ? (
+                      <ButtonPress>
+                        <button
+                          onClick={clearSearch}
+                          className="px-6 py-2 bg-[#0458A9] text-white rounded-full hover:bg-[#03407a] transition-colors font-medium"
+                        >
+                          View All Requests
+                        </button>
+                      </ButtonPress>
+                    ) : (
+                      <ButtonPress>
+                        <button
+                          onClick={() => (window.location.href = "/venues")}
+                          className="px-6 py-2 bg-[#0458A9] text-white rounded-full hover:bg-[#03407a] transition-colors font-medium"
+                        >
+                          Browse Venues
+                        </button>
+                      </ButtonPress>
+                    )}
+                  </div>
+                </FadeIn>
               )}
-              <button
-                className="px-4 py-2 rounded-full border border-gray-300 bg-white text-gray-700 font-semibold transition hover:bg-gray-100 disabled:opacity-50"
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </button>
-            </div>
+            </ProgressiveLoad>
+
+            {/* Pagination Controls - always at the bottom */}
+            <ProgressiveLoad
+              isLoading={isLoading}
+              skeleton={
+                <div className="flex justify-center items-center gap-2 mt-8 mb-2 pb-20 lg:pb-2 sticky bottom-0 bg-gray-50 pt-6 z-10">
+                  <ContentSkeleton lines={1} className="w-12 h-10" />
+                  <ContentSkeleton lines={1} className="w-8 h-10" />
+                  <ContentSkeleton lines={1} className="w-8 h-10" />
+                  <ContentSkeleton lines={1} className="w-8 h-10" />
+                  <ContentSkeleton lines={1} className="w-12 h-10" />
+                </div>
+              }
+            >
+              {totalPages > 1 && (
+                <FadeIn delay={125}>
+                  <div className="flex justify-center items-center gap-2 mt-8 mb-2 pb-20 lg:pb-2 sticky bottom-0 bg-gray-50 pt-6 z-10">
+                    <ButtonPress>
+                      <button
+                        className="px-4 py-2 rounded-full border border-gray-300 bg-white text-gray-700 font-semibold transition hover:bg-gray-100 disabled:opacity-50"
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                      >
+                        Prev
+                      </button>
+                    </ButtonPress>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <ButtonPress key={page}>
+                          <button
+                            className={`px-4 py-2 rounded-full border font-semibold transition
+                            ${
+                              page === currentPage
+                                ? "bg-[#0458A9] text-white border-[#0458A9] shadow"
+                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                            }
+                          `}
+                            onClick={() => goToPage(page)}
+                          >
+                            {page}
+                          </button>
+                        </ButtonPress>
+                      )
+                    )}
+                    <ButtonPress>
+                      <button
+                        className="px-4 py-2 rounded-full border border-gray-300 bg-white text-gray-700 font-semibold transition hover:bg-gray-100 disabled:opacity-50"
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                      >
+                        Next
+                      </button>
+                    </ButtonPress>
+                  </div>
+                </FadeIn>
+              )}
+            </ProgressiveLoad>
           </div>
         </main>
         {/* Right Sidebar */}
@@ -266,6 +470,6 @@ export default function RequestsPage() {
         request={selectedRequest}
         onReservationUpdated={handleReservationSubmitted}
       />
-    </div>
+    </PageTransition>
   );
 }

@@ -2,6 +2,12 @@ import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import ReserveStep2Modal from "./ReserveStep2Modal";
 import { getVenueBookings } from "../api/requests";
+import {
+  FadeIn,
+  ScaleOnHover,
+  ButtonPress,
+  ModalAnimation,
+} from "./AnimationWrapper";
 
 // Helper function to get days in month
 const getDaysInMonth = (year, month) => {
@@ -292,7 +298,7 @@ export default function ReserveStep1Modal({
     );
 
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2">
+      <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div className="bg-white rounded-2xl shadow-xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden">
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 md:p-6 border-b border-gray-200">
@@ -335,67 +341,68 @@ export default function ReserveStep1Modal({
                 placeholder="Search venues by name or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#0458A9] focus:border-transparent text-base placeholder-gray-500"
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#0458A9] focus:border-transparent text-base placeholder-gray-500 transition-all duration-200"
               />
             </div>
           </div>
 
           {/* Venues Grid */}
-          <div className="flex-1 p-4 md:p-6 overflow-y-auto">
+          <div className="flex-1 px-4 pt-4 pb-24 md:p-6 overflow-y-auto">
             {filteredVenues.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                {filteredVenues.map((v) => (
-                  <button
-                    key={v.name}
-                    onClick={() => handleVenueSelect(v)}
-                    className="group flex flex-col bg-white border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-[#0458A9] hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#0458A9] focus:border-transparent"
-                  >
-                    <div className="relative w-full aspect-video overflow-hidden">
-                      <img
-                        src={v.images ? v.images[0] : v.image}
-                        alt={v.name}
-                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
-                      />
-                      {/* Gradient overlay for better text readability if needed */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                    </div>
-                    <div className="p-4 flex-1 flex flex-col">
-                      <h4 className="font-bold text-[#0458A9] text-base md:text-lg mb-2 group-hover:text-[#03407a] transition-colors line-clamp-2">
-                        {v.name}
-                      </h4>
-                      {v.description && (
-                        <p className="text-gray-600 text-sm line-clamp-2 mb-3 flex-1">
-                          {v.description}
-                        </p>
-                      )}
-                      {v.participants && (
-                        <div className="flex items-center text-gray-500 text-sm">
-                          <svg
-                            className="w-4 h-4 mr-1"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                            />
-                          </svg>
-                          {v.participants} max
-                        </div>
-                      )}
-                      {/* Selected indicator for current venue */}
-                      {v.name === venue.name && (
-                        <div className="mt-3 text-center">
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#0458A9] text-white">
-                            Currently Selected
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </button>
+                {filteredVenues.map((v, index) => (
+                  <div key={v.name} className="group">
+                    <button
+                      onClick={() => handleVenueSelect(v)}
+                      className="w-full flex flex-col bg-white border-2 border-gray-200 rounded-2xl overflow-hidden hover:border-[#0458A9] hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#0458A9] focus:border-transparent"
+                    >
+                      <div className="relative w-full aspect-video overflow-hidden">
+                        <img
+                          src={v.images ? v.images[0] : v.image}
+                          alt={v.name}
+                          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-200"
+                        />
+                        {/* Gradient overlay for better text readability */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                      </div>
+                      <div className="p-4 flex-1 flex flex-col text-left">
+                        <h4 className="font-bold text-[#0458A9] text-base md:text-lg mb-2 group-hover:text-[#03407a] transition-colors line-clamp-2">
+                          {v.name}
+                        </h4>
+                        {v.description && (
+                          <p className="text-gray-600 text-sm line-clamp-2 mb-3 flex-1">
+                            {v.description}
+                          </p>
+                        )}
+                        {v.participants && (
+                          <div className="flex items-center text-gray-500 text-sm">
+                            <svg
+                              className="w-4 h-4 mr-1"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth="2"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                              />
+                            </svg>
+                            {v.participants} max
+                          </div>
+                        )}
+                        {/* Selected indicator for current venue */}
+                        {v.name === venue.name && (
+                          <div className="mt-3 text-center">
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#0458A9] text-white animate-pulse">
+                              Currently Selected
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  </div>
                 ))}
               </div>
             ) : (
@@ -455,190 +462,230 @@ export default function ReserveStep1Modal({
   return (
     <>
       {open && !step2Open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-2 my-8 flex flex-col gap-6 p-4 md:p-10 overflow-y-auto max-h-[95vh]">
-            {/* Close Button */}
-            <button
-              className="absolute top-3 right-3 z-10 p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100"
-              onClick={onClose}
-              aria-label="Close modal"
-            >
-              <X size={20} />
-            </button>
-            {/* Step 1 label */}
-            <div className="flex justify-end w-full">
-              <span className="text-[#0458A9] font-semibold text-lg md:text-xl">
-                Step 1
-              </span>
+        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-6xl w-full mx-auto flex flex-col gap-6 px-4 pt-4 pb-24 md:p-10 overflow-y-auto max-h-[90vh]">
+            {/* Header: Close button and Step 1 Label */}
+            <div className="flex items-center justify-between w-full mb-2">
+              {/* Empty div for spacing, allowing Step 1 to be on the right and close button to be truly on top right of modal */}
+              <div className="w-1/3">
+                {" "}
+                {/* Adjust width as needed or remove if Step 1 can be centered */}
+                {/* Intentionally empty or for a potential left-aligned element */}
+              </div>
+              <FadeIn delay={200} className="w-1/3 text-center">
+                <span className="text-[#0458A9] font-semibold text-lg md:text-xl">
+                  Step 1
+                </span>
+              </FadeIn>
+              <div className="w-1/3 flex justify-end">
+                <button
+                  className="p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100 transition-colors z-10" // Added z-10 just in case
+                  onClick={onClose}
+                  aria-label="Close modal"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
+
             {/* Title and subtitle */}
-            <div className="mb-2">
-              <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9]">
-                Preferred Date
-              </h2>
-              <div className="text-gray-600 text-sm md:text-base">
-                indicate whether your booking is for a single day or multiple
-                days, then select your preferred date(s).
+            <FadeIn delay={300}>
+              <div className="mb-2">
+                <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9]">
+                  Preferred Date
+                </h2>
+                <div className="text-gray-600 text-sm md:text-base">
+                  indicate whether your booking is for a single day or multiple
+                  days, then select your preferred date(s).
+                </div>
               </div>
-            </div>
+            </FadeIn>
+
             {/* Main content */}
-            <div className="flex flex-col md:flex-row gap-8 w-full">
-              {/* Left: Venue Info */}
-              <div className="flex flex-col items-center md:w-1/2 w-full justify-start">
-                <div className="w-full aspect-video rounded-2xl overflow-hidden mb-4">
-                  <img
-                    src={venue.images ? venue.images[0] : venue.image}
-                    alt={venue.name}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-                <div className="w-full text-left">
-                  <h3 className="text-2xl font-bold text-[#0458A9] leading-tight mb-1">
-                    {venue.name}
-                  </h3>
-                  <div className="text-gray-400 text-base mb-4">
-                    Managed by (Insert Department Name)
-                  </div>
-                  <button
-                    className="bg-[#0458A9] text-white rounded-full px-6 py-2 font-semibold text-base w-full md:w-auto hover:bg-[#03407a] transition"
-                    onClick={() => {
-                      setShowVenueSelector(true);
-                    }}
-                  >
-                    Change Venue
-                  </button>
-                </div>
-              </div>
-              {/* Right: Booking Type and Calendar */}
-              <div className="flex flex-col gap-4 md:w-1/2 w-full">
-                <div>
-                  <h4 className="text-xl md:text-2xl font-bold text-[#0458A9] mb-2">
-                    Type of Booking
-                  </h4>
-                  <div className="flex gap-2 mb-2">
-                    <button
-                      className={`rounded-full px-6 py-2 font-semibold border transition text-base w-1/2 md:w-auto ${
-                        bookingType === "one"
-                          ? "bg-[#0458A9] text-white border-[#0458A9]"
-                          : "bg-white text-gray-400 border-gray-300"
-                      }`}
-                      onClick={() => {
-                        setBookingType("one");
-                        setSelectedDays([]);
-                      }}
-                    >
-                      One Day
-                    </button>
-                    <button
-                      className={`rounded-full px-6 py-2 font-semibold border transition text-base w-1/2 md:w-auto ${
-                        bookingType === "multiple"
-                          ? "bg-[#0458A9] text-white border-[#0458A9]"
-                          : "bg-white text-gray-400 border-gray-300"
-                      }`}
-                      onClick={() => {
-                        setBookingType("multiple");
-                        setSelectedDays([]);
-                      }}
-                    >
-                      Multiple Days
-                    </button>
+            <FadeIn delay={400}>
+              <div className="flex flex-col md:flex-row gap-8 w-full">
+                {/* Left: Venue Info */}
+                <div className="flex flex-col items-center md:w-1/2 w-full justify-start">
+                  <ScaleOnHover>
+                    <div className="w-full aspect-video rounded-2xl overflow-hidden mb-4">
+                      <img
+                        src={venue.images ? venue.images[0] : venue.image}
+                        alt={venue.name}
+                        className="object-cover w-full h-full transition-transform duration-300 hover:scale-110"
+                      />
+                    </div>
+                  </ScaleOnHover>
+                  <div className="w-full text-left">
+                    <h3 className="text-2xl font-bold text-[#0458A9] leading-tight mb-1">
+                      {venue.name}
+                    </h3>
+                    <div className="text-gray-400 text-base mb-4">
+                      Managed by (Insert Department Name)
+                    </div>
+                    <ButtonPress>
+                      <button
+                        className="bg-[#0458A9] text-white rounded-full px-6 py-2 font-semibold text-base w-full md:w-auto hover:bg-[#03407a] transition-all duration-200 transform hover:scale-105"
+                        onClick={() => {
+                          setShowVenueSelector(true);
+                        }}
+                      >
+                        Change Venue
+                      </button>
+                    </ButtonPress>
                   </div>
                 </div>
-                <div>
-                  <h4 className="text-xl md:text-2xl font-bold text-[#0458A9] mb-2">
-                    Preferred Day(s)
-                  </h4>
-                  <div className="rounded-2xl border border-gray-400 p-4 bg-white">
-                    <div className="flex justify-between items-center mb-4">
-                      <button
-                        onClick={() => handleMonthChange(-1)}
-                        className="text-gray-600 hover:text-[#0458A9]"
-                      >
-                        ←
-                      </button>
-                      <div className="font-bold text-[#0458A9] text-lg">
-                        {currentDate.toLocaleString("default", {
-                          month: "long",
-                          year: "numeric",
-                        })}
-                      </div>
-                      <button
-                        onClick={() => handleMonthChange(1)}
-                        className="text-gray-600 hover:text-[#0458A9]"
-                      >
-                        →
-                      </button>
-                    </div>
-                    <div className="text-sm text-gray-600 mb-2 text-center">
-                      Bookings available from{" "}
-                      {new Date(
-                        new Date().setDate(new Date().getDate() + 14)
-                      ).toLocaleDateString()}
-                    </div>
-                    <div className="grid grid-cols-7 gap-1 text-center text-gray-700 text-base mb-1">
-                      {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
-                        (d) => (
-                          <div key={d} className="font-semibold">
-                            {d}
-                          </div>
-                        )
-                      )}
-                    </div>
-                    <div className="grid grid-cols-7 gap-1 text-center">
-                      {calendarDays.map((dayData, i) => (
+
+                {/* Right: Booking Type and Calendar */}
+                <div className="flex flex-col gap-4 md:w-1/2 w-full">
+                  <div>
+                    <h4 className="text-xl md:text-2xl font-bold text-[#0458A9] mb-2">
+                      Type of Booking
+                    </h4>
+                    <div className="flex flex-wrap sm:flex-nowrap gap-2 mb-2">
+                      <ButtonPress className="w-full sm:w-1/2 md:w-auto">
                         <button
-                          key={i}
-                          className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center text-base transition border-2 ${
-                            !dayData
-                              ? "bg-transparent border-transparent cursor-default"
-                              : dayData.disabled
-                              ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-                              : selectedDays.some(
-                                  (d) =>
-                                    d.formattedDate === dayData.formattedDate
-                                )
-                              ? "bg-[#0458A9] text-white border-[#0458A9]"
-                              : "bg-white text-gray-700 border-transparent hover:bg-blue-50"
+                          className={`rounded-full px-6 py-2 font-semibold border transition-all duration-200 text-base w-full ${
+                            bookingType === "one"
+                              ? "bg-[#0458A9] text-white border-[#0458A9] transform scale-105"
+                              : "bg-white text-gray-400 border-gray-300 hover:border-[#0458A9] hover:text-[#0458A9]"
                           }`}
-                          disabled={!dayData || dayData.disabled}
-                          onClick={() => handleDayClick(dayData)}
-                          title={
-                            dayData?.disabled
-                              ? "Bookings available from 2 weeks ahead"
-                              : ""
-                          }
+                          onClick={() => {
+                            setBookingType("one");
+                            setSelectedDays([]);
+                          }}
                         >
-                          {dayData?.day || ""}
+                          One Day
                         </button>
-                      ))}
+                      </ButtonPress>
+                      <ButtonPress className="w-full sm:w-1/2 md:w-auto">
+                        <button
+                          className={`rounded-full px-6 py-2 font-semibold border transition-all duration-200 text-base w-full ${
+                            bookingType === "multiple"
+                              ? "bg-[#0458A9] text-white border-[#0458A9] transform scale-105"
+                              : "bg-white text-gray-400 border-gray-300 hover:border-[#0458A9] hover:text-[#0458A9]"
+                          }`}
+                          onClick={() => {
+                            setBookingType("multiple");
+                            setSelectedDays([]);
+                          }}
+                        >
+                          Multiple Days
+                        </button>
+                      </ButtonPress>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-xl md:text-2xl font-bold text-[#0458A9] mb-2">
+                      Preferred Day(s)
+                    </h4>
+                    <div className="rounded-2xl border border-gray-400 p-4 bg-white">
+                      <div className="flex justify-between items-center mb-4">
+                        <ButtonPress>
+                          <button
+                            onClick={() => handleMonthChange(-1)}
+                            className="text-gray-600 hover:text-[#0458A9] p-1 rounded-full hover:bg-gray-100 transition-colors"
+                          >
+                            ←
+                          </button>
+                        </ButtonPress>
+                        <div className="font-bold text-[#0458A9] text-lg">
+                          {currentDate.toLocaleString("default", {
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </div>
+                        <ButtonPress>
+                          <button
+                            onClick={() => handleMonthChange(1)}
+                            className="text-gray-600 hover:text-[#0458A9] p-1 rounded-full hover:bg-gray-100 transition-colors"
+                          >
+                            →
+                          </button>
+                        </ButtonPress>
+                      </div>
+                      <div className="text-sm text-gray-600 mb-2 text-center">
+                        Bookings available from{" "}
+                        {new Date(
+                          new Date().setDate(new Date().getDate() + 14)
+                        ).toLocaleDateString()}
+                      </div>
+                      <div className="grid grid-cols-7 gap-1 text-center text-gray-700 text-base mb-1">
+                        {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
+                          (d) => (
+                            <div key={d} className="font-semibold">
+                              {d}
+                            </div>
+                          )
+                        )}
+                      </div>
+                      <div className="grid grid-cols-7 gap-1 text-center">
+                        {calendarDays.map((dayData, i) => (
+                          <ButtonPress key={i}>
+                            <button
+                              className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center text-base transition-all duration-200 border-2 transform ${
+                                !dayData
+                                  ? "bg-transparent border-transparent cursor-default"
+                                  : dayData.disabled
+                                  ? "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                                  : selectedDays.some(
+                                      (d) =>
+                                        d.formattedDate ===
+                                        dayData.formattedDate
+                                    )
+                                  ? "bg-[#0458A9] text-white border-[#0458A9] scale-110 shadow-lg"
+                                  : "bg-white text-gray-700 border-transparent hover:bg-blue-50 hover:scale-105"
+                              }`}
+                              disabled={!dayData || dayData.disabled}
+                              onClick={() => handleDayClick(dayData)}
+                              title={
+                                dayData?.disabled
+                                  ? "Bookings available from 2 weeks ahead"
+                                  : ""
+                              }
+                            >
+                              {dayData?.day || ""}
+                            </button>
+                          </ButtonPress>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </FadeIn>
+
             {/* Footer: Back/Next */}
-            <div className="flex justify-between items-center mt-6 w-full">
-              <button
-                className="text-gray-400 font-semibold text-base px-6 py-2 rounded-full cursor-pointer hover:text-[#0458A9] hover:bg-gray-100 transition"
-                onClick={onClose}
-              >
-                Back
-              </button>
-              <button
-                className="bg-[#0458A9] text-white rounded-full px-10 py-2 font-semibold text-base hover:bg-[#03407a] transition"
-                onClick={handleNext}
-                disabled={
-                  (bookingType === "multiple" && selectedDays.length < 2) ||
-                  (bookingType === "one" && selectedDays.length === 0)
-                }
-              >
-                Next
-              </button>
-            </div>
-            {errorMsg && (
-              <div className="text-red-600 text-center mt-2 font-semibold">
-                {errorMsg}
+            <FadeIn delay={500}>
+              <div className="flex justify-between items-center mt-6 w-full">
+                <ButtonPress>
+                  <button
+                    className="text-gray-400 font-semibold text-base px-6 py-2 rounded-full cursor-pointer hover:text-[#0458A9] hover:bg-gray-100 transition-all duration-200"
+                    onClick={onClose}
+                  >
+                    Back
+                  </button>
+                </ButtonPress>
+                <ButtonPress>
+                  <button
+                    className="bg-[#0458A9] text-white rounded-full px-10 py-2 font-semibold text-base hover:bg-[#03407a] transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    onClick={handleNext}
+                    disabled={
+                      (bookingType === "multiple" && selectedDays.length < 2) ||
+                      (bookingType === "one" && selectedDays.length === 0)
+                    }
+                  >
+                    Next
+                  </button>
+                </ButtonPress>
               </div>
+            </FadeIn>
+
+            {errorMsg && (
+              <FadeIn>
+                <div className="text-red-600 text-center mt-2 font-semibold animate-pulse">
+                  {errorMsg}
+                </div>
+              </FadeIn>
             )}
           </div>
         </div>

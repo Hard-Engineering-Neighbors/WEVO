@@ -32,6 +32,8 @@ export default function AdminDashboardPage() {
   });
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // Lock navigation to admin dashboard if authenticated
   useEffect(() => {
@@ -135,6 +137,23 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // Calculate paginated requests
+  const indexOfLastRequest = currentPage * itemsPerPage;
+  const indexOfFirstRequest = indexOfLastRequest - itemsPerPage;
+  const currentRequests = requests.slice(
+    indexOfFirstRequest,
+    indexOfLastRequest
+  );
+  const totalPages = Math.ceil(requests.length / itemsPerPage);
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
   return (
     <div className="flex flex-col min-h-screen font-sans bg-gray-50">
       <div className="flex flex-col lg:flex-row flex-1">
@@ -219,63 +238,91 @@ export default function AdminDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {requests.map((req) => (
-                      <tr
-                        key={req.id}
-                        className="bg-white border-b hover:bg-gray-50"
-                      >
-                        <td className="px-3 py-3">
-                          {truncateText(req.orgName, 25)}
-                        </td>
-                        <td className="px-3 py-3">
-                          {truncateText(req.location, 25)}
-                        </td>
-                        <td className="px-3 py-3">
-                          {truncateText(req.type, 25)}
-                        </td>
-                        <td className="px-3 py-3">
-                          {truncateText(req.eventName, 25)}
-                        </td>
-                        <td className="px-3 py-3 min-w-[8rem]">
-                          <div>{req.date}</div>
-                          <div className="text-xs text-gray-500">
-                            {req.time}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3">
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              req.status === "Pending"
-                                ? "bg-yellow-100 text-yellow-800"
-                                : req.status === "Approved"
-                                ? "bg-green-100 text-green-800"
-                                : req.status === "Rejected"
-                                ? "bg-red-100 text-red-800"
-                                : req.status === "Cancelled"
-                                ? "bg-gray-300 text-gray-700 border border-gray-400"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
-                          >
-                            {req.status}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <button
-                            className="bg-[#56708A] text-white px-4 py-1.5 rounded-md text-xs font-medium hover:bg-[#455b74] transition-colors"
-                            onClick={() => handleOpenReviewModal(req)}
-                          >
-                            Details
-                          </button>
+                    {currentRequests.length > 0 ? (
+                      currentRequests.map((req) => (
+                        <tr
+                          key={req.id}
+                          className="bg-white border-b hover:bg-gray-50"
+                        >
+                          <td className="px-3 py-3">
+                            {truncateText(req.orgName, 25)}
+                          </td>
+                          <td className="px-3 py-3">
+                            {truncateText(req.location, 25)}
+                          </td>
+                          <td className="px-3 py-3">
+                            {truncateText(req.type, 25)}
+                          </td>
+                          <td className="px-3 py-3">
+                            {truncateText(req.eventName, 25)}
+                          </td>
+                          <td className="px-3 py-3 min-w-[8rem]">
+                            <div>{req.date}</div>
+                            <div className="text-xs text-gray-500">
+                              {req.time}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3">
+                            <span
+                              className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                req.status === "Pending"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : req.status === "Approved"
+                                  ? "bg-green-100 text-green-800"
+                                  : req.status === "Rejected"
+                                  ? "bg-red-100 text-red-800"
+                                  : req.status === "Cancelled"
+                                  ? "bg-gray-300 text-gray-700 border border-gray-400"
+                                  : "bg-gray-100 text-gray-800"
+                              }`}
+                            >
+                              {req.status}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 text-center">
+                            <button
+                              className="bg-[#56708A] text-white px-4 py-1.5 rounded-md text-xs font-medium hover:bg-[#455b74] transition-colors"
+                              onClick={() => handleOpenReviewModal(req)}
+                            >
+                              Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="7"
+                          className="text-center py-10 text-gray-500"
+                        >
+                          No requests found.
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
-              <div className="flex justify-end mt-4">
-                <button className="text-[#56708A] text-sm hover:underline font-medium">
-                  Full View
-                </button>
+              {/* Pagination Controls */}
+              <div className="flex flex-col sm:flex-row justify-between items-center mt-4 pt-2 border-t border-gray-200">
+                <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+                  Page {totalPages > 0 ? currentPage : 0} of {totalPages}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1 || totalPages === 0}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
 

@@ -19,8 +19,8 @@ export default function AdminNotificationDetailsModal({
     cancellationReason: "",
     rejectionReason: "",
     perDayTimes: [],
-    ...((data || {})),
-    ...((booking || {})),
+    ...(data || {}),
+    ...(booking || {}),
   };
 
   // Ensure all fields are strings or numbers for rendering
@@ -49,7 +49,13 @@ export default function AdminNotificationDetailsModal({
     // Remove 'Reason:' and everything after from the message
     mainMessage = notif.message.replace(/\s*Reason:[\s\S]*/i, "").trim();
     if (!mainMessage || mainMessage === notif.message) {
-      mainMessage = `${details.orgName || "An organization"} cancelled their approved event${details.eventName ? `: ${safe(details.eventName)}` : ""}${details.date ? ` on ${safe(details.date)}` : ""}${details.venue ? ` at ${safe(details.venue)}` : ""}.`;
+      mainMessage = `${
+        details.orgName || "An organization"
+      } cancelled their approved event${
+        details.eventName ? `: ${safe(details.eventName)}` : ""
+      }${details.date ? ` on ${safe(details.date)}` : ""}${
+        details.venue ? ` at ${safe(details.venue)}` : ""
+      }.`;
     }
     showCancellationReason = true;
   } else if (
@@ -58,7 +64,11 @@ export default function AdminNotificationDetailsModal({
     details.venue &&
     details.orgName
   ) {
-    mainMessage = `You have rejected ${details.orgName} request for ${safe(details.venue)}${details.eventName ? ` for ${safe(details.eventName)}` : ""}${details.date ? ` on ${safe(details.date)}` : ""}.`;
+    mainMessage = `You have rejected ${details.orgName} request for ${safe(
+      details.venue
+    )}${details.eventName ? ` for ${safe(details.eventName)}` : ""}${
+      details.date ? ` on ${safe(details.date)}` : ""
+    }.`;
     showRejectionReason = true;
   } else if (
     notif.type === "Admin" &&
@@ -67,19 +77,44 @@ export default function AdminNotificationDetailsModal({
     details.eventName &&
     (perDayTimes.length > 0 || details.date)
   ) {
-    mainMessage = `You have approved ${details.orgName} request for ${safe(details.venue)} for ${safe(details.eventName)}${perDayTimes.length > 0 ? " on " + perDayTimes.map((d) => new Date(d.date).toLocaleDateString()).join(", ") : details.date ? ` on ${safe(details.date)}` : ""}.`;
-  } else if (
-    notif.type === "System" &&
-    details.venue &&
-    details.orgName
-  ) {
-    mainMessage = `New booking request from ${details.orgName} for ${safe(details.venue)}${perDayTimes.length > 0 ? " on " + perDayTimes.map((d) => new Date(d.date).toLocaleDateString()).join(", ") : details.date ? ` on ${safe(details.date)}` : ""}.`;
-  } else if (
-    notif.type === "Admin" &&
-    details.orgName &&
-    details.eventName
-  ) {
-    mainMessage = `You have approved ${details.orgName}'s event: ${safe(details.eventName)}${perDayTimes.length > 0 ? " on " + perDayTimes.map((d) => new Date(d.date).toLocaleDateString()).join(", ") : details.date ? ` on ${safe(details.date)}` : ""}.`;
+    mainMessage = `You have approved ${details.orgName} request for ${safe(
+      details.venue
+    )} for ${safe(details.eventName)}${
+      perDayTimes.length > 0
+        ? " on " +
+          perDayTimes
+            .map((d) => new Date(d.date).toLocaleDateString())
+            .join(", ")
+        : details.date
+        ? ` on ${safe(details.date)}`
+        : ""
+    }.`;
+  } else if (notif.type === "System" && details.venue && details.orgName) {
+    mainMessage = `New booking request from ${details.orgName} for ${safe(
+      details.venue
+    )}${
+      perDayTimes.length > 0
+        ? " on " +
+          perDayTimes
+            .map((d) => new Date(d.date).toLocaleDateString())
+            .join(", ")
+        : details.date
+        ? ` on ${safe(details.date)}`
+        : ""
+    }.`;
+  } else if (notif.type === "Admin" && details.orgName && details.eventName) {
+    mainMessage = `You have approved ${details.orgName}'s event: ${safe(
+      details.eventName
+    )}${
+      perDayTimes.length > 0
+        ? " on " +
+          perDayTimes
+            .map((d) => new Date(d.date).toLocaleDateString())
+            .join(", ")
+        : details.date
+        ? ` on ${safe(details.date)}`
+        : ""
+    }.`;
   }
 
   // Always show event details
@@ -87,17 +122,32 @@ export default function AdminNotificationDetailsModal({
     <div className="flex flex-wrap gap-4 mb-2 justify-start">
       {perDayTimes.length > 0 ? (
         perDayTimes.map((d, i) => (
-          <div key={i} className="bg-gray-100 rounded-lg px-4 py-2 text-sm text-gray-700">
-            <span className="font-semibold">Event Date and Time:</span> {new Date(d.date).toLocaleDateString()} {d.startTime} - {d.endTime}
+          <div
+            key={i}
+            className="bg-gray-100 rounded-lg px-4 py-2 text-sm text-gray-700"
+          >
+            <span className="font-semibold">Event Date and Time:</span>{" "}
+            {new Date(d.date).toLocaleDateString()} {d.startTime} - {d.endTime}
           </div>
         ))
       ) : details.start_time && details.end_time ? (
         <div className="bg-gray-100 rounded-lg px-4 py-2 text-sm text-gray-700">
-          <span className="font-semibold">Event Date and Time:</span> {new Date(details.start_time).toLocaleDateString()} {new Date(details.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(details.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          <span className="font-semibold">Event Date and Time:</span>{" "}
+          {new Date(details.start_time).toLocaleDateString()}{" "}
+          {new Date(details.start_time).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}{" "}
+          -{" "}
+          {new Date(details.end_time).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
         </div>
       ) : details.date ? (
         <div className="bg-gray-100 rounded-lg px-4 py-2 text-sm text-gray-700">
-          <span className="font-semibold">Event Date and Time:</span> {safe(details.date)}
+          <span className="font-semibold">Event Date and Time:</span>{" "}
+          {safe(details.date)}
         </div>
       ) : null}
       {details.orgName && (
@@ -114,7 +164,7 @@ export default function AdminNotificationDetailsModal({
   );
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[2100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
       <div className="relative bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-8 flex flex-col gap-2">
         <button
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
@@ -130,22 +180,26 @@ export default function AdminNotificationDetailsModal({
         {eventDetails}
         {details.eventName && (
           <div className="bg-gray-100 rounded-lg px-4 py-2 text-sm text-gray-700">
-            <span className="font-semibold">Event Name:</span> {safe(details.eventName)}
+            <span className="font-semibold">Event Name:</span>{" "}
+            {safe(details.eventName)}
           </div>
         )}
         {details.participants && (
           <div className="bg-gray-100 rounded-lg px-4 py-2 text-sm text-gray-700">
-            <span className="font-semibold">Participants:</span> {safe(details.participants)}
+            <span className="font-semibold">Participants:</span>{" "}
+            {safe(details.participants)}
           </div>
         )}
         {details.type && (
           <div className="bg-gray-100 rounded-lg px-4 py-2 text-sm text-gray-700">
-            <span className="font-semibold">Event Type:</span> {safe(details.type)}
+            <span className="font-semibold">Event Type:</span>{" "}
+            {safe(details.type)}
           </div>
         )}
         {details.purpose && (
           <div className="bg-gray-100 rounded-lg px-4 py-2 text-sm text-gray-700">
-            <span className="font-semibold">Event Purpose:</span> {safe(details.purpose)}
+            <span className="font-semibold">Event Purpose:</span>{" "}
+            {safe(details.purpose)}
           </div>
         )}
         {showRejectionReason && details.rejectionReason && (

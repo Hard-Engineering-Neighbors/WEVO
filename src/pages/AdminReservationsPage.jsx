@@ -54,6 +54,8 @@ export default function AdminReservationsPage() {
   const [selectedNotif, setSelectedNotif] = useState(null);
   // Track expanded rows for date/time
   const [expandedRows, setExpandedRows] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10); // Or your preferred number
 
   // 1. Define loadRequests at the top level
   const loadRequests = async () => {
@@ -119,8 +121,30 @@ export default function AdminReservationsPage() {
     if (activeTab === "Pending") {
       return res.status && res.status.toLowerCase() === "pending";
     }
-    return true;
+    return true; // Should not happen if tabs are correctly handled
   });
+
+  // Calculate paginated reservations
+  const indexOfLastReservation = currentPage * itemsPerPage;
+  const indexOfFirstReservation = indexOfLastReservation - itemsPerPage;
+  const currentReservations = filteredReservations.slice(
+    indexOfFirstReservation,
+    indexOfLastReservation
+  );
+  const totalPages = Math.ceil(filteredReservations.length / itemsPerPage);
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
+  // Reset to page 1 when activeTab changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab]);
 
   const tableHeaders = [
     { name: "Organization Name", sortable: true },
@@ -227,7 +251,7 @@ export default function AdminReservationsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredReservations.map((res) => (
+                  {currentReservations.map((res) => (
                     <tr
                       key={res.id}
                       className="bg-white border-b hover:bg-gray-50"
@@ -246,31 +270,45 @@ export default function AdminReservationsPage() {
                       </td>
                       <td className="px-4 py-3">
                         {res.perDayTimes && res.perDayTimes.length > 0 ? (
-                          <div className="flex flex-col gap-1">
-                            {(expandedRows[res.id]
-                              ? res.perDayTimes
-                              : res.perDayTimes.slice(0, 2)
-                            ).map((d, i) => (
-                              <span key={i}>
-                                {new Date(d.date).toLocaleDateString()}{" "}
-                                {d.startTime} - {d.endTime}
-                              </span>
-                            ))}
-                            {res.perDayTimes.length > 2 && (
+                          <div className="flex justify-between items-start w-full">
+                            <div className="flex flex-col gap-0.5">
+                              {(expandedRows[res.id]
+                                ? res.perDayTimes
+                                : res.perDayTimes.slice(0, 1)
+                              ) // Show only the first date by default
+                                .map((d, i) => (
+                                  <span
+                                    key={i}
+                                    className="text-xs whitespace-nowrap"
+                                  >
+                                    {new Date(d.date).toLocaleDateString()}{" "}
+                                    {d.startTime} - {d.endTime}
+                                  </span>
+                                ))}
+                            </div>
+
+                            {res.perDayTimes.length > 1 && (
                               <button
-                                className="text-xs text-blue-600 hover:underline mt-1 self-start"
+                                className="text-xs text-blue-600 hover:text-blue-800 ml-2 flex items-center flex-shrink-0 whitespace-nowrap"
                                 onClick={() =>
                                   setExpandedRows((prev) => ({
                                     ...prev,
                                     [res.id]: !prev[res.id],
                                   }))
                                 }
+                                aria-expanded={!!expandedRows[res.id]}
                               >
-                                {expandedRows[res.id]
-                                  ? "Show less"
-                                  : `Show more (${
-                                      res.perDayTimes.length - 2
-                                    } more)`}
+                                <span>
+                                  {expandedRows[res.id]
+                                    ? "Show less"
+                                    : `+${res.perDayTimes.length - 1} more`}
+                                </span>
+                                <ChevronDown
+                                  size={14}
+                                  className={`ml-1 transform transition-transform duration-150 ${
+                                    expandedRows[res.id] ? "rotate-180" : ""
+                                  }`}
+                                />
                               </button>
                             )}
                           </div>
@@ -315,7 +353,7 @@ export default function AdminReservationsPage() {
                       </td>
                     </tr>
                   ))}
-                  {filteredReservations.length === 0 && (
+                  {currentReservations.length === 0 && (
                     <tr>
                       <td
                         colSpan={tableHeaders.length}
@@ -328,6 +366,30 @@ export default function AdminReservationsPage() {
                 </tbody>
               </table>
             </div>
+            {/* Pagination Controls */}
+            {totalPages > 0 && (
+              <div className="flex flex-col sm:flex-row justify-between items-center mt-6 pt-4 border-t border-gray-200">
+                <div className="text-sm text-gray-600 mb-2 sm:mb-0">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </main>
         <AdminRightSidebar onNotificationClick={setSelectedNotif} />

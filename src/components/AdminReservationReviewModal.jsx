@@ -67,7 +67,8 @@ export default function AdminReservationReviewModal({
     uploadedDocuments = [],
   } = requestData;
 
-  const perDayTimes = requestData.perDayTimes || requestData.per_day_times || [];
+  const perDayTimes =
+    requestData.perDayTimes || requestData.per_day_times || [];
 
   // For display, try to split date and time if they are combined in 'date' field
   let displayDate = eventDateRaw;
@@ -99,7 +100,7 @@ export default function AdminReservationReviewModal({
   return (
     <>
       {/* Main Review Modal */}
-      <div className="fixed inset-0 z-[50] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="fixed inset-0 z-[1900] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div className="relative bg-white rounded-xl shadow-xl w-full max-w-3xl mx-auto flex flex-col gap-5 p-6 md:p-8 max-h-[90vh] overflow-y-auto">
           {/* Close Button */}
           <button
@@ -201,7 +202,9 @@ export default function AdminReservationReviewModal({
                   {perDayTimes.length > 0 ? (
                     <div className="flex flex-col gap-1">
                       {perDayTimes.map((d, i) => (
-                        <span key={i}>{new Date(d.date).toLocaleDateString()}</span>
+                        <span key={i}>
+                          {new Date(d.date).toLocaleDateString()}
+                        </span>
                       ))}
                     </div>
                   ) : (
@@ -217,7 +220,9 @@ export default function AdminReservationReviewModal({
                   {perDayTimes.length > 0 ? (
                     <div className="flex flex-col gap-1">
                       {perDayTimes.map((d, i) => (
-                        <span key={i}>{d.startTime} - {d.endTime}</span>
+                        <span key={i}>
+                          {d.startTime} - {d.endTime}
+                        </span>
                       ))}
                     </div>
                   ) : (
@@ -256,9 +261,14 @@ export default function AdminReservationReviewModal({
             <div className="flex flex-col gap-2">
               {perDayTimes.length > 0 ? (
                 perDayTimes.map(({ date, startTime, endTime }) => (
-                  <div key={date} className="p-2.5 bg-gray-100 rounded-md flex justify-between">
+                  <div
+                    key={date}
+                    className="p-2.5 bg-gray-100 rounded-md flex justify-between"
+                  >
                     <span>{new Date(date).toLocaleDateString()}</span>
-                    <span>{startTime} - {endTime}</span>
+                    <span>
+                      {startTime} - {endTime}
+                    </span>
                   </div>
                 ))
               ) : (
@@ -276,11 +286,15 @@ export default function AdminReservationReviewModal({
               Event Duration
             </label>
             <div className="p-2.5 bg-gray-100 rounded-md">
-              {perDayTimes.length > 0 ? (
-                `${new Date(perDayTimes[0].date).toLocaleDateString()} ${perDayTimes[0].startTime} - ${new Date(perDayTimes[perDayTimes.length-1].date).toLocaleDateString()} ${perDayTimes[perDayTimes.length-1].endTime}`
-              ) : (
-                `${requestData.date || "-"} ${requestData.time || "-"}`
-              )}
+              {perDayTimes.length > 0
+                ? `${new Date(perDayTimes[0].date).toLocaleDateString()} ${
+                    perDayTimes[0].startTime
+                  } - ${new Date(
+                    perDayTimes[perDayTimes.length - 1].date
+                  ).toLocaleDateString()} ${
+                    perDayTimes[perDayTimes.length - 1].endTime
+                  }`
+                : `${requestData.date || "-"} ${requestData.time || "-"}`}
             </div>
           </div>
 

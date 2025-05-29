@@ -117,18 +117,31 @@ export default function CalendarComponent({
 
   // Tile content to show event indicators
   const tileContent = ({ date, view }) => {
-    if (view === "month" && hasEvents(date)) {
-      const eventCount = getEventsForDate(date).length;
-      return (
-        <div className="flex justify-center items-center mt-1">
-          <div
-            className="w-2 h-2 rounded-full flex items-center justify-center text-xs text-white font-bold"
-            style={{ backgroundColor: primaryColor }}
-          >
-            {eventCount > 1 && <span className="text-[8px]">{eventCount}</span>}
+    if (view === "month") {
+      const eventsOnDate = getEventsForDate(date);
+      const eventCount = eventsOnDate.length;
+
+      if (eventCount > 0) {
+        return (
+          <div className="flex justify-center items-center mt-1 w-full">
+            {eventCount === 1 ? (
+              <div
+                className="w-2 h-2 rounded-full" // Standard 8px dot for single event
+                style={{ backgroundColor: primaryColor }}
+              />
+            ) : (
+              // Enhanced badge for multiple events
+              <div
+                className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-semibold leading-none"
+                // 16px diameter circle with 10px semi-bold text
+                style={{ backgroundColor: primaryColor }}
+              >
+                {eventCount > 9 ? "9+" : eventCount}
+              </div>
+            )}
           </div>
-        </div>
-      );
+        );
+      }
     }
     return null;
   };
@@ -395,13 +408,6 @@ export default function CalendarComponent({
             />
             <span>Venue is reserved on that day</span>
           </div>
-          <button
-            className="text-sm font-medium hover:underline transition-colors"
-            style={{ color: primaryColor }}
-            onClick={onFullViewClick}
-          >
-            Full View
-          </button>
         </div>
       </div>
 

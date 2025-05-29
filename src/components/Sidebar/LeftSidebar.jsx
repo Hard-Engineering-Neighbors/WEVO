@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import {
   CalendarDays,
   MapPin,
@@ -73,7 +74,7 @@ export default function LeftSidebar({ active = "calendar" }) {
   const SupportModal = () => {
     if (!isSupportModalOpen) return null;
     return (
-      <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+      <div className="fixed inset-0 z-[950] flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
         <div className="relative bg-white rounded-xl shadow-xl max-w-xs w-full p-6">
           <button
             className="absolute top-3 right-3 text-gray-400 hover:text-gray-700"
@@ -105,7 +106,7 @@ export default function LeftSidebar({ active = "calendar" }) {
   const UnderConstructionModal = ({ isOpen, onClose, title }) => {
     if (!isOpen) return null;
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+      <div className="fixed inset-0 z-[960] flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
         <div className="relative bg-white rounded-xl shadow-xl max-w-xs w-full p-6 text-center">
           <button
             className="absolute top-3 right-3 text-gray-400 hover:text-gray-700"
@@ -130,6 +131,45 @@ export default function LeftSidebar({ active = "calendar" }) {
       </div>
     );
   };
+
+  // Mobile Navigation Component (to be rendered via portal)
+  const MobileNavigation = () => (
+    <nav
+      className="lg:hidden bg-white border-t border-gray-200 shadow-md p-1 flex justify-around items-center h-16"
+      style={{
+        position: "fixed",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 99999,
+        isolation: "isolate",
+        boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.1)",
+        transform: "translateZ(0)", // Force hardware acceleration
+        willChange: "transform", // Optimize for animations
+      }}
+    >
+      {navItems.map((item) => (
+        <button
+          key={item.key}
+          className={`flex flex-col items-center justify-center p-1 rounded-md w-1/4 text-xs ${
+            active === item.key && item.type === "navigate"
+              ? "text-[#0458A9]"
+              : "text-gray-500 hover:text-[#0458A9]/80"
+          }`}
+          onClick={() => {
+            if (item.type === "navigate") {
+              handleNav(item.path);
+            } else if (item.type === "modal") {
+              setIsSupportModalOpen(true);
+            }
+          }}
+        >
+          <item.icon size={24} />
+          <span className="mt-0.5 font-medium">{item.name}</span>
+        </button>
+      ))}
+    </nav>
+  );
 
   return (
     <>
@@ -193,29 +233,9 @@ export default function LeftSidebar({ active = "calendar" }) {
         </div>
       </aside>
 
-      {/* Mobile: Fixed Bottom Tab Bar (hidden on lg and up) */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-md p-1 flex justify-around items-center z-30 h-16">
-        {navItems.map((item) => (
-          <button
-            key={item.key}
-            className={`flex flex-col items-center justify-center p-1 rounded-md w-1/4 text-xs ${
-              active === item.key && item.type === "navigate"
-                ? "text-[#0458A9]"
-                : "text-gray-500 hover:text-[#0458A9]/80"
-            }`}
-            onClick={() => {
-              if (item.type === "navigate") {
-                handleNav(item.path);
-              } else if (item.type === "modal") {
-                setIsSupportModalOpen(true);
-              }
-            }}
-          >
-            <item.icon size={24} />
-            <span className="mt-0.5 font-medium">{item.name}</span>
-          </button>
-        ))}
-      </nav>
+      {/* Mobile Navigation via Portal */}
+      {typeof document !== "undefined" &&
+        createPortal(<MobileNavigation />, document.body)}
 
       {/* Support Modal for Mobile */}
       <SupportModal />
