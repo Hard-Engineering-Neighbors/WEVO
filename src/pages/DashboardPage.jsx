@@ -147,26 +147,33 @@ function StatsCard({ stat, index }) {
   return (
     <ScaleOnHover>
       <FadeIn delay={index * 25}>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 mb-1">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6 hover:shadow-md transition-all duration-300 min-h-[120px] md:min-h-[140px]">
+          <div className="flex items-center justify-between mb-3 md:mb-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm md:text-xs font-medium text-gray-600 mb-2">
                 {stat.title}
               </p>
-              <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-              <div className="flex items-center mt-2">
-                <TrendingUp size={14} className="text-green-500 mr-1" />
-                <span className="text-sm text-green-500 font-medium">
-                  {stat.trend}
-                </span>
-                <span className="text-sm text-gray-500 ml-1">
-                  vs last month
-                </span>
-              </div>
+              <p className="text-2xl md:text-lg lg:text-xl font-bold text-gray-900">
+                {stat.value}
+              </p>
             </div>
-            <div className={`${stat.bgColor} ${stat.color} p-3 rounded-lg`}>
-              <Icon size={24} />
+            <div
+              className={`${stat.bgColor} ${stat.color} p-3 md:p-2 lg:p-3 rounded-lg flex-shrink-0 ml-3 md:ml-2 flex items-center justify-center`}
+            >
+              <Icon size={24} className="md:w-5 md:h-5 lg:w-6 lg:h-6" />
             </div>
+          </div>
+          <div className="flex items-center w-full">
+            <TrendingUp
+              size={14}
+              className="text-green-500 mr-2 flex-shrink-0"
+            />
+            <span className="text-sm md:text-xs text-green-500 font-medium">
+              {stat.trend}
+            </span>
+            <span className="text-sm md:text-xs text-gray-500 ml-2">
+              vs last month
+            </span>
           </div>
         </div>
       </FadeIn>
@@ -303,139 +310,150 @@ export default function DashboardPage() {
         <LeftSidebar active="calendar" />
 
         {/* Center Content */}
-        <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 space-y-6 order-2 lg:order-none min-h-screen pb-20 lg:pb-6">
-          {/* Search Bar */}
-          <ProgressiveLoad
-            isLoading={isLoading}
-            skeleton={<SearchBarSkeleton />}
-          >
-            <FadeIn delay={50}>
-              <DashboardSearchBar
-                onSearch={(term) => {
-                  // Navigate to venues page with search term
-                  navigate(`/venues?search=${encodeURIComponent(term)}`);
-                }}
-                placeholder="Search for event venues, locations, or keywords to get started..."
-                disabled={isLoading}
-              />
-            </FadeIn>
-          </ProgressiveLoad>
-
-          {/* Welcome Section */}
-          <ProgressiveLoad
-            isLoading={isLoading}
-            skeleton={<ContentSkeleton lines={2} className="mb-6" />}
-          >
-            <FadeIn delay={75}>
-              <div className="bg-gradient-to-r from-[#0458A9] to-[#0374d4] rounded-2xl p-6 text-white">
-                <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                  Welcome back! 👋
-                </h1>
-                <p className="text-blue-100 text-base">
-                  Here's what's happening with your venue bookings today.
-                </p>
-              </div>
-            </FadeIn>
-          </ProgressiveLoad>
-
-          {/* Stats Cards */}
-          <ProgressiveLoad
-            isLoading={isLoading}
-            skeleton={
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <StatsCardSkeleton key={i} />
-                ))}
-              </div>
-            }
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {stats.map((stat, index) => (
-                <StatsCard key={stat.title} stat={stat} index={index} />
-              ))}
-            </div>
-          </ProgressiveLoad>
-
-          {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Calendar */}
-            <ProgressiveLoad
-              isLoading={isLoading}
-              skeleton={<CalendarSkeleton />}
-              className="lg:col-span-2"
-            >
-              <FadeIn delay={100}>
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-                  <Calendar
-                    events={calendarEvents}
-                    primaryColor="#0458A9"
-                    layout="dashboard"
-                    showReserveButton={true}
+        <main className="w-full lg:w-3/5 bg-gray-50 order-2 lg:order-none min-h-screen lg:h-screen lg:overflow-y-hidden overflow-x-hidden">
+          {/* New inner wrapper for content */}
+          <div className="max-w-screen-xl mx-auto w-full flex flex-col lg:h-full overflow-x-hidden">
+            <div className="p-3 md:p-6 space-y-4 lg:flex-1 lg:overflow-y-auto">
+              {/* Search Bar */}
+              <ProgressiveLoad
+                isLoading={isLoading}
+                skeleton={<SearchBarSkeleton />}
+              >
+                <FadeIn delay={50}>
+                  <DashboardSearchBar
+                    onSearch={(term) => {
+                      // Navigate to venues page with search term
+                      navigate(`/venues?search=${encodeURIComponent(term)}`);
+                    }}
+                    placeholder="Search for event venues, locations, or keywords to get started..."
+                    disabled={isLoading}
                   />
-                </div>
-              </FadeIn>
-            </ProgressiveLoad>
+                </FadeIn>
+              </ProgressiveLoad>
 
-            {/* Recent Bookings */}
-            <ProgressiveLoad
-              isLoading={isLoading}
-              skeleton={
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                  <div className="mb-4">
-                    <ContentSkeleton lines={1} className="w-1/3" />
+              {/* Welcome Section */}
+              <ProgressiveLoad
+                isLoading={isLoading}
+                skeleton={<ContentSkeleton lines={2} className="mb-6" />}
+              >
+                <FadeIn delay={75}>
+                  <div className="bg-gradient-to-r from-[#0458A9] to-[#0374d4] rounded-2xl p-4 md:p-6 text-white">
+                    <h1 className="text-xl md:text-2xl font-bold mb-2">
+                      Welcome back! 👋
+                    </h1>
+                    <p className="text-blue-100 text-sm md:text-base">
+                      Here's what's happening with your venue bookings today.
+                    </p>
                   </div>
-                  <EventListSkeleton count={3} />
+                </FadeIn>
+              </ProgressiveLoad>
+
+              {/* Stats Cards */}
+              <ProgressiveLoad
+                isLoading={isLoading}
+                skeleton={
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <StatsCardSkeleton key={i} />
+                    ))}
+                  </div>
+                }
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                  {stats.map((stat, index) => (
+                    <StatsCard key={stat.title} stat={stat} index={index} />
+                  ))}
                 </div>
-              }
-            >
-              <FadeIn delay={125}>
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-                  <div className="p-6 border-b border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        Recent Bookings
-                      </h2>
-                      <ButtonPress>
-                        <button
-                          onClick={() => navigate("/requests")}
-                          className="text-sm text-[#0458A9] hover:text-[#03407a] font-medium transition-colors"
-                        >
-                          View All
-                        </button>
-                      </ButtonPress>
+              </ProgressiveLoad>
+
+              {/* Main Content Grid */}
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:flex-1 lg:min-h-0">
+                {/* Calendar */}
+                <ProgressiveLoad
+                  isLoading={isLoading}
+                  skeleton={<CalendarSkeleton />}
+                  className="xl:col-span-2 flex flex-col lg:min-h-0"
+                >
+                  <FadeIn delay={100}>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full min-h-[300px] lg:min-h-[auto]">
+                      <Calendar
+                        events={calendarEvents}
+                        primaryColor="#0458A9"
+                        layout="dashboard"
+                        showReserveButton={true}
+                      />
                     </div>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    {recentBookings.length > 0 ? (
-                      recentBookings.map((booking, index) => (
-                        <BookingCard
-                          key={booking.id}
-                          booking={booking}
-                          index={index}
-                        />
-                      ))
-                    ) : (
-                      <div className="text-center py-8 text-gray-500">
-                        <CalendarIcon
-                          size={48}
-                          className="mx-auto mb-3 text-gray-300"
-                        />
-                        <p className="text-sm">No recent bookings found</p>
-                        <ButtonPress>
-                          <button
-                            onClick={() => navigate("/venues")}
-                            className="mt-3 text-sm text-[#0458A9] hover:text-[#03407a] font-medium transition-colors underline"
-                          >
-                            Browse venues to get started
-                          </button>
-                        </ButtonPress>
+                  </FadeIn>
+                </ProgressiveLoad>
+
+                {/* Recent Bookings */}
+                <ProgressiveLoad
+                  isLoading={isLoading}
+                  skeleton={
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                      <div className="mb-4">
+                        <ContentSkeleton lines={1} className="w-1/3" />
                       </div>
-                    )}
-                  </div>
-                </div>
-              </FadeIn>
-            </ProgressiveLoad>
-          </div>
+                      <EventListSkeleton count={3} />
+                    </div>
+                  }
+                  className="flex flex-col min-h-0"
+                >
+                  <FadeIn delay={125}>
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full min-h-[300px] lg:min-h-[auto]">
+                      <div className="p-4 md:p-6 border-b border-gray-100 flex-shrink-0">
+                        <div className="flex items-center justify-between">
+                          <h2 className="text-base md:text-lg font-semibold text-gray-900">
+                            Recent Bookings
+                          </h2>
+                          <ButtonPress>
+                            <button
+                              onClick={() => navigate("/requests")}
+                              className="text-xs md:text-sm text-[#0458A9] hover:text-[#03407a] font-medium transition-colors"
+                            >
+                              View All
+                            </button>
+                          </ButtonPress>
+                        </div>
+                      </div>
+                      <div className="p-4 md:p-6 lg:flex-1 lg:overflow-y-auto">
+                        <div className="space-y-3">
+                          {recentBookings.length > 0 ? (
+                            recentBookings.map((booking, index) => (
+                              <BookingCard
+                                key={booking.id}
+                                booking={booking}
+                                index={index}
+                              />
+                            ))
+                          ) : (
+                            <div className="text-center py-8 text-gray-500">
+                              <CalendarIcon
+                                size={48}
+                                className="mx-auto mb-3 text-gray-300"
+                              />
+                              <p className="text-sm">
+                                No recent bookings found
+                              </p>
+                              <ButtonPress>
+                                <button
+                                  onClick={() => navigate("/venues")}
+                                  className="mt-3 text-sm text-[#0458A9] hover:text-[#03407a] font-medium transition-colors underline"
+                                >
+                                  Browse venues to get started
+                                </button>
+                              </ButtonPress>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </FadeIn>
+                </ProgressiveLoad>
+              </div>
+            </div>
+          </div>{" "}
+          {/* End of new inner wrapper */}
         </main>
 
         {/* Right Sidebar */}

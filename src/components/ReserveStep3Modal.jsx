@@ -28,6 +28,16 @@ export default function ReserveStep3Modal({
   if (!open) return null;
 
   const handleFileChange = (idx, file) => {
+    if (file && file.type !== "application/pdf") {
+      alert("Invalid file type. Please upload PDF files only.");
+      // Clear the file input
+      if (fileInputs.current[idx]) {
+        fileInputs.current[idx].value = null;
+      }
+      // Optionally, remove the file from the state if it was somehow set before this check
+      // setFiles((prev) => ({ ...prev, [idx]: null }));
+      return;
+    }
     setFiles((prev) => ({ ...prev, [idx]: file }));
   };
 
@@ -127,12 +137,20 @@ export default function ReserveStep3Modal({
                         className="flex-shrink-0"
                       >
                         <rect width="24" height="24" rx="4" fill="#0458A9" />
-                        <path d="M7 7H17V17H7V7Z" fill="white" />
+                        <rect
+                          x="5"
+                          y="5"
+                          width="14"
+                          height="14"
+                          rx="1"
+                          fill="white"
+                        />
                         <text
                           x="12"
-                          y="16"
+                          y="12.5"
                           textAnchor="middle"
-                          fontSize="8"
+                          dominantBaseline="central"
+                          fontSize="7.5"
                           fill="#0458A9"
                           fontWeight="bold"
                         >

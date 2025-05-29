@@ -183,7 +183,7 @@ export default function LeftSidebar({ active = "calendar" }) {
       </div>
 
       {/* Desktop: Full Left Sidebar (hidden below lg) */}
-      <aside className="hidden lg:flex w-full lg:w-1/5 bg-white lg:border-b-0 lg:border-r p-4 md:p-6 flex-col justify-between border-gray-400 min-h-screen z-20">
+      <aside className="hidden lg:flex w-full lg:w-1/5 bg-white lg:border-b-0 lg:border-r p-4 md:p-6 flex-col justify-between border-gray-400 min-h-screen z-20 lg:sticky lg:top-0 lg:h-screen">
         <div className="flex flex-1 flex-col items-center justify-start w-full">
           <img
             src="/wevoLogoPng.png"

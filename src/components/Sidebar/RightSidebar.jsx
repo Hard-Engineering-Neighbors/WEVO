@@ -99,7 +99,6 @@ export default function RightSidebar({ onNotificationClick }) {
   const { currentUser, logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const [showAll, setShowAll] = useState(false);
   const [selectedNotif, setSelectedNotif] = useState(null);
   const [highlightedId, setHighlightedId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -179,32 +178,25 @@ export default function RightSidebar({ onNotificationClick }) {
     return false;
   });
 
-  // For desktop: show 5 notifications normally or all if showAll is true
-  // For mobile: show only latest notification or all if showAll is true
-  const visibleNotifications = showAll
-    ? filteredUserNotifications
-    : filteredUserNotifications.slice(0, 1); // Changed from 5 to 1 for mobile-first approach
-
   return (
     <>
-      <aside className="w-full lg:w-1/5 bg-white lg:border-t-0 lg:border-l p-4 md:p-6 order-1 lg:order-none flex flex-col gap-4 border-gray-200">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-base font-medium text-gray-700">
+      <aside className="w-full lg:w-1/5 bg-white lg:border-t-0 lg:border-l p-4 md:p-6 order-1 lg:order-none flex flex-col gap-4 border-gray-200 h-auto max-h-screen overflow-y-auto lg:sticky lg:top-0 lg:h-screen">
+        <div className="flex items-center justify-between mb-2 gap-2 min-h-[40px]">
+          <div className="text-sm lg:text-base font-medium text-gray-700 truncate flex-1 min-w-0 pr-2">
             {currentUser?.email || "Account Name"}
           </div>
-          <div className="flex items-center bg-gray-100 rounded-full px-3 py-1 gap-2">
-            <span className="w-8 h-8 rounded-full bg-[#0458A9] flex items-center justify-center">
-              <User size={18} className="text-white" />
+          <div className="flex items-center bg-gray-100 rounded-full px-2 lg:px-3 py-1 gap-1 lg:gap-2 flex-shrink-0">
+            <span className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-[#0458A9] flex items-center justify-center">
+              <User size={16} className="lg:w-[18px] lg:h-[18px] text-white" />
             </span>
-            {/* <Menu size={20} className="text-gray-600 cursor-pointer" /> */}
             <button
               onClick={() => setShowLogoutConfirm(true)}
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-100 group"
+              className="w-7 h-7 lg:w-8 lg:h-8 rounded-full flex items-center justify-center hover:bg-red-100 group"
               title="Logout"
             >
               <LogOut
-                size={20}
-                className="text-gray-600 group-hover:text-red-500 transition-colors"
+                size={16}
+                className="lg:w-5 lg:h-5 text-gray-600 group-hover:text-red-500 transition-colors"
               />
             </button>
           </div>
@@ -227,19 +219,12 @@ export default function RightSidebar({ onNotificationClick }) {
             />
           </div>
 
-          {/* Mobile and Desktop: Notifications List */}
-          <ul
-            className="divide-y divide-gray-200 overflow-y-auto flex-grow pr-1"
-            style={{ maxHeight: showAll ? "none" : "calc(100vh - 350px)" }}
-          >
-            {/* Desktop: Show normal behavior (5 or all) */}
-            {/* Mobile: Show latest or all */}
+          {/* Notifications List - Max height applied for desktop, mobile list will scroll with sidebar */}
+          <ul className="divide-y divide-gray-200 overflow-y-auto flex-grow pr-1 max-h-[12rem] lg:max-h-[calc(100vh-220px)]">
+            {/* Desktop Notifications */}
             <div className="hidden lg:block">
               {filteredUserNotifications.length > 0 ? (
-                (showAll
-                  ? filteredUserNotifications
-                  : filteredUserNotifications.slice(0, 5)
-                ).map((notif) => {
+                filteredUserNotifications.map((notif) => {
                   // Parse the data if it's a string
                   const data =
                     typeof notif.data === "string"
@@ -369,10 +354,10 @@ export default function RightSidebar({ onNotificationClick }) {
               )}
             </div>
 
-            {/* Mobile: Show only latest notification or all */}
+            {/* Mobile Notifications */}
             <div className="block lg:hidden">
               {filteredUserNotifications.length > 0 ? (
-                visibleNotifications.map((notif) => {
+                filteredUserNotifications.map((notif) => {
                   const data =
                     typeof notif.data === "string"
                       ? JSON.parse(notif.data || "{}")
@@ -386,14 +371,9 @@ export default function RightSidebar({ onNotificationClick }) {
                         ${
                           highlightedId === notif.id
                             ? "bg-blue-50 shadow-blue-100"
-                            : isUnread
-                            ? "bg-white hover:bg-gray-50"
-                            : "bg-gray-50 hover:bg-gray-100"
-                        }
-                        ${
-                          isUnread
-                            ? "border border-blue-200"
-                            : "border border-transparent"
+                            : notif.status === "unread"
+                            ? "bg-white hover:bg-gray-50 border border-blue-200"
+                            : "bg-gray-50 hover:bg-gray-100 border border-transparent"
                         }
                       `}
                       onClick={() => {
@@ -401,7 +381,7 @@ export default function RightSidebar({ onNotificationClick }) {
                         setSelectedNotif(notif);
                       }}
                     >
-                      {isUnread && (
+                      {notif.status === "unread" && (
                         <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-blue-500 rounded-full"></span>
                       )}
                       <div className="flex-1 pr-2">
@@ -409,7 +389,9 @@ export default function RightSidebar({ onNotificationClick }) {
                           <div className="flex items-center gap-2">
                             <span
                               className={`font-semibold text-sm ${
-                                isUnread ? "text-blue-600" : "text-gray-700"
+                                notif.status === "unread"
+                                  ? "text-blue-600"
+                                  : "text-gray-700"
                               }`}
                             >
                               {notif.type === "System" || notif.type === "WEVO"
@@ -466,7 +448,9 @@ export default function RightSidebar({ onNotificationClick }) {
                         </div>
                         <div
                           className={`text-xs mb-1.5 ${
-                            isUnread ? "text-gray-500" : "text-gray-400"
+                            notif.status === "unread"
+                              ? "text-gray-500"
+                              : "text-gray-400"
                           }`}
                         >
                           {new Date(notif.created_at).toLocaleDateString(
@@ -481,7 +465,7 @@ export default function RightSidebar({ onNotificationClick }) {
                         </div>
                         <div
                           className={`text-sm leading-snug ${
-                            isUnread
+                            notif.status === "unread"
                               ? "text-gray-800 font-bold"
                               : "text-gray-600"
                           }`}
@@ -501,37 +485,6 @@ export default function RightSidebar({ onNotificationClick }) {
               )}
             </div>
           </ul>
-
-          {/* Show All/Show Less button - Different behavior for mobile vs desktop */}
-          {/* Desktop: Show button if more than 5 notifications */}
-          <div className="hidden lg:block">
-            {filteredUserNotifications.length > 5 && (
-              <div className="flex justify-center mt-auto pt-2 lg:mt-4 mb-1">
-                <button
-                  className="w-full py-2.5 bg-white rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-                  onClick={() => setShowAll((v) => !v)}
-                >
-                  {showAll ? "Show Less" : "Show All Notifications"}
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Mobile: Show button if more than 1 notification */}
-          <div className="block lg:hidden">
-            {filteredUserNotifications.length > 1 && (
-              <div className="flex justify-center mt-auto pt-2 mb-1">
-                <button
-                  className="w-full py-2.5 bg-white rounded-lg border border-gray-300 text-sm text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-                  onClick={() => setShowAll((v) => !v)}
-                >
-                  {showAll
-                    ? "Show Less"
-                    : `Show All (${filteredUserNotifications.length})`}
-                </button>
-              </div>
-            )}
-          </div>
         </div>
       </aside>
 
