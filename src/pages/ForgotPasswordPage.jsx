@@ -16,14 +16,26 @@ export default function ForgotPasswordPage() {
     setMessage("");
     setError("");
 
-    console.log("Forgot Password form submitted with email:", email);
-    // Placeholder for backend logic
-    setTimeout(() => {
-      setMessage(
-        "If an account with this email exists, password reset instructions will be sent. (Frontend Placeholder)"
-      );
+    try {
+      // Send password reset email using Supabase
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        console.error("Password reset error:", error);
+        setError("Failed to send password reset email. Please try again.");
+      } else {
+        setMessage(
+          "Password reset instructions have been sent to your email address. Please check your inbox and follow the instructions to reset your password."
+        );
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   // Prevent back/forward navigation from leaving login page or returning to 2fa
