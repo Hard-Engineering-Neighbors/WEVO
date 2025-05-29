@@ -62,7 +62,9 @@ function LoginPage() {
     // Check cooldown before proceeding
     const cooldownLeft = getCooldownRemaining(email);
     if (cooldownLeft > 0) {
-      setErrorMessage(`Please wait ${cooldownLeft}s before requesting another code.`);
+      setErrorMessage(
+        `Please wait ${cooldownLeft}s before requesting another code.`
+      );
       setCooldown(cooldownLeft);
       setLoading(false);
       if (!cooldownInterval.current) {
@@ -107,12 +109,12 @@ function LoginPage() {
   // Prevent back/forward navigation from leaving login page or returning to 2fa
   useEffect(() => {
     // Instantly disable back/forward navigation by pushing a dummy state and locking the user in a navigation loop
-    window.history.pushState({ page: 'login' }, '', '/login');
+    window.history.pushState({ page: "login" }, "", "/login");
     const blockNav = () => {
-      window.history.pushState({ page: 'login' }, '', '/login');
+      window.history.pushState({ page: "login" }, "", "/login");
     };
-    window.addEventListener('popstate', blockNav);
-    return () => window.removeEventListener('popstate', blockNav);
+    window.addEventListener("popstate", blockNav);
+    return () => window.removeEventListener("popstate", blockNav);
   }, []);
 
   return (
