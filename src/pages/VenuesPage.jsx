@@ -23,8 +23,8 @@ import {
 import venueSample from "../assets/cultural_center.webp";
 
 function VenueCard({ venue, onClick }) {
-  const isMaintenance = venue.status === 'maintenance';
-  const isActive = venue.status === 'active';
+  const isMaintenance = venue.status === "maintenance";
+  const isActive = venue.status === "active";
   // Debug logging for venue image
   React.useEffect(() => {
     if (venue && venue.image) {
@@ -40,44 +40,61 @@ function VenueCard({ venue, onClick }) {
   return (
     <ButtonPress className="h-full">
       <div
-        className={`bg-white rounded-xl shadow border border-[#C0C0C0] flex flex-col h-full min-h-full overflow-hidden w-full max-w-xs mx-auto cursor-pointer hover:shadow-lg transition-all duration-300 hover:border-[#0458A9] ${isMaintenance ? 'opacity-60 pointer-events-none' : ''}`}
+        className={`bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col h-full overflow-hidden cursor-pointer hover:shadow-md transition-all duration-300 hover:border-[#0458A9] hover:-translate-y-1 ${
+          isMaintenance ? "opacity-60 pointer-events-none" : ""
+        }`}
         onClick={isActive ? onClick : undefined}
-        style={isMaintenance ? { pointerEvents: 'none' } : {}}
+        style={isMaintenance ? { pointerEvents: "none" } : {}}
       >
         <div className="relative overflow-hidden flex-shrink-0">
           <img
             src={venue.image_url || "/images/placeholder_venue.png"}
             alt={venue.name}
-            className="w-full h-32 object-cover transition-transform duration-300"
+            className="w-full h-36 object-cover transition-transform duration-300 hover:scale-105"
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = "/images/placeholder_venue.png";
             }}
           />
           {isMaintenance && (
-            <span className="absolute top-2 left-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded shadow">Maintenance</span>
+            <div className="absolute top-3 left-3 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+              Under Maintenance
+            </div>
           )}
         </div>
-        <div className="px-4 py-2 flex flex-col gap-1">
-          <h3 className="font-semibold text-gray-800 mb-1">{venue.name}</h3>
-          <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 md:line-clamp-3 mb-2">{venue.description}</p>
-          <div className="flex items-center gap-2 text-xs text-[#56708A] font-medium">
-            <Users size={16} />
-            {venue.capacity} Participants Max
+        <div className="p-3 flex flex-col flex-grow">
+          <h3 className="font-bold text-base text-gray-900 mb-2 line-clamp-2 leading-tight">
+            {venue.name}
+          </h3>
+          <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 mb-3 flex-grow">
+            {venue.description}
+          </p>
+
+          <div className="space-y-2 mt-auto">
+            <div className="flex items-center gap-2 text-sm text-[#0458A9] font-semibold">
+              <Users size={16} />
+              <span>{venue.capacity} Participants Max</span>
+            </div>
+            <div className="text-xs text-gray-500">
+              <span className="font-medium">Managed by:</span>{" "}
+              {venue.department || "Administration"}
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+              <span className="text-xs italic text-gray-400">
+                *fees may apply
+              </span>
+              <button
+                className={`px-3 py-1.5 bg-[#0458A9] text-white text-xs font-semibold rounded-lg hover:bg-[#03407a] transition-all duration-200 hover:shadow-md ${
+                  !isActive ? "opacity-50 cursor-not-allowed bg-gray-400" : ""
+                }`}
+                onClick={isActive ? onClick : undefined}
+                disabled={!isActive}
+              >
+                View Details
+              </button>
+            </div>
           </div>
-          <div className="text-xs text-gray-500">Managed by: {venue.department || "Administration"}</div>
-        </div>
-        <div className="flex items-center justify-between mt-auto">
-          <span className="text-[10px] italic text-gray-400">
-            fees may apply
-          </span>
-          <button
-            className={`text-[#0458A9] text-xs font-semibold hover:underline transition-all hover:text-[#03407a] ${!isActive ? 'opacity-50 cursor-not-allowed' : ''}`}
-            onClick={isActive ? onClick : undefined}
-            disabled={!isActive}
-          >
-            Details
-          </button>
         </div>
       </div>
     </ButtonPress>
@@ -145,13 +162,15 @@ export default function VenuesPage() {
   useEffect(() => {
     if (!searchTerm.trim()) {
       // Only show venues that are not inactive
-      setFilteredVenues(venues.filter(v => v.status !== 'inactive'));
+      setFilteredVenues(venues.filter((v) => v.status !== "inactive"));
     } else {
       const filtered = venues.filter(
         (venue) =>
-          (venue.status !== 'inactive') &&
+          venue.status !== "inactive" &&
           (venue.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            venue.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            venue.description
+              ?.toLowerCase()
+              .includes(searchTerm.toLowerCase()) ||
             venue.capacity?.toString().includes(searchTerm))
       );
       setFilteredVenues(filtered);
@@ -253,7 +272,7 @@ export default function VenuesPage() {
               <ProgressiveLoad
                 isLoading={isLoading}
                 skeleton={
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
                     {Array.from({ length: 8 }).map((_, i) => (
                       <CardSkeleton key={i} />
                     ))}
@@ -263,7 +282,7 @@ export default function VenuesPage() {
               >
                 {paginatedVenues.length > 0 ? (
                   <StaggerContainer
-                    className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 items-stretch pb-4"
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 items-stretch pb-6"
                     staggerDelay={25}
                   >
                     {paginatedVenues.map((venue, idx) => (
