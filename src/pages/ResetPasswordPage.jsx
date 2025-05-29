@@ -130,23 +130,12 @@ export default function ResetPasswordPage() {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <main className="flex flex-1 flex-col items-center justify-center p-4 md:p-8">
-        <div className="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-gray-100 relative">
-          <Link
-            to="/login"
-            className="absolute top-6 left-6 text-gray-500 hover:text-[#0458A9] transition-colors flex items-center group"
-            aria-label="Back to Login"
-          >
-            <ArrowLeft
-              size={20}
-              className="mr-1 group-hover:animate-pulse-horizontal"
-            />
-            <span className="text-sm font-medium">Back to Login</span>
-          </Link>
+        <div className="w-full max-w-md bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-gray-100">
           <div className="flex flex-col items-center mb-6">
             <img
               src="/wevoLogoPng.png"
               alt="Wevo Logo"
-              className="w-auto max-h-24 mb-4 mt-8 md:mt-0" // Added margin top for mobile when back button is present
+              className="w-auto max-h-24 mb-4"
             />
             <h2 className="text-2xl md:text-3xl text-[#0458A9] font-bold text-center">
               Set New Password
@@ -254,6 +243,18 @@ export default function ResetPasswordPage() {
                   "Set New Password"
                 )}
               </button>
+
+              <Link
+                to="/login"
+                className="w-full text-gray-500 hover:text-[#0458A9] transition-colors flex items-center justify-center group py-3 border border-gray-300 rounded-xl hover:bg-gray-50"
+                aria-label="Back to Login"
+              >
+                <ArrowLeft
+                  size={20}
+                  className="mr-1 group-hover:animate-pulse-horizontal"
+                />
+                <span className="text-sm font-medium">Back to Login</span>
+              </Link>
             </form>
           )}
 
