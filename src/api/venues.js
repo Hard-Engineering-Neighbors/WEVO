@@ -1,49 +1,78 @@
-import venues, { addVenue, updateVenue, deleteVenue, getVenueById, getAllVenues } from "../data/venues";
+import { supabase } from "../supabase/supabaseClient";
 
-export function fetchVenues() {
-  // TODO: Replace with real API call
-  return Promise.resolve(getAllVenues());
+// Fetch all venues
+export async function fetchVenues() {
+  const { data, error } = await supabase
+    .from("venues")
+    .select("*")
+    .order("name");
+  if (error) throw error;
+  return data;
 }
 
-export function createVenue(venueData) {
-  // TODO: Replace with real API call
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const newVenue = addVenue(venueData);
-      resolve(newVenue);
-    }, 500); // Simulate API delay
-  });
+// Create a new venue
+export async function createVenue(venueData) {
+  const insertData = {
+    name: venueData.name,
+    location: venueData.location || null,
+    capacity: venueData.capacity || null,
+    description: venueData.description || null,
+    image_url: venueData.image_url || null,
+    features: venueData.features?.length ? venueData.features : null,
+    status: venueData.status || "active",
+    department: venueData.department || null,
+  };
+  const { data, error } = await supabase
+    .from("venues")
+    .insert([insertData])
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }
 
-export function editVenue(id, updates) {
-  // TODO: Replace with real API call
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const updatedVenue = updateVenue(id, updates);
-      if (updatedVenue) {
-        resolve(updatedVenue);
-      } else {
-        reject(new Error("Venue not found"));
-      }
-    }, 500); // Simulate API delay
-  });
+// Edit venue
+export async function editVenue(id, updates) {
+  const updateData = {
+    name: updates.name,
+    location: updates.location || null,
+    capacity: updates.capacity ? parseInt(updates.capacity) : null,
+    description: updates.description || null,
+    image_url: updates.image_url || null,
+    features: updates.features?.length ? updates.features : null,
+    status: updates.status || "active",
+    department: updates.department || null,
+  };
+  const { data, error } = await supabase
+    .from("venues")
+    .update(updateData)
+    .eq("id", id)
+    .select()
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("Venue not found or not updated");
+  return data;
 }
 
-export function removeVenue(id) {
-  // TODO: Replace with real API call
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      const deletedVenue = deleteVenue(id);
-      if (deletedVenue) {
-        resolve(deletedVenue);
-      } else {
-        reject(new Error("Venue not found"));
-      }
-    }, 500); // Simulate API delay
-  });
+// Delete venue
+export async function removeVenue(id) {
+  const { data, error } = await supabase
+    .from("venues")
+    .delete()
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
 }
 
-export function getVenue(id) {
-  // TODO: Replace with real API call
-  return Promise.resolve(getVenueById(id));
+// Get venue by id
+export async function getVenue(id) {
+  const { data, error } = await supabase
+    .from("venues")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (error) throw error;
+  return data;
 } 

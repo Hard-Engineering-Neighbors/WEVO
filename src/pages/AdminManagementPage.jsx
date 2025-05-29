@@ -434,7 +434,7 @@ export default function AdminManagementPage() {
                       className="flex items-start gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                     >
                       <img
-                        src={venue.image || "/images/placeholder_venue.png"}
+                        src={venue.image_url || "/images/placeholder_venue.png"}
                         alt={venue.name}
                         className="w-28 h-28 md:w-32 md:h-32 object-cover rounded-lg flex-shrink-0 bg-gray-200"
                         onError={(e) => {
@@ -451,16 +451,12 @@ export default function AdminManagementPage() {
                             {venue.description}
                           </p>
                           <div className="space-y-1">
-                            {venue.participants && (
-                              <p className="text-xs text-[#56708A] font-medium">
-                                Capacity: {venue.participants} participants
-                              </p>
-                            )}
-                            {venue.department && (
-                              <p className="text-xs text-gray-500">
-                                Managed by: {venue.department}
-                              </p>
-                            )}
+                            <p className="text-xs text-[#56708A] font-medium">
+                              Capacity: {venue.capacity} participants
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              Managed by: {venue.department || "Administration"}
+                            </p>
                             {venue.status && venue.status !== "active" && (
                               <p
                                 className={`text-xs font-medium ${

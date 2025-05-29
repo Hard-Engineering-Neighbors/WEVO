@@ -48,9 +48,7 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
   if (!open || !venue) return null;
 
   // Carousel state - ensure we have a valid image
-  const images = venue.images || [
-    venue.image || "/images/placeholder_venue.png",
-  ];
+  const images = [venue.image_url || "/images/placeholder_venue.png"];
 
   const next = () => setCurrent((c) => (c + 1) % images.length);
   const prev = () => setCurrent((c) => (c - 1 + images.length) % images.length);
@@ -136,7 +134,7 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
             </div>
             <div className="flex items-center gap-2 text-gray-700 font-medium">
               <Users size={20} />
-              {venue.participants} Participants Max
+              {venue.capacity} Participants Max
             </div>
             <div className="text-gray-700 text-sm max-h-32 overflow-y-auto">
               {venue.description}

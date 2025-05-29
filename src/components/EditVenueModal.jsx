@@ -5,14 +5,15 @@ import {
   uploadVenueImage,
   validateImageFile,
   formatFileSize,
+  uploadVenueImageToStorage,
 } from "../utils/imageUpload";
 
 export default function EditVenueModal({ open, onClose, venue, onSave }) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    participants: "",
-    image: "",
+    capacity: "",
+    image_url: "",
     department: "",
     location: "",
     features: [],
@@ -53,26 +54,21 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
       setFormData({
         name: venue.name || "",
         description: venue.description || "",
-        participants: venue.participants?.toString() || "",
-        image: venue.image || "",
+        capacity: venue.capacity?.toString() || "",
+        image_url: venue.image_url || "",
         department: venue.department || "",
         location: venue.location || "",
         features: venue.features || [],
         status: venue.status || "active",
       });
-
-      // Set up image preview if venue has an image
       setImageUpload({
         isUploading: false,
-        preview: venue.image || null,
+        preview: venue.image_url || null,
         file: null,
         error: null,
       });
-
       setErrors({});
       setNewFeature("");
-
-      // Clear file input
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -83,8 +79,8 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
     setFormData({
       name: "",
       description: "",
-      participants: "",
-      image: "",
+      capacity: "",
+      image_url: "",
       department: "",
       location: "",
       features: [],
@@ -109,7 +105,6 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
       ...prev,
       [name]: value,
     }));
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -118,55 +113,69 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
     }
   };
 
-  const handleImageSelect = (e) => {
+  const handleImageSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    // Validate the file
     const validationErrors = validateImageFile(file);
     if (validationErrors.length > 0) {
       setImageUpload((prev) => ({
         ...prev,
         error: validationErrors[0],
         file: null,
-        preview: formData.image || null, // Keep existing image if validation fails
+        preview: formData.image_url || null,
       }));
       return;
     }
-
-    // Create preview
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       setImageUpload((prev) => ({
         ...prev,
         preview: event.target.result,
         file: file,
         error: null,
+        isUploading: true,
       }));
+      try {
+        const uploadResult = await uploadVenueImage(file);
+        const publicUrl = await uploadVenueImageToStorage(uploadResult.file);
+        setFormData((prev) => ({
+          ...prev,
+          image_url: publicUrl,
+        }));
+        setImageUpload((prev) => ({
+          ...prev,
+          isUploading: false,
+          preview: publicUrl,
+          file: null,
+        }));
+      } catch (error) {
+        setImageUpload((prev) => ({
+          ...prev,
+          isUploading: false,
+          error: error.message,
+        }));
+      }
     };
     reader.readAsDataURL(file);
   };
 
   const handleImageUpload = async () => {
     if (!imageUpload.file) return;
-
     setImageUpload((prev) => ({ ...prev, isUploading: true, error: null }));
-
     try {
+      // Only allow and upload WebP images
       const uploadResult = await uploadVenueImage(imageUpload.file);
-
-      // Update form data with the uploaded image URL
+      // Upload to Supabase Storage and get public URL
+      const publicUrl = await uploadVenueImageToStorage(uploadResult.file);
       setFormData((prev) => ({
         ...prev,
-        image: uploadResult.venueImagePath,
+        image_url: publicUrl,
       }));
-
-      // Update upload state
       setImageUpload((prev) => ({
         ...prev,
         isUploading: false,
-        preview: uploadResult.venueImagePath,
-        file: null, // Clear file after successful upload
+        preview: publicUrl,
+        file: null,
       }));
     } catch (error) {
       setImageUpload((prev) => ({
@@ -178,7 +187,7 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
   };
 
   const handleImageRemove = () => {
-    setFormData((prev) => ({ ...prev, image: "" }));
+    setFormData((prev) => ({ ...prev, image_url: "" }));
     setImageUpload({
       isUploading: false,
       preview: null,
@@ -208,61 +217,50 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
 
   const validateForm = () => {
     const newErrors = {};
-
     if (!formData.name.trim()) {
       newErrors.name = "Venue name is required";
     }
-
     if (!formData.description.trim()) {
       newErrors.description = "Description is required";
     }
-
-    if (!formData.participants || formData.participants <= 0) {
-      newErrors.participants = "Valid participant capacity is required";
+    if (!formData.capacity || isNaN(parseInt(formData.capacity)) || parseInt(formData.capacity) <= 0) {
+      newErrors.capacity = "Valid participant capacity is required";
     }
-
     if (!formData.department.trim()) {
       newErrors.department = "Managing department is required";
     }
-
+    if (!formData.image_url) {
+      newErrors.image_url = "Venue image (WebP) is required";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) {
       return;
     }
-
     setIsSubmitting(true);
-
     try {
-      // Create the updated venue object
       const updatedVenueData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
-        participants: parseInt(formData.participants),
-        image: formData.image || venue.image || "/images/placeholder_venue.png",
+        capacity: formData.capacity ? parseInt(formData.capacity) : null,
+        image_url: formData.image_url,
         department: formData.department.trim(),
         location: formData.location.trim() || "TBD",
         features: formData.features,
         status: formData.status,
       };
-
-      // Use the API to update the venue
+      console.log("Editing venue:", venue);
+      console.log("Form data:", updatedVenueData);
+      console.log("Venue id:", venue.id);
       const updatedVenue = await editVenue(venue.id, updatedVenueData);
-
-      // Call the onSave callback with the updated venue
       if (onSave) {
         await onSave(updatedVenue);
       }
-
-      // Close modal
       onClose();
-
-      // Show success message
       alert(`Venue "${updatedVenue.name}" has been updated successfully!`);
     } catch (error) {
       console.error("Error updating venue:", error);
@@ -329,19 +327,19 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
               </label>
               <input
                 type="number"
-                name="participants"
-                value={formData.participants}
+                name="capacity"
+                value={formData.capacity}
                 onChange={handleInputChange}
                 disabled={isSubmitting}
                 min="1"
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#56708A] focus:border-[#56708A] disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                  errors.participants ? "border-red-500" : "border-gray-300"
+                  errors.capacity ? "border-red-500" : "border-gray-300"
                 }`}
                 placeholder="Maximum capacity"
               />
-              {errors.participants && (
+              {errors.capacity && (
                 <p className="mt-1 text-sm text-red-600">
-                  {errors.participants}
+                  {errors.capacity}
                 </p>
               )}
             </div>
@@ -416,8 +414,8 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
             <div className="space-y-3">
               <input
                 type="url"
-                name="image"
-                value={formData.image}
+                name="image_url"
+                value={formData.image_url}
                 onChange={handleInputChange}
                 disabled={isSubmitting}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#56708A] focus:border-[#56708A] disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -477,7 +475,7 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*"
+                      accept="image/webp"
                       onChange={handleImageSelect}
                       disabled={isSubmitting}
                       className="hidden"
@@ -508,7 +506,7 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
               </div>
 
               <p className="text-xs text-gray-500">
-                Supported formats: JPEG, PNG, WebP. Maximum size: 5MB.
+                Supported format: WebP only (.webp). Maximum size: 5MB.
               </p>
             </div>
           </div>

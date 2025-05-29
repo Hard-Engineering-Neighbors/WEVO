@@ -509,9 +509,13 @@ export default function ReserveStep1Modal({
                   <ScaleOnHover>
                     <div className="w-full aspect-video rounded-2xl overflow-hidden mb-4">
                       <img
-                        src={venue.images ? venue.images[0] : venue.image}
+                        src={venue.image_url || "/images/placeholder_venue.png"}
                         alt={venue.name}
                         className="object-cover w-full h-full transition-transform duration-300 hover:scale-110"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "/images/placeholder_venue.png";
+                        }}
                       />
                     </div>
                   </ScaleOnHover>

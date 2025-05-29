@@ -23,6 +23,8 @@ import {
 import venueSample from "../assets/cultural_center.webp";
 
 function VenueCard({ venue, onClick }) {
+  const isMaintenance = venue.status === 'maintenance';
+  const isActive = venue.status === 'active';
   // Debug logging for venue image
   React.useEffect(() => {
     if (venue && venue.image) {
@@ -38,51 +40,44 @@ function VenueCard({ venue, onClick }) {
   return (
     <ButtonPress className="h-full">
       <div
-        className="bg-white rounded-xl shadow border border-[#C0C0C0] flex flex-col h-full min-h-full overflow-hidden w-full max-w-xs mx-auto cursor-pointer hover:shadow-lg transition-all duration-300 hover:border-[#0458A9]"
-        onClick={onClick}
+        className={`bg-white rounded-xl shadow border border-[#C0C0C0] flex flex-col h-full min-h-full overflow-hidden w-full max-w-xs mx-auto cursor-pointer hover:shadow-lg transition-all duration-300 hover:border-[#0458A9] ${isMaintenance ? 'opacity-60 pointer-events-none' : ''}`}
+        onClick={isActive ? onClick : undefined}
+        style={isMaintenance ? { pointerEvents: 'none' } : {}}
       >
         <div className="relative overflow-hidden flex-shrink-0">
           <img
-            src={venue.image}
+            src={venue.image_url || "/images/placeholder_venue.png"}
             alt={venue.name}
             className="w-full h-32 object-cover transition-transform duration-300"
             onError={(e) => {
-              console.log(
-                `VenueCard - Image failed to load for ${venue.name}:`,
-                e.target.src
-              );
               e.target.onerror = null;
               e.target.src = "/images/placeholder_venue.png";
             }}
-            onLoad={() => {
-              console.log(
-                `VenueCard - Image loaded successfully for ${venue.name}`
-              );
-            }}
           />
+          {isMaintenance && (
+            <span className="absolute top-2 left-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded shadow">Maintenance</span>
+          )}
         </div>
-        <div className="p-4 flex flex-col flex-1">
-          <h3 className="font-bold text-lg mb-1 text-gray-800 hover:text-[#0458A9] transition-colors line-clamp-2">
-            {venue.name}
-          </h3>
-          <p className="text-xs text-gray-600 mb-2 line-clamp-3">
-            {venue.description}
-          </p>
-          <div className="flex items-center text-xs text-gray-500 mb-2 gap-1">
-            <Users size={16} className="mr-1" />
-            {venue.participants} Participants
+        <div className="px-4 py-2 flex flex-col gap-1">
+          <h3 className="font-semibold text-gray-800 mb-1">{venue.name}</h3>
+          <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 md:line-clamp-3 mb-2">{venue.description}</p>
+          <div className="flex items-center gap-2 text-xs text-[#56708A] font-medium">
+            <Users size={16} />
+            {venue.capacity} Participants Max
           </div>
-          <div className="flex items-center justify-between mt-auto">
-            <span className="text-[10px] italic text-gray-400">
-              fees may apply
-            </span>
-            <button
-              className="text-[#0458A9] text-xs font-semibold hover:underline transition-all hover:text-[#03407a]"
-              onClick={onClick}
-            >
-              Details
-            </button>
-          </div>
+          <div className="text-xs text-gray-500">Managed by: {venue.department || "Administration"}</div>
+        </div>
+        <div className="flex items-center justify-between mt-auto">
+          <span className="text-[10px] italic text-gray-400">
+            fees may apply
+          </span>
+          <button
+            className={`text-[#0458A9] text-xs font-semibold hover:underline transition-all hover:text-[#03407a] ${!isActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+            onClick={isActive ? onClick : undefined}
+            disabled={!isActive}
+          >
+            Details
+          </button>
         </div>
       </div>
     </ButtonPress>
@@ -146,20 +141,21 @@ export default function VenuesPage() {
     }
   }, [searchParams]);
 
-  // Filter venues based on search term
+  // Filter venues based on search term and status
   useEffect(() => {
     if (!searchTerm.trim()) {
-      setFilteredVenues(venues);
+      // Only show venues that are not inactive
+      setFilteredVenues(venues.filter(v => v.status !== 'inactive'));
     } else {
       const filtered = venues.filter(
         (venue) =>
-          venue.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          venue.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          venue.participants?.toString().includes(searchTerm)
+          (venue.status !== 'inactive') &&
+          (venue.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            venue.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            venue.capacity?.toString().includes(searchTerm))
       );
       setFilteredVenues(filtered);
     }
-    // Reset to first page when search changes
     setCurrentPage(1);
   }, [searchTerm, venues]);
 

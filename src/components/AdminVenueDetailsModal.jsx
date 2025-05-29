@@ -28,7 +28,7 @@ export default function AdminVenueDetailsModal({
   if (!open || !venue) return null;
 
   // Carousel state
-  const images = venue.images || [venue.image];
+  const images = [venue.image_url || "/images/placeholder_venue.png"];
 
   const next = () => setCurrent((c) => (c + 1) % images.length);
   const prev = () => setCurrent((c) => (c - 1 + images.length) % images.length);
@@ -108,11 +108,11 @@ export default function AdminVenueDetailsModal({
             {venue.name}
           </h2>
           <div className="text-gray-400 text-sm -mt-3">
-            Managed by Administration
+            Managed by {venue.department || "(Insert Department Name)"}
           </div>
           <div className="flex items-center gap-2 text-gray-700 font-medium">
             <Users size={20} />
-            {venue.participants} Participants Max
+            {venue.capacity} Participants Max
           </div>
           <div className="text-gray-700 text-sm max-h-32 overflow-y-auto">
             {venue.description}

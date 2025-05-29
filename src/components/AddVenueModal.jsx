@@ -12,6 +12,7 @@ import {
   uploadVenueImage,
   validateImageFile,
   formatFileSize,
+  uploadVenueImageToStorage,
 } from "../utils/imageUpload";
 
 export default function AddVenueModal({ open, onClose, onSave }) {
@@ -19,7 +20,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
     name: "",
     description: "",
     participants: "",
-    image: "",
+    image_url: "",
     department: "",
     location: "",
     features: [],
@@ -59,7 +60,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
       name: "",
       description: "",
       participants: "",
-      image: "",
+      image_url: "",
       department: "",
       location: "",
       features: [],
@@ -93,10 +94,9 @@ export default function AddVenueModal({ open, onClose, onSave }) {
     }
   };
 
-  const handleImageSelect = (e) => {
+  const handleImageSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     // Validate the file
     const validationErrors = validateImageFile(file);
     if (validationErrors.length > 0) {
@@ -104,55 +104,46 @@ export default function AddVenueModal({ open, onClose, onSave }) {
         ...prev,
         error: validationErrors[0],
         file: null,
-        preview: null,
+        preview: formData.image_url || null,
       }));
       return;
     }
-
-    // Create preview
+    // Create preview and auto-upload
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       setImageUpload((prev) => ({
         ...prev,
         preview: event.target.result,
         file: file,
         error: null,
+        isUploading: true,
       }));
+      try {
+        const uploadResult = await uploadVenueImage(file);
+        const publicUrl = await uploadVenueImageToStorage(uploadResult.file);
+        setFormData((prev) => ({
+          ...prev,
+          image_url: publicUrl,
+        }));
+        setImageUpload((prev) => ({
+          ...prev,
+          isUploading: false,
+          preview: publicUrl,
+          file: null,
+        }));
+      } catch (error) {
+        setImageUpload((prev) => ({
+          ...prev,
+          isUploading: false,
+          error: error.message,
+        }));
+      }
     };
     reader.readAsDataURL(file);
   };
 
-  const handleImageUpload = async () => {
-    if (!imageUpload.file) return;
-
-    setImageUpload((prev) => ({ ...prev, isUploading: true, error: null }));
-
-    try {
-      const uploadResult = await uploadVenueImage(imageUpload.file);
-
-      // Update form data with the uploaded image URL
-      setFormData((prev) => ({
-        ...prev,
-        image: uploadResult.venueImagePath,
-      }));
-
-      // Update upload state
-      setImageUpload((prev) => ({
-        ...prev,
-        isUploading: false,
-        preview: uploadResult.venueImagePath,
-      }));
-    } catch (error) {
-      setImageUpload((prev) => ({
-        ...prev,
-        isUploading: false,
-        error: error.message,
-      }));
-    }
-  };
-
   const handleImageRemove = () => {
-    setFormData((prev) => ({ ...prev, image: "" }));
+    setFormData((prev) => ({ ...prev, image_url: "" }));
     setImageUpload({
       isUploading: false,
       preview: null,
@@ -191,12 +182,16 @@ export default function AddVenueModal({ open, onClose, onSave }) {
       newErrors.description = "Description is required";
     }
 
-    if (!formData.participants || formData.participants <= 0) {
+    if (!formData.participants || isNaN(parseInt(formData.participants)) || parseInt(formData.participants) <= 0) {
       newErrors.participants = "Valid participant capacity is required";
     }
 
     if (!formData.department.trim()) {
       newErrors.department = "Managing department is required";
+    }
+
+    if (!formData.image_url) {
+      newErrors.image_url = "Venue image (WebP) is required";
     }
 
     setErrors(newErrors);
@@ -205,42 +200,35 @@ export default function AddVenueModal({ open, onClose, onSave }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!validateForm()) {
+    const isValid = validateForm();
+    if (!isValid) {
+      console.error('Form validation failed:', errors, formData);
       return;
     }
-
     setIsSubmitting(true);
-
     try {
-      // Create the venue object that matches venues.js structure
+      // Create the venue object for DB
       const newVenueData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
-        participants: parseInt(formData.participants),
-        image: formData.image || "/images/placeholder_venue.png",
+        capacity: formData.participants ? parseInt(formData.participants) : null,
+        image_url: formData.image_url,
         department: formData.department.trim(),
         location: formData.location.trim() || "TBD",
         features: formData.features,
         status: formData.status,
       };
-
+      console.log('Submitting new venue:', newVenueData);
       // Use the API to create the venue
       const createdVenue = await createVenue(newVenueData);
-
-      // Call the onSave callback with the created venue
       if (onSave) {
         await onSave(createdVenue);
       }
-
-      // Reset form and close modal
       resetForm();
       onClose();
-
-      // Show success message
       alert(`Venue "${createdVenue.name}" has been added successfully!`);
     } catch (error) {
-      console.error("Error adding venue:", error);
+      console.error("Error adding venue:", error, formData);
       alert("Failed to add venue. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -388,8 +376,8 @@ export default function AddVenueModal({ open, onClose, onSave }) {
             <div className="space-y-3">
               <input
                 type="url"
-                name="image"
-                value={formData.image}
+                name="image_url"
+                value={formData.image_url}
                 onChange={handleInputChange}
                 disabled={isSubmitting}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#56708A] focus:border-[#56708A] disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -417,30 +405,12 @@ export default function AddVenueModal({ open, onClose, onSave }) {
                         <Trash2 size={14} />
                       </button>
                     </div>
-                    {imageUpload.file && !formData.image && (
+                    {imageUpload.file && !formData.image_url && (
                       <div className="text-center">
                         <p className="text-sm text-gray-600 mb-2">
                           {imageUpload.file.name} (
                           {formatFileSize(imageUpload.file.size)})
                         </p>
-                        <button
-                          type="button"
-                          onClick={handleImageUpload}
-                          disabled={isSubmitting || imageUpload.isUploading}
-                          className="px-4 py-2 bg-[#56708A] text-white rounded-lg hover:bg-[#455b74] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
-                        >
-                          {imageUpload.isUploading ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              Uploading...
-                            </>
-                          ) : (
-                            <>
-                              <Upload size={16} />
-                              Upload Image
-                            </>
-                          )}
-                        </button>
                       </div>
                     )}
                   </div>
@@ -449,7 +419,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*"
+                      accept="image/webp"
                       onChange={handleImageSelect}
                       disabled={isSubmitting}
                       className="hidden"
@@ -480,7 +450,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
               </div>
 
               <p className="text-xs text-gray-500">
-                Supported formats: JPEG, PNG, WebP. Maximum size: 5MB.
+                Supported format: WebP only (.webp). Maximum size: 5MB.
               </p>
             </div>
           </div>
