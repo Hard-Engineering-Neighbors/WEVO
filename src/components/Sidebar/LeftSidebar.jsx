@@ -15,6 +15,7 @@ import {
   MessageCircle,
   Phone,
   MapPinIcon,
+  Users,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
@@ -730,6 +731,128 @@ export default function LeftSidebar({ active = "calendar" }) {
                 To be the leading student development group that bridges the gap
                 between academic challenges and practical solutions.
               </p>
+            </div>
+
+            {/* Team Members Section */}
+            <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-6 border border-purple-200">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
+                  <Users className="text-white" size={24} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-purple-700 text-lg">
+                    Meet Our Team
+                  </h4>
+                  <p className="text-gray-600 text-sm">
+                    The brilliant minds behind WEVO
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-lg p-4 border border-purple-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">KG</span>
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-gray-800">
+                        Kirk Henrich Gamo
+                      </h5>
+                      <p className="text-purple-600 text-sm font-medium">
+                        Project Manager
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 border border-purple-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">JV</span>
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-gray-800">
+                        Jan Floyd Vallota
+                      </h5>
+                      <p className="text-blue-600 text-sm font-medium">
+                        Lead Developer
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 border border-purple-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">JB</span>
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-gray-800">
+                        Jullian Bilan
+                      </h5>
+                      <p className="text-green-600 text-sm font-medium">
+                        Developer
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 border border-purple-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-orange-600 to-red-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">FB</span>
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-gray-800">
+                        Frederick Jibril Buñag
+                      </h5>
+                      <p className="text-orange-600 text-sm font-medium">
+                        QA Specialist
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 border border-purple-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-pink-600 to-rose-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">DA</span>
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-gray-800">
+                        Dallas Aquino
+                      </h5>
+                      <p className="text-pink-600 text-sm font-medium">
+                        UI/UX Designer
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 border border-purple-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">CB</span>
+                    </div>
+                    <div>
+                      <h5 className="font-semibold text-gray-800">
+                        Clarence Anthony Bolivar
+                      </h5>
+                      <p className="text-teal-600 text-sm font-medium">
+                        Documentation Lead
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 bg-white rounded-lg border border-purple-100">
+                <p className="text-gray-600 text-sm text-center italic">
+                  "Together, we're building the future of campus event
+                  management, one venue at a time."
+                </p>
+              </div>
             </div>
           </div>
           <div className="sticky bottom-0 bg-white rounded-b-xl border-t border-gray-200 p-6">

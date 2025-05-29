@@ -53,7 +53,6 @@ export default function AddVenueModal({ open, onClose, onSave }) {
     "Projector",
     "WiFi",
     "Parking",
-    "Kitchen",
     "Stage",
     "Microphone",
     "Lighting System",
@@ -177,7 +176,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
   const handleLocationImageSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     // Validate the file
     const validationErrors = validateImageFile(file);
     if (validationErrors.length > 0) {
@@ -189,7 +188,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
       }));
       return;
     }
-    
+
     // Create preview and auto-upload
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -200,16 +199,16 @@ export default function AddVenueModal({ open, onClose, onSave }) {
         error: null,
         isUploading: true,
       }));
-      
+
       try {
         const uploadResult = await uploadVenueImage(file);
         const publicUrl = await uploadLocationImageToStorage(uploadResult.file);
-        
+
         setFormData((prev) => ({
           ...prev,
           location_image_url: publicUrl,
         }));
-        
+
         setLocationImageUpload((prev) => ({
           ...prev,
           isUploading: false,
@@ -267,7 +266,11 @@ export default function AddVenueModal({ open, onClose, onSave }) {
       newErrors.description = "Description is required";
     }
 
-    if (!formData.participants || isNaN(parseInt(formData.participants)) || parseInt(formData.participants) <= 0) {
+    if (
+      !formData.participants ||
+      isNaN(parseInt(formData.participants)) ||
+      parseInt(formData.participants) <= 0
+    ) {
       newErrors.participants = "Valid participant capacity is required";
     }
 
@@ -287,7 +290,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
     e.preventDefault();
     const isValid = validateForm();
     if (!isValid) {
-      console.error('Form validation failed:', errors, formData);
+      console.error("Form validation failed:", errors, formData);
       return;
     }
     setIsSubmitting(true);
@@ -296,7 +299,9 @@ export default function AddVenueModal({ open, onClose, onSave }) {
       const newVenueData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
-        capacity: formData.participants ? parseInt(formData.participants) : null,
+        capacity: formData.participants
+          ? parseInt(formData.participants)
+          : null,
         image_url: formData.image_url,
         department: formData.department.trim(),
         location: formData.location.trim() || "TBD",
@@ -304,7 +309,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
         features: formData.features,
         status: formData.status,
       };
-      console.log('Submitting new venue:', newVenueData);
+      console.log("Submitting new venue:", newVenueData);
       // Use the API to create the venue
       const createdVenue = await createVenue(newVenueData);
       if (onSave) {
@@ -322,7 +327,12 @@ export default function AddVenueModal({ open, onClose, onSave }) {
   };
 
   const handleClose = () => {
-    if (isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading) return; // Prevent closing while submitting
+    if (
+      isSubmitting ||
+      imageUpload.isUploading ||
+      locationImageUpload.isUploading
+    )
+      return; // Prevent closing while submitting
     resetForm();
     onClose();
   };
@@ -338,7 +348,11 @@ export default function AddVenueModal({ open, onClose, onSave }) {
           <button
             className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
             onClick={handleClose}
-            disabled={isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading}
+            disabled={
+              isSubmitting ||
+              imageUpload.isUploading ||
+              locationImageUpload.isUploading
+            }
             aria-label="Close modal"
           >
             <X size={24} />
@@ -496,10 +510,7 @@ export default function AddVenueModal({ open, onClose, onSave }) {
                     disabled={isSubmitting}
                     className="hidden"
                   />
-                  <MapPin
-                    size={48}
-                    className="mx-auto text-gray-400 mb-4"
-                  />
+                  <MapPin size={48} className="mx-auto text-gray-400 mb-4" />
                   <p className="text-gray-600 mb-2">
                     Drop a location map image here or click to browse
                   </p>
@@ -522,7 +533,8 @@ export default function AddVenueModal({ open, onClose, onSave }) {
             </div>
 
             <p className="text-xs text-gray-500 mt-2">
-              Supported format: WebP only (.webp). Maximum size: 5MB. Upload a map or layout image of the venue location.
+              Supported format: WebP only (.webp). Maximum size: 5MB. Upload a
+              map or layout image of the venue location.
             </p>
           </div>
 
@@ -717,14 +729,22 @@ export default function AddVenueModal({ open, onClose, onSave }) {
             <button
               type="button"
               onClick={handleClose}
-              disabled={isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading}
+              disabled={
+                isSubmitting ||
+                imageUpload.isUploading ||
+                locationImageUpload.isUploading
+              }
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading}
+              disabled={
+                isSubmitting ||
+                imageUpload.isUploading ||
+                locationImageUpload.isUploading
+              }
               className="flex-1 px-4 py-2 bg-[#56708A] text-white rounded-lg hover:bg-[#455b74] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSubmitting ? (

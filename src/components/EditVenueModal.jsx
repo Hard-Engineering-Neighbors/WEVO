@@ -46,7 +46,6 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
     "Projector",
     "WiFi",
     "Parking",
-    "Kitchen",
     "Stage",
     "Microphone",
     "Lighting System",
@@ -231,7 +230,7 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
   const handleLocationImageSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    
+
     const validationErrors = validateImageFile(file);
     if (validationErrors.length > 0) {
       setLocationImageUpload((prev) => ({
@@ -242,7 +241,7 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
       }));
       return;
     }
-    
+
     const reader = new FileReader();
     reader.onload = async (event) => {
       setLocationImageUpload((prev) => ({
@@ -252,16 +251,16 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
         error: null,
         isUploading: true,
       }));
-      
+
       try {
         const uploadResult = await uploadVenueImage(file);
         const publicUrl = await uploadLocationImageToStorage(uploadResult.file);
-        
+
         setFormData((prev) => ({
           ...prev,
           location_image_url: publicUrl,
         }));
-        
+
         setLocationImageUpload((prev) => ({
           ...prev,
           isUploading: false,
@@ -316,7 +315,11 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
     if (!formData.description.trim()) {
       newErrors.description = "Description is required";
     }
-    if (!formData.capacity || isNaN(parseInt(formData.capacity)) || parseInt(formData.capacity) <= 0) {
+    if (
+      !formData.capacity ||
+      isNaN(parseInt(formData.capacity)) ||
+      parseInt(formData.capacity) <= 0
+    ) {
       newErrors.capacity = "Valid participant capacity is required";
     }
     if (!formData.department.trim()) {
@@ -365,7 +368,12 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
   };
 
   const handleClose = () => {
-    if (isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading) return; // Prevent closing while submitting
+    if (
+      isSubmitting ||
+      imageUpload.isUploading ||
+      locationImageUpload.isUploading
+    )
+      return; // Prevent closing while submitting
     resetForm();
     onClose();
   };
@@ -384,7 +392,11 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
           <button
             className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
             onClick={handleClose}
-            disabled={isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading}
+            disabled={
+              isSubmitting ||
+              imageUpload.isUploading ||
+              locationImageUpload.isUploading
+            }
             aria-label="Close modal"
           >
             <X size={24} />
@@ -432,9 +444,7 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
                 placeholder="Maximum capacity"
               />
               {errors.capacity && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.capacity}
-                </p>
+                <p className="mt-1 text-sm text-red-600">{errors.capacity}</p>
               )}
             </div>
           </div>
@@ -638,7 +648,9 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
                       <button
                         type="button"
                         onClick={handleLocationImageRemove}
-                        disabled={isSubmitting || locationImageUpload.isUploading}
+                        disabled={
+                          isSubmitting || locationImageUpload.isUploading
+                        }
                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors disabled:opacity-50"
                       >
                         <Trash2 size={14} />
@@ -653,7 +665,9 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
                         <button
                           type="button"
                           onClick={handleLocationImageSelect}
-                          disabled={isSubmitting || locationImageUpload.isUploading}
+                          disabled={
+                            isSubmitting || locationImageUpload.isUploading
+                          }
                           className="px-4 py-2 bg-[#56708A] text-white rounded-lg hover:bg-[#455b74] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {locationImageUpload.isUploading ? (
@@ -681,10 +695,7 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
                       disabled={isSubmitting}
                       className="hidden"
                     />
-                    <MapPin
-                      size={48}
-                      className="mx-auto text-gray-400 mb-4"
-                    />
+                    <MapPin size={48} className="mx-auto text-gray-400 mb-4" />
                     <p className="text-gray-600 mb-2">
                       Drop an image here or click to browse
                     </p>
@@ -818,14 +829,22 @@ export default function EditVenueModal({ open, onClose, venue, onSave }) {
             <button
               type="button"
               onClick={handleClose}
-              disabled={isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading}
+              disabled={
+                isSubmitting ||
+                imageUpload.isUploading ||
+                locationImageUpload.isUploading
+              }
               className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || imageUpload.isUploading || locationImageUpload.isUploading}
+              disabled={
+                isSubmitting ||
+                imageUpload.isUploading ||
+                locationImageUpload.isUploading
+              }
               className="flex-1 px-4 py-2 bg-[#56708A] text-white rounded-lg hover:bg-[#455b74] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
