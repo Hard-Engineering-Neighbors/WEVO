@@ -59,15 +59,15 @@ const calculateStats = (requests) => {
   ).length;
 
   // Calculate this month's bookings
-  const thisMonth = new Date();
-  const thisMonthRequests = requests.filter((req) => {
-    if (!req.created_at) return false;
-    const reqDate = new Date(req.created_at);
-    return (
-      reqDate.getMonth() === thisMonth.getMonth() &&
-      reqDate.getFullYear() === thisMonth.getFullYear()
-    );
-  }).length;
+  // const thisMonth = new Date();
+  // const thisMonthRequests = requests.filter((req) => {
+  //   if (!req.created_at) return false;
+  //   const reqDate = new Date(req.created_at);
+  //   return (
+  //     reqDate.getMonth() === thisMonth.getMonth() &&
+  //     reqDate.getFullYear() === thisMonth.getFullYear()
+  //   );
+  // }).length;
 
   return [
     {
@@ -78,14 +78,14 @@ const calculateStats = (requests) => {
       bgColor: "bg-blue-100",
       trend: total > 0 ? "+12%" : "0%",
     },
-    {
-      title: "This Month",
-      value: thisMonthRequests.toString(),
-      icon: Clock,
-      color: "text-green-600",
-      bgColor: "bg-green-100",
-      trend: thisMonthRequests > 0 ? "+8%" : "0%",
-    },
+    // {
+    //   title: "This Month",
+    //   value: thisMonthRequests.toString(),
+    //   icon: Clock,
+    //   color: "text-green-600",
+    //   bgColor: "bg-green-100",
+    //   trend: thisMonthRequests > 0 ? "+8%" : "0%",
+    // },
     {
       title: "Approved",
       value: approved.toString(),
@@ -359,7 +359,7 @@ export default function DashboardPage() {
                   </div>
                 }
               >
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-3 gap-4">
                   {stats.map((stat, index) => (
                     <StatsCard key={stat.title} stat={stat} index={index} />
                   ))}
