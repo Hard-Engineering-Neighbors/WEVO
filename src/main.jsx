@@ -12,6 +12,8 @@ import AdminTwoFactorPage from "./pages/AdminTwoFactorPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminReservationsPage from "./pages/AdminReservationsPage";
 import AdminManagementPage from "./pages/AdminManagementPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -54,6 +56,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/2fa" element={<TwoFactorPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLoginPage />} />

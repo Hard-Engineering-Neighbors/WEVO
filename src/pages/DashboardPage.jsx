@@ -357,11 +357,12 @@ export default function DashboardPage() {
           </ProgressiveLoad>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Calendar */}
             <ProgressiveLoad
               isLoading={isLoading}
               skeleton={<CalendarSkeleton />}
+              className="lg:col-span-2"
             >
               <FadeIn delay={100}>
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
