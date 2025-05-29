@@ -160,10 +160,10 @@ function LoginPage() {
               Login Credentials
             </h2>
             <p className="text-sm text-gray-500 mb-4">
-              Don&apos;t have an account?{" "}
+              {/* Don&apos;t have an account?{" "}
               <a href="/register" className="text-[#0458A9] hover:underline">
                 Register
-              </a>
+              </a> */}
             </p>
 
             {errorMessage && (
