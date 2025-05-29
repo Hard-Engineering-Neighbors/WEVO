@@ -23,6 +23,7 @@ export default function RequestDetailsModal({
     useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [isCancellingPending, setIsCancellingPending] = useState(false);
   const [showAllDates, setShowAllDates] = useState(false);
 
   if (!open || !request) return null;
@@ -66,6 +67,7 @@ export default function RequestDetailsModal({
         setIsCancellationReasonModalOpen(true);
       } else {
         // Pending: delete
+        setIsCancellingPending(true);
         try {
           await cancelReservation(request.id);
           if (typeof onReservationUpdated === "function")
@@ -73,6 +75,8 @@ export default function RequestDetailsModal({
           onClose();
         } catch (e) {
           setErrorMessage("Failed to cancel reservation: " + (e.message || e));
+        } finally {
+          setIsCancellingPending(false);
         }
       }
     }
@@ -351,10 +355,37 @@ export default function RequestDetailsModal({
                 </button>
               ) : (
                 <button
-                  className="bg-white text-[#0458A9] border border-[#0458A9] rounded-full px-8 py-3 font-semibold text-base hover:bg-gray-100"
+                  className="bg-white text-[#0458A9] border border-[#0458A9] rounded-full px-8 py-3 font-semibold text-base hover:bg-gray-100 disabled:opacity-50 flex items-center justify-center"
                   onClick={() => handleCancelReservation()}
+                  disabled={isCancellingPending}
                 >
-                  Cancel Reservation
+                  {isCancellingPending ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 mr-2 text-[#0458A9]"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        ></path>
+                      </svg>
+                      Cancelling...
+                    </>
+                  ) : (
+                    "Cancel Reservation"
+                  )}
                 </button>
               )}
             </div>
