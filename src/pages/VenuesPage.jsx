@@ -23,6 +23,18 @@ import {
 import venueSample from "../assets/cultural_center.webp";
 
 function VenueCard({ venue, onClick }) {
+  // Debug logging for venue image
+  React.useEffect(() => {
+    if (venue && venue.image) {
+      console.log(`VenueCard - ${venue.name} image:`, venue.image);
+      console.log(`VenueCard - ${venue.name} image type:`, typeof venue.image);
+      console.log(
+        `VenueCard - ${venue.name} is data URL:`,
+        venue.image.startsWith("data:")
+      );
+    }
+  }, [venue]);
+
   return (
     <ButtonPress className="h-full">
       <div
@@ -34,6 +46,19 @@ function VenueCard({ venue, onClick }) {
             src={venue.image}
             alt={venue.name}
             className="w-full h-32 object-cover transition-transform duration-300"
+            onError={(e) => {
+              console.log(
+                `VenueCard - Image failed to load for ${venue.name}:`,
+                e.target.src
+              );
+              e.target.onerror = null;
+              e.target.src = "/images/placeholder_venue.png";
+            }}
+            onLoad={() => {
+              console.log(
+                `VenueCard - Image loaded successfully for ${venue.name}`
+              );
+            }}
           />
         </div>
         <div className="p-4 flex flex-col flex-1">
@@ -90,6 +115,17 @@ export default function VenuesPage() {
         // Add artificial delay to show loading state
         await new Promise((resolve) => setTimeout(resolve, 800));
         const venuesData = await fetchVenues();
+
+        // Debug logging for loaded venues
+        console.log("VenuesPage - Loaded venues:", venuesData);
+        console.log("VenuesPage - Number of venues:", venuesData.length);
+        venuesData.forEach((venue, index) => {
+          console.log(
+            `VenuesPage - Venue ${index + 1} (${venue.name}) image:`,
+            venue.image
+          );
+        });
+
         setVenues(venuesData);
         setFilteredVenues(venuesData); // Initialize filtered venues
       } catch (error) {

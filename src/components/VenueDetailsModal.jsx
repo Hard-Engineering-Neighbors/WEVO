@@ -15,7 +15,12 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
 
   // Reset selectedVenue when modal is opened with a new venue
   useEffect(() => {
-    if (open && venue) setSelectedVenue(venue);
+    if (open && venue) {
+      setSelectedVenue(venue);
+      // Debug: Log venue data to check if image is present
+      console.log("VenueDetailsModal - Venue data:", venue);
+      console.log("VenueDetailsModal - Venue image:", venue.image);
+    }
   }, [open, venue]);
 
   // Reset step1Open when this modal closes
@@ -42,8 +47,10 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
 
   if (!open || !venue) return null;
 
-  // Carousel state
-  const images = venue.images || [venue.image];
+  // Carousel state - ensure we have a valid image
+  const images = venue.images || [
+    venue.image || "/images/placeholder_venue.png",
+  ];
 
   const next = () => setCurrent((c) => (c + 1) % images.length);
   const prev = () => setCurrent((c) => (c - 1 + images.length) % images.length);
@@ -81,6 +88,14 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
                 src={images[current]}
                 alt={venue.name}
                 className="object-cover w-full h-full"
+                onError={(e) => {
+                  console.log("Image failed to load:", e.target.src);
+                  e.target.onerror = null;
+                  e.target.src = "/images/placeholder_venue.png";
+                }}
+                onLoad={() => {
+                  console.log("Image loaded successfully:", images[current]);
+                }}
               />
               {images.length > 1 && (
                 <>
@@ -117,7 +132,7 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
               {venue.name}
             </h2>
             <div className="text-gray-400 text-sm -mt-3">
-              Managed by (Insert Department Name)
+              Managed by {venue.department || "(Insert Department Name)"}
             </div>
             <div className="flex items-center gap-2 text-gray-700 font-medium">
               <Users size={20} />
@@ -125,6 +140,29 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
             </div>
             <div className="text-gray-700 text-sm max-h-32 overflow-y-auto">
               {venue.description}
+            </div>
+
+            {/* Features Section */}
+            <div className="mt-2">
+              <h4 className="font-semibold text-gray-800 mb-1">
+                Available Features
+              </h4>
+              {Array.isArray(venue.features) && venue.features.length > 0 ? (
+                <ul className="flex flex-wrap gap-2">
+                  {venue.features.map((feature, idx) => (
+                    <li
+                      key={idx}
+                      className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-xs font-medium border border-blue-200"
+                    >
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-xs text-gray-500 italic">
+                  No features listed
+                </div>
+              )}
             </div>
           </div>
           {/* Right: Map & Reserve Button */}
