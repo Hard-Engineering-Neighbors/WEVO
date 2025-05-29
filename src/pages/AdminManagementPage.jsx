@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import AdminLeftSidebar from "../components/Sidebar/AdminLeftSidebar";
 import AdminRightSidebar from "../components/Sidebar/AdminRightSidebar";
-import { Search, ListFilter, Filter, PlusSquare, Eye } from "lucide-react";
+import { PlusSquare, Eye } from "lucide-react";
 import {
   fetchVenues,
   createVenue,
@@ -169,27 +169,10 @@ export default function AdminManagementPage() {
       <div className="flex flex-col lg:flex-row flex-1">
         <AdminLeftSidebar active="Management" />
 
-        <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 space-y-6 order-2 lg:order-none">
-          {/* Top Search Bar (Functional Global Search) */}
-          <div className="flex justify-center">
-            <div className="relative w-full max-w-full sm:max-w-2xl md:max-w-3xl border border-gray-300 rounded-full">
-              <Search
-                size={25}
-                className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 text-[#56708A]"
-              />
-              <input
-                type="text"
-                placeholder="Search venues by name, description, department, location..."
-                value={globalSearchTerm}
-                onChange={(e) => handleGlobalSearch(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border-transparent rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-[#56708A] focus:border-[#56708A] text-xs md:text-base"
-              />
-            </div>
-          </div>
-
+        <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 flex flex-col h-screen order-2 lg:order-none">
           {/* Search Results Summary */}
           {globalSearchTerm && (
-            <div className="bg-white rounded-lg p-4 shadow-sm">
+            <div className="bg-white rounded-lg p-4 shadow-sm flex-shrink-0">
               <h3 className="font-semibold text-gray-800 mb-2">
                 Search Results for "{globalSearchTerm}"
               </h3>
@@ -199,9 +182,9 @@ export default function AdminManagementPage() {
             </div>
           )}
 
-          {/* Venues Section - Full Width */}
-          <section className="bg-white rounded-xl shadow p-4 md:p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          {/* Venues Section - Full Height */}
+          <section className="bg-white rounded-xl shadow p-4 md:p-6 flex flex-col flex-1 min-h-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 flex-shrink-0">
               <div>
                 <h2 className="text-2xl font-bold text-[#56708A]">Venues</h2>
                 <p className="text-sm text-gray-500 mt-1">
@@ -215,12 +198,6 @@ export default function AdminManagementPage() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100">
-                  <ListFilter size={20} className="text-gray-600" />
-                </button>
-                <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100">
-                  <Filter size={20} className="text-gray-600" />
-                </button>
                 <button
                   onClick={handleAddVenue}
                   className="p-2 bg-[#56708A] text-white border border-[#56708A] rounded-lg hover:bg-[#455b74] transition-colors"
@@ -230,20 +207,7 @@ export default function AdminManagementPage() {
                 </button>
               </div>
             </div>
-            <div className="relative">
-              <Search
-                size={18}
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              />
-              <input
-                type="text"
-                placeholder="Search venues by name, description, department, location..."
-                value={venueSearchTerm}
-                onChange={(e) => handleVenueSearch(e.target.value)}
-                className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-[#56708A] focus:border-[#56708A]"
-              />
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[600px] overflow-y-auto pr-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 flex-1 overflow-y-auto pr-2 mt-4">
               {isLoading ? (
                 <div className="col-span-full flex items-center justify-center py-8">
                   <div className="text-gray-500">Loading venues...</div>
@@ -304,27 +268,14 @@ export default function AdminManagementPage() {
               ) : (
                 <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
                   <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                    <Search size={40} className="text-gray-400" />
+                    <Eye size={40} className="text-gray-400" />
                   </div>
                   <h3 className="text-xl font-semibold text-gray-700 mb-3">
                     No venues found
                   </h3>
                   <p className="text-gray-500 text-base mb-6">
-                    {venueSearchTerm || globalSearchTerm
-                      ? `No venues match your search criteria`
-                      : "No venues are currently available"}
+                    No venues are currently available
                   </p>
-                  {(venueSearchTerm || globalSearchTerm) && (
-                    <button
-                      onClick={() => {
-                        setVenueSearchTerm("");
-                        setGlobalSearchTerm("");
-                      }}
-                      className="px-6 py-3 bg-[#56708A] text-white rounded-md hover:bg-[#455b74] transition-colors"
-                    >
-                      Clear Search
-                    </button>
-                  )}
                 </div>
               )}
             </div>

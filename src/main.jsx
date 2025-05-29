@@ -22,14 +22,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route
-            path="/"
-            element={
-              <PrivateRoute>
-                <App />
-              </PrivateRoute>
-            }
-          />
+          <Route path="/" element={<App />} />
           <Route
             path="/dashboard"
             element={

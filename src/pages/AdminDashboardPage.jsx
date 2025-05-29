@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import AdminLeftSidebar from "../components/Sidebar/AdminLeftSidebar";
 import AdminRightSidebar from "../components/Sidebar/AdminRightSidebar";
 import Calendar from "../components/Calendar/Calendar"; // Assuming a generic calendar can be used or adapted
-import { Search, ListFilter, Filter, User, Bookmark } from "lucide-react";
+import { User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminReservationReviewModal from "../components/AdminReservationReviewModal";
 import {
@@ -161,25 +161,6 @@ export default function AdminDashboardPage() {
 
         {/* Center Content */}
         <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 space-y-4 order-2 lg:order-none">
-          {/* Main Search Bar - Styled like User's SearchBar.jsx */}
-          <div className="flex justify-center">
-            <div className="relative w-full max-w-full sm:max-w-2xl md:max-w-3xl border border-gray-300 rounded-full">
-              <Search
-                size={25} // Matched User SearchBar
-                className="absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 text-[#56708A]" // Admin color
-              />
-              <input
-                type="text"
-                placeholder="Search for event venues, locations, keywords, etc."
-                className="w-full pl-12 pr-12 py-4 border-transparent rounded-full shadow-sm focus:outline-none focus:ring-1 focus:ring-[#56708A] focus:border-[#56708A] text-xs md:text-base"
-              />
-              <Bookmark
-                size={25} // Matched User SearchBar
-                className="absolute right-3 md:right-4 top-1/2 transform -translate-y-1/2 text-[#56708A] hover:text-[#56708A]/80 cursor-pointer" // Admin color
-              />
-            </div>
-          </div>
-
           {/* Main content grid: Requests on left, Stats/Calendar on right */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Requests Table Section (occupies 2/3 on md screens) */}
@@ -188,25 +169,6 @@ export default function AdminDashboardPage() {
                 <h2 className="text-2xl font-bold text-[#56708A] mb-3 md:mb-0">
                   Requests
                 </h2>
-                <div className="flex items-center gap-2 w-full md:w-auto">
-                  <div className="relative flex-grow md:flex-grow-0">
-                    <Search
-                      size={18}
-                      className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Find a request by name or date"
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-1 focus:ring-[#56708A] focus:border-[#56708A]"
-                    />
-                  </div>
-                  <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100">
-                    <ListFilter size={20} className="text-gray-600" />
-                  </button>
-                  <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-100">
-                    <Filter size={20} className="text-gray-600" />
-                  </button>
-                </div>
               </div>
 
               {/* Table */}

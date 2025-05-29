@@ -125,7 +125,7 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
                 </div>
               )}
             </div>
-            {/* Venue Details - MOVED HERE */}
+            {/* Venue Details */}
             <h2 className="text-2xl md:text-3xl font-bold text-[#0458A9] leading-tight">
               {venue.name}
             </h2>
@@ -139,10 +139,47 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
             <div className="text-gray-700 text-sm max-h-32 overflow-y-auto">
               {venue.description}
             </div>
+          </div>
+          {/* Right: Map, Features & Reserve Button */}
+          <div className="flex-1 flex flex-col min-w-0 md:ml-6">
+            {/* Location / Map */}
+            <div className="flex-grow">
+              <h3 className="text-lg font-bold mb-2">Location</h3>
+              <div className="w-full aspect-video rounded-xl overflow-hidden border">
+                {venue.location_image_url ? (
+                  <img
+                    src={venue.location_image_url}
+                    alt={`${venue.name} location map`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.log(
+                        "Location image failed to load:",
+                        e.target.src
+                      );
+                      e.target.onerror = null;
+                      e.target.src = "/images/placeholder_location.png";
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                    <div className="text-center text-gray-500">
+                      <MapPin
+                        size={48}
+                        className="mx-auto mb-2 text-gray-400"
+                      />
+                      <p className="text-sm">Location map not available</p>
+                      {venue.location && (
+                        <p className="text-xs mt-1">{venue.location}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
 
-            {/* Features Section */}
-            <div className="mt-2">
-              <h4 className="font-semibold text-gray-800 mb-1">
+            {/* Features Section - MOVED HERE */}
+            <div className="mt-4">
+              <h4 className="font-semibold text-gray-800 mb-2">
                 Available Features
               </h4>
               {Array.isArray(venue.features) && venue.features.length > 0 ? (
@@ -162,41 +199,10 @@ export default function VenueDetailsModal({ open, onClose, venue }) {
                 </div>
               )}
             </div>
-          </div>
-          {/* Right: Map & Reserve Button */}
-          <div className="flex-1 flex flex-col min-w-0 md:ml-6">
-            {/* Location / Map - MOVED UP */}
-            <div className="flex-grow">
-              <h3 className="text-lg font-bold mb-2">Location</h3>
-              <div className="w-full aspect-video rounded-xl overflow-hidden border">
-                {venue.location_image_url ? (
-                  <img
-                    src={venue.location_image_url}
-                    alt={`${venue.name} location map`}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      console.log("Location image failed to load:", e.target.src);
-                      e.target.onerror = null;
-                      e.target.src = "/images/placeholder_location.png";
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                    <div className="text-center text-gray-500">
-                      <MapPin size={48} className="mx-auto mb-2 text-gray-400" />
-                      <p className="text-sm">Location map not available</p>
-                      {venue.location && (
-                        <p className="text-xs mt-1">{venue.location}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
 
-            {/* Reserve Button - MOVED HERE & MODIFIED */}
+            {/* Reserve Button */}
             <button
-              className="bg-[#0458A9] text-white rounded-full px-10 py-3 font-semibold text-base w-full hover:bg-[#03407a] transition mt-6 md:mt-auto"
+              className="bg-[#0458A9] text-white rounded-full px-10 py-3 font-semibold text-base w-full hover:bg-[#03407a] transition mt-6"
               onClick={handleReserveClick}
             >
               Reserve

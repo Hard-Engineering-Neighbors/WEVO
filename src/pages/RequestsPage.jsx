@@ -3,14 +3,7 @@ import LeftSidebar from "../components/Sidebar/LeftSidebar";
 import RightSidebar from "../components/Sidebar/RightSidebar";
 import SearchBar from "../components/SearchBar/SearchBar";
 import RequestDetailsModal from "../components/RequestDetailsModal";
-import {
-  Calendar,
-  Users,
-  ListFilter,
-  Filter,
-  Clock,
-  FileText,
-} from "lucide-react";
+import { Calendar, Users, Clock, FileText } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { fetchRequests } from "../api/requests";
 import { supabase } from "../supabase/supabaseClient";
@@ -322,18 +315,6 @@ export default function RequestsPage() {
                           </ButtonPress>
                         </div>
                       )}
-                    </div>
-                    <div className="flex gap-2">
-                      <ButtonPress>
-                        <button className="px-2 md:px-3 py-2 border rounded-md hover:bg-gray-50 transition-colors">
-                          <ListFilter size={16} />
-                        </button>
-                      </ButtonPress>
-                      <ButtonPress>
-                        <button className="px-2 md:px-3 py-2 border rounded-md hover:bg-gray-50 transition-colors">
-                          <Filter size={16} />
-                        </button>
-                      </ButtonPress>
                     </div>
                   </div>
                 </FadeIn>

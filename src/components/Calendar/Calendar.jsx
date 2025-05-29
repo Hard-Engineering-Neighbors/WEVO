@@ -237,7 +237,7 @@ export default function CalendarComponent({
         >
           <div
             className={`p-6 h-full flex flex-col ${
-              layout === "admin" ? "min-h-[200px]" : "min-h-[300px]"
+              layout === "admin" ? "min-h-[120px]" : "min-h-[300px]"
             }`}
           >
             <div className="mb-4">
@@ -263,7 +263,7 @@ export default function CalendarComponent({
             ) : selectedDateEvents.length > 0 ? (
               <div
                 className={`space-y-3 ${
-                  layout === "admin" ? "max-h-[150px]" : "max-h-[220px]"
+                  layout === "admin" ? "max-h-[80px]" : "max-h-[220px]"
                 } overflow-y-auto pr-1`}
               >
                 {selectedDateEvents.map((event) => (
@@ -526,7 +526,7 @@ export default function CalendarComponent({
           background-color: transparent;
           border-radius: 8px;
           overflow: hidden;
-          min-height: 300px;
+          min-height: 200px;
         }
 
         /* Ensure all tiles have consistent positioning */

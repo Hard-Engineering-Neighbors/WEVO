@@ -35,32 +35,6 @@ export default function AdminLeftSidebar({ active = "Dashboard" }) {
           ))}
         </nav>
       </div>
-      {/* Support Tools at the bottom, styled like LeftSidebar */}
-      <div className="mt-8 w-full hidden md:flex flex-col items-center">
-        <h3 className="text-[#56708A] font-bold text-lg mb-2">Support Tools</h3>
-        <div className="flex flex-col gap-2 w-full">
-          {/* Example support buttons, paths should be updated for admin */}
-          <button
-            onClick={() => handleNav("/admin/faq")} // Example path
-            className="border rounded-full py-2 px-3 md:px-20 text-xs md:text-base text-gray-700 hover:bg-gray-100 w-full"
-          >
-            FAQ
-          </button>
-          <button
-            onClick={() => handleNav("/admin/manual")} // Example path
-            className="border rounded-full py-2 px-3 md:px-20 text-xs md:text-base text-gray-700 hover:bg-gray-100 w-full"
-          >
-            Admin Manual
-          </button>
-          <button
-            onClick={() => handleNav("/admin/preferences")} // Example path
-            className="border rounded-full py-2 px-3 md:px-20 text-xs md:text-base text-gray-700 hover:bg-gray-100 w-full"
-          >
-            Preferences
-          </button>
-          {/* No "Contact Admin" in admin sidebar mockup, can be added if needed */}
-        </div>
-      </div>
     </aside>
   );
 }

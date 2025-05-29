@@ -234,7 +234,7 @@ export default function DashboardSearchBar({
                     {/* Venue Image */}
                     <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden border border-gray-200">
                       <img
-                        src={venue.image}
+                        src={venue.image_url || "/images/placeholder_venue.png"}
                         alt={venue.name}
                         className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                         onError={(e) => {

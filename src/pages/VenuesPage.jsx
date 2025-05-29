@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import LeftSidebar from "../components/Sidebar/LeftSidebar";
 import RightSidebar from "../components/Sidebar/RightSidebar";
 import SearchBar from "../components/SearchBar/SearchBar";
-import { Users, Info, MapPin, Filter, ListFilter } from "lucide-react";
+import { Users, Info, MapPin } from "lucide-react";
 import { fetchVenues } from "../api/venues";
 import VenueDetailsModal from "../components/VenueDetailsModal";
 import { useSearchParams } from "react-router-dom";
@@ -249,18 +249,6 @@ export default function VenuesPage() {
                           </ButtonPress>
                         </div>
                       )}
-                    </div>
-                    <div className="flex gap-2">
-                      <ButtonPress>
-                        <button className="px-2 md:px-3 py-2 border rounded-md hover:bg-gray-50 transition-colors">
-                          <ListFilter size={16} />
-                        </button>
-                      </ButtonPress>
-                      <ButtonPress>
-                        <button className="px-2 md:px-3 py-2 border rounded-md hover:bg-gray-50 transition-colors">
-                          <Filter size={16} />
-                        </button>
-                      </ButtonPress>
                     </div>
                   </div>
                 </FadeIn>

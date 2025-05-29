@@ -147,33 +147,38 @@ function StatsCard({ stat, index }) {
   return (
     <ScaleOnHover>
       <FadeIn delay={index * 25}>
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6 hover:shadow-md transition-all duration-300 min-h-[120px] md:min-h-[140px]">
-          <div className="flex items-center justify-between mb-3 md:mb-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-sm md:text-xs font-medium text-gray-600 mb-2">
-                {stat.title}
-              </p>
-              <p className="text-2xl md:text-lg lg:text-xl font-bold text-gray-900">
-                {stat.value}
-              </p>
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/20 p-6 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 min-h-[140px] relative overflow-hidden">
+          {/* Subtle gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
+
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-500 mb-2 tracking-wide">
+                  {stat.title}
+                </p>
+                <p className="text-3xl font-bold text-gray-900 tracking-tight">
+                  {stat.value}
+                </p>
+              </div>
+              <div
+                className={`${stat.bgColor} ${stat.color} p-3 rounded-2xl flex-shrink-0 ml-4 shadow-sm`}
+              >
+                <Icon size={24} className="drop-shadow-sm" />
+              </div>
             </div>
-            <div
-              className={`${stat.bgColor} ${stat.color} p-3 md:p-2 lg:p-3 rounded-lg flex-shrink-0 ml-3 md:ml-2 flex items-center justify-center`}
-            >
-              <Icon size={24} className="md:w-5 md:h-5 lg:w-6 lg:h-6" />
+
+            <div className="flex items-center">
+              <div className="flex items-center bg-green-50 rounded-full px-2 py-1">
+                <TrendingUp size={12} className="text-green-600 mr-1" />
+                <span className="text-xs text-green-600 font-semibold">
+                  {stat.trend}
+                </span>
+              </div>
+              <span className="text-xs text-gray-400 ml-2 font-medium">
+                vs last month
+              </span>
             </div>
-          </div>
-          <div className="flex items-center w-full">
-            <TrendingUp
-              size={14}
-              className="text-green-500 mr-2 flex-shrink-0"
-            />
-            <span className="text-sm md:text-xs text-green-500 font-medium">
-              {stat.trend}
-            </span>
-            <span className="text-sm md:text-xs text-gray-500 ml-2">
-              vs last month
-            </span>
           </div>
         </div>
       </FadeIn>
@@ -185,42 +190,94 @@ function BookingCard({ booking, index }) {
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
       case "approved":
-        return "bg-green-100 text-green-800";
+        return {
+          bg: "bg-emerald-50",
+          text: "text-emerald-700",
+          border: "border-emerald-200",
+          dot: "bg-emerald-500",
+        };
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return {
+          bg: "bg-amber-50",
+          text: "text-amber-700",
+          border: "border-amber-200",
+          dot: "bg-amber-500",
+        };
       case "rejected":
-        return "bg-red-100 text-red-800";
+        return {
+          bg: "bg-red-50",
+          text: "text-red-700",
+          border: "border-red-200",
+          dot: "bg-red-500",
+        };
       default:
-        return "bg-gray-100 text-gray-800";
+        return {
+          bg: "bg-gray-50",
+          text: "text-gray-700",
+          border: "border-gray-200",
+          dot: "bg-gray-500",
+        };
     }
   };
+
+  const statusColors = getStatusColor(booking.status);
 
   return (
     <ScaleOnHover>
       <FadeIn delay={index * 50}>
-        <div className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-all duration-300 hover:border-[#0458A9]">
-          <div className="flex items-start justify-between mb-2">
-            <h4 className="font-medium text-gray-900 flex-1 pr-2">
-              {booking.title}
-            </h4>
-            <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                booking.status
-              )}`}
-            >
-              {booking.status}
-            </span>
-          </div>
-          <div className="space-y-1 text-sm text-gray-600">
-            <div className="flex items-center">
-              <CalendarIcon size={14} className="mr-2" />
-              {new Date(booking.date).toLocaleDateString()}
+        <div className="bg-white/80 backdrop-blur-xl rounded-xl border border-white/20 p-5 hover:shadow-md hover:scale-[1.02] transition-all duration-300 relative overflow-hidden">
+          {/* Subtle gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent pointer-events-none"></div>
+
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-4">
+              <h4 className="font-semibold text-gray-900 flex-1 pr-3 text-base leading-tight">
+                {booking.title}
+              </h4>
+              <div
+                className={`${statusColors.bg} ${statusColors.border} border rounded-full px-3 py-1 flex items-center`}
+              >
+                <div
+                  className={`w-2 h-2 ${statusColors.dot} rounded-full mr-2`}
+                ></div>
+                <span className={`text-xs font-medium ${statusColors.text}`}>
+                  {booking.status}
+                </span>
+              </div>
             </div>
-            <div className="flex items-center">
-              <Users size={14} className="mr-2" />
-              {booking.participants} participants
+
+            <div className="space-y-3">
+              <div className="flex items-center text-gray-600">
+                <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center mr-3">
+                  <CalendarIcon size={16} className="text-blue-600" />
+                </div>
+                <span className="text-sm font-medium">
+                  {new Date(booking.date).toLocaleDateString("en-US", {
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
+              </div>
+
+              <div className="flex items-center text-gray-600">
+                <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center mr-3">
+                  <Users size={16} className="text-purple-600" />
+                </div>
+                <span className="text-sm font-medium">
+                  {booking.participants} participants
+                </span>
+              </div>
+
+              <div className="flex items-center">
+                <div className="w-8 h-8 bg-[#0458A9]/10 rounded-lg flex items-center justify-center mr-3">
+                  <MapPin size={16} className="text-[#0458A9]" />
+                </div>
+                <span className="text-sm font-semibold text-[#0458A9]">
+                  {booking.venue}
+                </span>
+              </div>
             </div>
-            <div className="text-[#0458A9] font-medium">{booking.venue}</div>
           </div>
         </div>
       </FadeIn>
