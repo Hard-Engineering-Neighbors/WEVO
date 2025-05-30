@@ -18,15 +18,8 @@ export default function ForgotPasswordPage() {
 
     try {
       // Send password reset email using Supabase
-      // Use environment variable for production URL, fallback to window.location.origin for development
-      const redirectUrl =
-        import.meta.env.VITE_SITE_URL || window.location.origin;
-
-      // TEMPORARY FIX: If you need immediate deployment, uncomment the line below and replace with your Vercel URL:
-      // const redirectUrl = "https://your-vercel-domain.vercel.app";
-
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${redirectUrl}/reset-password`,
+        redirectTo: `${window.location.origin}/reset-password`,
       });
 
       if (error) {
