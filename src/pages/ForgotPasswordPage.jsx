@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Mail, ArrowLeft, Loader2, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../supabase/supabaseClient";
+import { sendPasswordResetEmail } from "../api/auth";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -16,34 +16,18 @@ export default function ForgotPasswordPage() {
     setMessage("");
     setError("");
 
-    console.log("Forgot Password form submitted with email:", email);
-    // Placeholder for backend logic
-    setTimeout(() => {
-      setMessage(
-        "If an account with this email exists, password reset instructions will be sent. (Frontend Placeholder)"
-      );
-      setLoading(false);
-    }, 1500);
-  };
+    const result = await sendPasswordResetEmail(email);
 
-  // Prevent back/forward navigation from leaving login page or returning to 2fa
-  useEffect(() => {
-    // Instantly disable back/forward navigation by pushing a dummy state and locking the user in a navigation loop
-    window.history.pushState(
-      { page: "forgot-password" },
-      "",
-      "/forgot-password"
-    );
-    const blockNav = () => {
-      window.history.pushState(
-        { page: "forgot-password" },
-        "",
-        "/forgot-password"
+    if (result.success) {
+      setMessage(
+        "If an account with this email exists, password reset instructions have been sent to your email."
       );
-    };
-    window.addEventListener("popstate", blockNav);
-    return () => window.removeEventListener("popstate", blockNav);
-  }, []);
+    } else {
+      setError(result.error);
+    }
+
+    setLoading(false);
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">

@@ -242,10 +242,10 @@ function AdminLoginPage() {
 
               <div className="text-right">
                 <a
-                  href="/admin/reset-password"
+                  href="/forgot-password"
                   className="text-sm font-semibold text-gray-600 hover:underline"
                 >
-                  Reset Password
+                  Forgot Password?
                 </a>
               </div>
             </form>
