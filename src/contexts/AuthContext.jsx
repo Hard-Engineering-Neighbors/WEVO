@@ -20,7 +20,7 @@ async function syncUserToDatabase(authUser) {
       .eq("id", authUser.id)
       .single();
 
-    if (fetchError && fetchError.code !== 'PGRST116') {
+    if (fetchError && fetchError.code !== "PGRST116") {
       // Error other than "not found"
       console.error("Error checking existing user:", fetchError);
       return;
@@ -28,18 +28,16 @@ async function syncUserToDatabase(authUser) {
 
     if (!existingUser) {
       // User doesn't exist in users table, create them
-      const { error: insertError } = await supabase
-        .from("users")
-        .insert({
-          id: authUser.id,
-          email: authUser.email,
-          full_name: authUser.user_metadata?.full_name || authUser.email.split('@')[0],
-          role: "user", // Default role
-          position: "",
-          contact_number: "",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
+      const { error: insertError } = await supabase.from("users").insert({
+        id: authUser.id,
+        email: authUser.email,
+        full_name:
+          authUser.user_metadata?.full_name || authUser.email.split("@")[0],
+        role: "user", // Default role
+        position: "",
+        contact_number: "",
+        created_at: new Date().toISOString(),
+      });
 
       if (insertError) {
         console.error("Error creating user in database:", insertError);
@@ -47,17 +45,8 @@ async function syncUserToDatabase(authUser) {
         console.log("User synced to database:", authUser.email);
       }
     } else {
-      // User exists, optionally update their last login or other fields
-      const { error: updateError } = await supabase
-        .from("users")
-        .update({
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", authUser.id);
-
-      if (updateError) {
-        console.error("Error updating user:", updateError);
-      }
+      // User exists, no need to update anything since updated_at column doesn't exist
+      console.log("User already exists in database:", authUser.email);
     }
   } catch (error) {
     console.error("Error in syncUserToDatabase:", error);
@@ -70,18 +59,20 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Listen to auth state changes
-    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      const user = session?.user || null;
-      
-      // Sync user to database when they sign in
-      if (event === 'SIGNED_IN' && user) {
-        await syncUserToDatabase(user);
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        const user = session?.user || null;
+
+        // Sync user to database when they sign in
+        if (event === "SIGNED_IN" && user) {
+          await syncUserToDatabase(user);
+        }
+
+        setCurrentUser(user);
+        setLoading(false);
       }
-      
-      setCurrentUser(user);
-      setLoading(false);
-    });
-    
+    );
+
     // Get initial user and sync if they exist
     supabase.auth.getUser().then(async ({ data }) => {
       const user = data?.user || null;
@@ -91,7 +82,7 @@ export function AuthProvider({ children }) {
       setCurrentUser(user);
       setLoading(false);
     });
-    
+
     return () => {
       listener?.subscription.unsubscribe();
     };
