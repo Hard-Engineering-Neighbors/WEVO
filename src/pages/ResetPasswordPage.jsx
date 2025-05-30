@@ -7,8 +7,8 @@ import {
   CheckCircle,
   ArrowLeft,
 } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "../supabase/supabaseClient";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { setPasswordResetSession, updateUserPassword, signOutUser, getCurrentSession } from "../api/auth";
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -20,26 +20,42 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [isTokenProcessed, setIsTokenProcessed] = useState(false);
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // Placeholder for token verification logic
-    console.log(
-      "ResetPasswordPage: Attempting to verify token from URL (placeholder)."
-    );
-    setTimeout(() => {
-      // Simulate token being valid for now
-      const mockTokenIsValid = true; // Backend would determine this
-      if (mockTokenIsValid) {
-        setIsTokenProcessed(true);
-        console.log("ResetPasswordPage: Token deemed valid (placeholder).");
-      } else {
-        setError(
-          "Invalid or expired password reset link (Placeholder). Please try requesting a new one."
-        );
-        console.log("ResetPasswordPage: Token deemed invalid (placeholder).");
+    const handlePasswordReset = async () => {
+      try {
+        // Get the access_token and refresh_token from URL parameters
+        const accessToken = searchParams.get('access_token');
+        const refreshToken = searchParams.get('refresh_token');
+        
+        if (accessToken && refreshToken) {
+          // Set the session with the tokens from the reset link
+          const result = await setPasswordResetSession(accessToken, refreshToken);
+
+          if (result.success && result.session) {
+            setIsTokenProcessed(true);
+            console.log("Password reset session established successfully.");
+          } else {
+            throw new Error(result.error || "Unable to establish session");
+          }
+        } else {
+          // Check if user is already logged in (coming from email link might redirect differently)
+          const sessionResult = await getCurrentSession();
+          if (sessionResult.success && sessionResult.session) {
+            setIsTokenProcessed(true);
+          } else {
+            setError("Invalid or expired password reset link. Please request a new one.");
+          }
+        }
+      } catch (err) {
+        console.error("Token verification error:", err);
+        setError("Invalid or expired password reset link. Please request a new one.");
       }
-    }, 1000);
-  }, []);
+    };
+
+    handlePasswordReset();
+  }, [searchParams]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,33 +72,22 @@ export default function ResetPasswordPage() {
     setMessage("");
     setError("");
 
-    console.log("Reset Password form submitted with new password.");
-    // Placeholder for backend logic
-    setTimeout(() => {
-      setMessage(
-        "Your password has been successfully updated! (Frontend Placeholder) You will be redirected to login."
-      );
-      setLoading(false);
-      setTimeout(() => {
+    const result = await updateUserPassword(password);
+
+    if (result.success) {
+      setMessage("Your password has been successfully updated! You will be redirected to login.");
+      
+      // Sign out the user and redirect to login after a delay
+      setTimeout(async () => {
+        await signOutUser();
         navigate("/login");
       }, 3000);
-    }, 1500);
-  };
+    } else {
+      setError(result.error);
+    }
 
-  // Prevent back/forward navigation from leaving login page or returning to 2fa
-  useEffect(() => {
-    // Instantly disable back/forward navigation by pushing a dummy state and locking the user in a navigation loop
-    window.history.pushState({ page: "reset-password" }, "", "/reset-password");
-    const blockNav = () => {
-      window.history.pushState(
-        { page: "reset-password" },
-        "",
-        "/reset-password"
-      );
-    };
-    window.addEventListener("popstate", blockNav);
-    return () => window.removeEventListener("popstate", blockNav);
-  }, []);
+    setLoading(false);
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
