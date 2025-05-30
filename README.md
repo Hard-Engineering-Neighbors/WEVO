@@ -131,5 +131,3 @@ Contributions are welcome! Please feel free to open an issue or submit a pull re
 ## License
 
 This project is currently unlicensed. Please add a license file (e.g., MIT, Apache 2.0) if you intend to share or distribute this code.
-
-## Hard Engineering Neighbors
