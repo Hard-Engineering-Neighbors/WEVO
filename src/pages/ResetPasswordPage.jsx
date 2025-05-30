@@ -7,7 +7,7 @@ import {
   CheckCircle,
   ArrowLeft,
 } from "lucide-react";
-import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "../supabase/supabaseClient";
 
 export default function ResetPasswordPage() {
@@ -20,54 +20,26 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [isTokenProcessed, setIsTokenProcessed] = useState(false);
-  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    // Check for auth session on mount (user clicked reset link)
-    const checkSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Session error:", error);
-          setError("Invalid or expired password reset link. Please try requesting a new one.");
-          return;
-        }
-
-        if (session) {
-          setIsTokenProcessed(true);
-          console.log("Valid reset session found");
-        } else {
-          // Check if we have auth tokens in URL from email link
-          const accessToken = searchParams.get('access_token');
-          const refreshToken = searchParams.get('refresh_token');
-          
-          if (accessToken && refreshToken) {
-            // Set the session with the tokens from URL
-            const { error: sessionError } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken
-            });
-            
-            if (sessionError) {
-              console.error("Session set error:", sessionError);
-              setError("Invalid or expired password reset link. Please try requesting a new one.");
-            } else {
-              setIsTokenProcessed(true);
-              console.log("Session set successfully from URL tokens");
-            }
-          } else {
-            setError("Invalid or expired password reset link. Please try requesting a new one.");
-          }
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
-        setError("An error occurred. Please try requesting a new password reset link.");
+    // Placeholder for token verification logic
+    console.log(
+      "ResetPasswordPage: Attempting to verify token from URL (placeholder)."
+    );
+    setTimeout(() => {
+      // Simulate token being valid for now
+      const mockTokenIsValid = true; // Backend would determine this
+      if (mockTokenIsValid) {
+        setIsTokenProcessed(true);
+        console.log("ResetPasswordPage: Token deemed valid (placeholder).");
+      } else {
+        setError(
+          "Invalid or expired password reset link (Placeholder). Please try requesting a new one."
+        );
+        console.log("ResetPasswordPage: Token deemed invalid (placeholder).");
       }
-    };
-
-    checkSession();
-  }, [searchParams]);
+    }, 1000);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -84,32 +56,17 @@ export default function ResetPasswordPage() {
     setMessage("");
     setError("");
 
-    try {
-      // Update the user's password
-      const { error } = await supabase.auth.updateUser({
-        password: password
-      });
-
-      if (error) {
-        console.error("Password update error:", error);
-        setError("Failed to update password. Please try again.");
-      } else {
-        setMessage(
-          "Your password has been successfully updated! You will be redirected to login."
-        );
-        
-        // Sign out the user and redirect to login after successful password reset
-        setTimeout(async () => {
-          await supabase.auth.signOut();
-          navigate("/login");
-        }, 3000);
-      }
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
+    console.log("Reset Password form submitted with new password.");
+    // Placeholder for backend logic
+    setTimeout(() => {
+      setMessage(
+        "Your password has been successfully updated! (Frontend Placeholder) You will be redirected to login."
+      );
       setLoading(false);
-    }
+      setTimeout(() => {
+        navigate("/login");
+      }, 3000);
+    }, 1500);
   };
 
   // Prevent back/forward navigation from leaving login page or returning to 2fa
