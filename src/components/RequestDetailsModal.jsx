@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { X, ChevronDownIcon } from "lucide-react";
 import { cancelReservation, cancelApprovedReservation } from "../api/requests";
 import CancellationReasonModal from "./CancellationReasonModal";
+import { getVenueData } from "../utils/venueMatching";
+import venueSample from "../assets/cultural_center.webp";
 
 // Helper function to truncate text
 const truncateText = (text, maxLength) => {
@@ -28,8 +30,14 @@ export default function RequestDetailsModal({
 
   if (!open || !request) return null;
 
-  // Handle multiple images if they exist, otherwise use the single image
-  const images = request.images || [request.image];
+  // Get venue data from venuesList
+  const venueData = getVenueData(request.venue);
+
+  // Use venue image from venuesList, fallback to venueSample
+  const venueImage = venueData?.image || venueSample;
+
+  // Handle multiple images if they exist, otherwise use the venue image
+  const images = request.images || [venueImage];
 
   const next = () => setCurrent((c) => (c + 1) % images.length);
   const prev = () => setCurrent((c) => (c - 1 + images.length) % images.length);
@@ -37,12 +45,6 @@ export default function RequestDetailsModal({
   // PDF files (from request.pdf_files)
   const pdfFiles = request.pdf_files || [];
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-
-  // Placeholder functions for button actions
-  const handleViewDocuments = () => {
-    // TODO: Implement viewing/downloading documents
-    // console.log("View documents for:", request); // Removed for privacy
-  };
 
   const handleCancelReservation = async (reason) => {
     if (typeof reason === "string") {
@@ -163,7 +165,7 @@ export default function RequestDetailsModal({
                 Managed by WVSU Administration
               </div>
               <div className="text-gray-700 mt-4">
-                {request.description ||
+                {venueData?.description ||
                   "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."}
               </div>
             </div>
@@ -311,12 +313,6 @@ export default function RequestDetailsModal({
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mt-auto pt-4">
-              <button
-                className="bg-[#0458A9] text-white rounded-full px-8 py-3 font-semibold text-base hover:bg-[#03407a]"
-                onClick={handleViewDocuments}
-              >
-                Documents
-              </button>
               {request.status &&
               (request.status.toLowerCase() === "cancelled" ||
                 request.status.toLowerCase() === "rejected") ? (

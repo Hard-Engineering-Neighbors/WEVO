@@ -7,7 +7,7 @@ import { Calendar, Users, Clock, FileText } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { fetchRequests } from "../api/requests";
 import { supabase } from "../supabase/supabaseClient";
-import venuesList from "../data/venues";
+import { getVenueImage } from "../utils/venueMatching";
 import {
   PageTransition,
   FadeIn,
@@ -22,8 +22,6 @@ import {
   SearchBarSkeleton,
   ContentSkeleton,
 } from "../components/LoadingSkeletons";
-
-import venueSample from "../assets/cultural_center.webp";
 
 // Helper function to truncate text
 const truncateText = (text, maxLength) => {
@@ -111,13 +109,6 @@ function RequestCard({ request, onDetails, image }) {
 }
 
 function RequestsGrid({ requests, onDetails }) {
-  // Helper to get venue image by name
-  const getVenueImage = (venueName) => {
-    const venue = venuesList.find(
-      (v) => v.name.toLowerCase() === venueName?.toLowerCase()
-    );
-    return venue?.image || venueSample;
-  };
   // Responsive grid: 2 per row on sm+, 1 per row on mobile
   if (requests.length === 1) {
     return (
