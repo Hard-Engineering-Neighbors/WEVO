@@ -1176,7 +1176,7 @@ export default function LeftSidebar({ active = "calendar" }) {
               .map((item) => (
                 <button
                   key={item.key}
-                  className={`flex items-center gap-2 px-4 sm:px-6 py-2 md:py-3 rounded-full w-full justify-center text-xs md:text-base ${
+                  className={`flex items-center gap-2 px-4 sm:px-6 py-2 md:py-3 rounded-full w-full justify-center text-sm md:text-lg ${
                     active === item.key
                       ? "bg-[#0458A9] text-white"
                       : "text-gray-500 hover:bg-[#0458A9]/10"
@@ -1196,7 +1196,7 @@ export default function LeftSidebar({ active = "calendar" }) {
         </div>
         {/* Support Tools at the bottom (for desktop) */}
         <div className="mt-8 w-full flex flex-col items-center">
-          <h3 className="text-[#0458A9] font-bold text-lg mb-2">
+          <h3 className="text-[#0458A9] font-bold text-xl mb-2">
             Support Tools
           </h3>
           <div className="flex flex-col gap-2 w-full">
@@ -1204,7 +1204,7 @@ export default function LeftSidebar({ active = "calendar" }) {
               <button
                 key={tool.name}
                 onClick={tool.action}
-                className="border rounded-full py-2 px-4 text-xs md:text-base text-gray-700 hover:bg-gray-100 w-full"
+                className="border rounded-full py-2 px-4 text-sm md:text-lg text-gray-700 hover:bg-gray-100 w-full"
               >
                 {tool.name}
               </button>

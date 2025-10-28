@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import LeftSidebar from "../components/Sidebar/LeftSidebar";
 import RightSidebar from "../components/Sidebar/RightSidebar";
 import SearchBar from "../components/SearchBar/SearchBar";
-import { Users, Info, MapPin } from "lucide-react";
+import { Users, Info, MapPin, ChevronDown, ListRestart } from "lucide-react";
 import { fetchVenues } from "../api/venues";
 import VenueDetailsModal from "../components/VenueDetailsModal";
 import { useSearchParams } from "react-router-dom";
@@ -110,6 +110,9 @@ export default function VenuesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortOption, setSortOption] = useState("name-asc");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
 
   const [searchParams] = useSearchParams();
 
@@ -158,25 +161,56 @@ export default function VenuesPage() {
     }
   }, [searchParams]);
 
-  // Filter venues based on search term and status
+  // Combined filtering and sorting logic for venues
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      // Only show venues that are not inactive
-      setFilteredVenues(venues.filter((v) => v.status !== "inactive"));
-    } else {
-      const filtered = venues.filter(
-        (venue) =>
-          venue.status !== "inactive" &&
-          (venue.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            venue.description
-              ?.toLowerCase()
-              .includes(searchTerm.toLowerCase()) ||
-            venue.capacity?.toString().includes(searchTerm))
+    let processedVenues = [...venues];
+
+    // Filter by status (excluding 'inactive' unless 'all' is chosen)
+    if (statusFilter !== "all") {
+      processedVenues = processedVenues.filter(
+        (v) => v.status === statusFilter
       );
-      setFilteredVenues(filtered);
+    } else {
+      processedVenues = processedVenues.filter((v) => v.status !== "inactive");
     }
-    setCurrentPage(1);
-  }, [searchTerm, venues]);
+
+    // Filter by department
+    if (departmentFilter !== "all") {
+      processedVenues = processedVenues.filter(
+        (v) => v.department === departmentFilter
+      );
+    }
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+      const lowercasedSearch = searchTerm.toLowerCase();
+      processedVenues = processedVenues.filter(
+        (venue) =>
+          venue.name.toLowerCase().includes(lowercasedSearch) ||
+          venue.description?.toLowerCase().includes(lowercasedSearch) ||
+          venue.capacity?.toString().includes(searchTerm)
+      );
+    }
+
+    // Apply sorting
+    processedVenues.sort((a, b) => {
+      switch (sortOption) {
+        case "name-asc":
+          return a.name.localeCompare(b.name);
+        case "name-desc":
+          return b.name.localeCompare(a.name);
+        case "capacity-asc":
+          return a.capacity - b.capacity;
+        case "capacity-desc":
+          return b.capacity - a.capacity;
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredVenues(processedVenues);
+    setCurrentPage(1); // Reset to first page on filter/sort change
+  }, [searchTerm, venues, sortOption, statusFilter, departmentFilter]);
 
   const handleSearch = (term) => {
     setSearchTerm(term);
@@ -195,6 +229,19 @@ export default function VenuesPage() {
   const clearSearch = () => {
     setSearchTerm("");
   };
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setDepartmentFilter("all");
+    setSortOption("name-asc");
+    setCurrentPage(1);
+  };
+
+  // Get unique departments for the filter dropdown
+  const uniqueDepartments = [
+    ...new Set(venues.map((v) => v.department).filter(Boolean)),
+  ];
 
   return (
     <PageTransition>
@@ -249,6 +296,78 @@ export default function VenuesPage() {
                           </ButtonPress>
                         </div>
                       )}
+                    </div>
+                    {/* Filter and Sort Controls */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Status Filter */}
+                      <div className="relative">
+                        <select
+                          value={statusFilter}
+                          onChange={(e) => setStatusFilter(e.target.value)}
+                          className="appearance-none bg-white border border-gray-300 rounded-full px-4 py-2 pr-8 text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-[#0458A9] transition"
+                        >
+                          <option value="all">All Statuses</option>
+                          <option value="active">Available</option>
+                          <option value="maintenance">Maintenance</option>
+                        </select>
+                        <ChevronDown
+                          size={16}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                        />
+                      </div>
+
+                      {/* Department Filter */}
+                      <div className="relative">
+                        <select
+                          value={departmentFilter}
+                          onChange={(e) => setDepartmentFilter(e.target.value)}
+                          className="appearance-none bg-white border border-gray-300 rounded-full px-4 py-2 pr-8 text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-[#0458A9] transition"
+                        >
+                          <option value="all">All Departments</option>
+                          {uniqueDepartments.map((dept) => (
+                            <option key={dept} value={dept}>
+                              {dept}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown
+                          size={16}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                        />
+                      </div>
+
+                      {/* Sort By Dropdown */}
+                      <div className="relative">
+                        <select
+                          value={sortOption}
+                          onChange={(e) => setSortOption(e.target.value)}
+                          className="appearance-none bg-white border border-gray-300 rounded-full px-4 py-2 pr-8 text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-[#0458A9] transition"
+                        >
+                          <option value="name-asc">Sort: Name (A-Z)</option>
+                          <option value="name-desc">Sort: Name (Z-A)</option>
+                          <option value="capacity-asc">
+                            Sort: Capacity (Low-High)
+                          </option>
+                          <option value="capacity-desc">
+                            Sort: Capacity (High-Low)
+                          </option>
+                        </select>
+                        <ChevronDown
+                          size={16}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                        />
+                      </div>
+
+                      {/* Reset Button */}
+                      <ButtonPress>
+                        <button
+                          onClick={resetFilters}
+                          className="p-2 bg-white border border-gray-300 rounded-full text-gray-600 hover:bg-gray-100 transition"
+                          title="Reset filters and sort"
+                        >
+                          <ListRestart size={16} />
+                        </button>
+                      </ButtonPress>
                     </div>
                   </div>
                 </FadeIn>

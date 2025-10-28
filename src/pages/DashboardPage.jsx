@@ -144,45 +144,46 @@ const transformRequestsToBookings = (requests) => {
 
 function StatsCard({ stat, index }) {
   const Icon = stat.icon;
+  const isPositiveTrend = stat.trend.startsWith("+");
+  const trendColor = isPositiveTrend ? "text-green-600" : "text-red-600";
+  const trendBgColor = isPositiveTrend ? "bg-green-50" : "bg-red-50";
+
   return (
-    <ScaleOnHover>
-      <FadeIn delay={index * 25}>
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-sm border border-white/20 p-6 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 min-h-[140px] relative overflow-hidden">
-          {/* Subtle gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
+    <FadeIn delay={index * 25}>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex items-center justify-between">
+        {/* Icon and Content in Row */}
+        <div className="flex items-center gap-4">
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">
+            {/* Label (small, gray) */}
+            <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wider">
+              {stat.title}
+            </p>
 
-          <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-500 mb-2 tracking-wide">
-                  {stat.title}
-                </p>
-                <p className="text-3xl font-bold text-gray-900 tracking-tight">
-                  {stat.value}
-                </p>
-              </div>
+            {/* Value and Trend Badge in Row */}
+            <div className="flex items-baseline gap-3 justify-between">
+              <p className="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight pl-4 pr-4">
+                {stat.value}
+              </p>
+
+              {/* Trend Badge */}
               <div
-                className={`${stat.bgColor} ${stat.color} p-3 rounded-2xl flex-shrink-0 ml-4 shadow-sm`}
+                className={`${trendBgColor} rounded-md px-2 py-1 flex items-center gap-1 pl-4`}
               >
-                <Icon size={24} className="drop-shadow-sm" />
-              </div>
-            </div>
-
-            <div className="flex items-center">
-              <div className="flex items-center bg-green-50 rounded-full px-2 py-1">
-                <TrendingUp size={12} className="text-green-600 mr-1" />
-                <span className="text-xs text-green-600 font-semibold">
+                <TrendingUp size={12} className={trendColor} />
+                <span className={`text-md font-semibold ${trendColor}`}>
                   {stat.trend}
                 </span>
               </div>
-              <span className="text-xs text-gray-400 ml-2 font-medium">
-                vs last month
-              </span>
             </div>
           </div>
         </div>
-      </FadeIn>
-    </ScaleOnHover>
+        {/* Icon (left side) */}
+        <div className="w-20 h-20 bg-white-50 rounded-lg flex items-center justify-center flex-shrink-0 pr-4">
+          <Icon size={40} className={`${stat.color}`} />
+        </div>
+      </div>
+    </FadeIn>
   );
 }
 
@@ -395,8 +396,8 @@ export default function DashboardPage() {
               >
                 <FadeIn delay={75}>
                   <div className="bg-gradient-to-r from-[#0458A9] to-[#0374d4] rounded-2xl p-4 md:p-6 text-white">
-                    <h1 className="text-xl md:text-2xl font-bold mb-2">
-                      Welcome back! 👋
+                    <h1 className="text-2xl md:text-4xl font-bold mb-2">
+                      Welcome back!
                     </h1>
                     <p className="text-blue-100 text-sm md:text-base">
                       Here's what's happening with your venue bookings today.

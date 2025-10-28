@@ -178,6 +178,10 @@ export default function RightSidebar({ onNotificationClick }) {
     return false;
   });
 
+  const unreadCount = userNotifications.filter(
+    (notif) => notif.status === "unread"
+  ).length;
+
   return (
     <>
       <aside className="w-full lg:w-1/5 bg-white lg:border-t-0 lg:border-l p-4 md:p-6 order-1 lg:order-none flex flex-col gap-4 border-gray-200 h-auto max-h-screen overflow-y-auto lg:sticky lg:top-0 lg:h-screen">
@@ -202,9 +206,16 @@ export default function RightSidebar({ onNotificationClick }) {
           </div>
         </div>
         <div className="rounded-2xl border border-[#C0C0C0] p-4 bg-white flex-grow flex flex-col">
-          <h2 className="text-2xl font-bold text-[#0458A9] mb-2">
-            Notifications
-          </h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-2xl font-bold text-[#0458A9]">Notifications</h2>
+            <div
+              className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold text-white ${
+                unreadCount > 0 ? "bg-red-500" : "bg-gray-400"
+              }`}
+            >
+              {unreadCount}
+            </div>
+          </div>
           <div className="relative mb-3">
             <Search
               size={18}
