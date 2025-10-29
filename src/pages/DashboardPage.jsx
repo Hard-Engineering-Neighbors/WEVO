@@ -19,6 +19,7 @@ import Footer from "../components/Footer/Footer";
 import { useNavigate } from "react-router-dom";
 import Calendar from "../components/Calendar/Calendar";
 import { useAuth } from "../contexts/AuthContext";
+import { useSidebar } from "../contexts/SidebarContext";
 import { fetchRequests } from "../api/requests";
 import { supabase } from "../supabase/supabaseClient";
 import {
@@ -38,7 +39,6 @@ import {
 } from "../components/LoadingSkeletons";
 import {
   Calendar as CalendarIcon,
-  Users,
   CheckCircle,
   XCircle,
   AlertCircle,
@@ -187,105 +187,6 @@ function StatsCard({ stat, index }) {
   );
 }
 
-function BookingCard({ booking, index }) {
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case "approved":
-        return {
-          bg: "bg-emerald-50",
-          text: "text-emerald-700",
-          border: "border-emerald-200",
-          dot: "bg-emerald-500",
-        };
-      case "pending":
-        return {
-          bg: "bg-amber-50",
-          text: "text-amber-700",
-          border: "border-amber-200",
-          dot: "bg-amber-500",
-        };
-      case "rejected":
-        return {
-          bg: "bg-red-50",
-          text: "text-red-700",
-          border: "border-red-200",
-          dot: "bg-red-500",
-        };
-      default:
-        return {
-          bg: "bg-gray-50",
-          text: "text-gray-700",
-          border: "border-gray-200",
-          dot: "bg-gray-500",
-        };
-    }
-  };
-
-  const statusColors = getStatusColor(booking.status);
-
-  return (
-    <ScaleOnHover>
-      <FadeIn delay={index * 50}>
-        <div className="bg-white/80 backdrop-blur-xl rounded-xl border border-white/20 p-5 hover:shadow-md hover:scale-[1.02] transition-all duration-300 relative overflow-hidden">
-          {/* Subtle gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent pointer-events-none"></div>
-
-          <div className="relative z-10">
-            <div className="flex items-start justify-between mb-4">
-              <h4 className="font-semibold text-gray-900 flex-1 pr-3 text-base leading-tight">
-                {booking.title}
-              </h4>
-              <div
-                className={`${statusColors.bg} ${statusColors.border} border rounded-full px-3 py-1 flex items-center`}
-              >
-                <div
-                  className={`w-2 h-2 ${statusColors.dot} rounded-full mr-2`}
-                ></div>
-                <span className={`text-xs font-medium ${statusColors.text}`}>
-                  {booking.status}
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center text-gray-600">
-                <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center mr-3">
-                  <CalendarIcon size={16} className="text-blue-600" />
-                </div>
-                <span className="text-sm font-medium">
-                  {new Date(booking.date).toLocaleDateString("en-US", {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </span>
-              </div>
-
-              <div className="flex items-center text-gray-600">
-                <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center mr-3">
-                  <Users size={16} className="text-purple-600" />
-                </div>
-                <span className="text-sm font-medium">
-                  {booking.participants} participants
-                </span>
-              </div>
-
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-[#0458A9]/10 rounded-lg flex items-center justify-center mr-3">
-                  <MapPin size={16} className="text-[#0458A9]" />
-                </div>
-                <span className="text-sm font-semibold text-[#0458A9]">
-                  {booking.venue}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </FadeIn>
-    </ScaleOnHover>
-  );
-}
-
 // Real-time hook for requests updates
 function useRealtimeRequests(userId, setRequests) {
   useEffect(() => {
@@ -316,6 +217,7 @@ function useRealtimeRequests(userId, setRequests) {
 
 export default function DashboardPage() {
   const { currentUser } = useAuth();
+  const { isRightSidebarCollapsed } = useSidebar();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState([]);
@@ -368,7 +270,11 @@ export default function DashboardPage() {
         <LeftSidebar active="calendar" />
 
         {/* Center Content */}
-        <main className="w-full lg:w-3/5 bg-gray-50 order-2 lg:order-none min-h-screen lg:h-screen lg:overflow-y-hidden overflow-x-hidden">
+        <main
+          className={`w-full bg-gray-50 order-2 lg:order-none min-h-screen lg:h-screen lg:overflow-y-hidden overflow-x-hidden transition-all duration-300 ${
+            isRightSidebarCollapsed ? "lg:w-4/5" : "lg:w-3/5"
+          }`}
+        >
           {/* New inner wrapper for content */}
           <div className="max-w-screen-xl mx-auto w-full flex flex-col lg:h-full overflow-x-hidden">
             <div className="p-3 md:p-6 space-y-4 lg:flex-1 lg:overflow-y-auto">
@@ -425,15 +331,15 @@ export default function DashboardPage() {
               </ProgressiveLoad>
 
               {/* Main Content Grid */}
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:flex-1 lg:min-h-0">
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 lg:flex-1 lg:min-h-0 items-stretch xl:auto-rows-fr">
                 {/* Calendar */}
                 <ProgressiveLoad
                   isLoading={isLoading}
                   skeleton={<CalendarSkeleton />}
-                  className="xl:col-span-2 flex flex-col lg:min-h-0"
+                  className="xl:col-span-2 flex flex-col lg:min-h-0 h-full"
                 >
                   <FadeIn delay={100}>
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full min-h-[300px] lg:min-h-[auto]">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full min-h-[440px]">
                       <Calendar
                         events={calendarEvents}
                         primaryColor="#0458A9"
@@ -455,10 +361,10 @@ export default function DashboardPage() {
                       <EventListSkeleton count={3} />
                     </div>
                   }
-                  className="flex flex-col min-h-0"
+                  className="flex flex-col min-h-0 h-full"
                 >
                   <FadeIn delay={125}>
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full min-h-[300px] lg:min-h-[auto]">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full min-h-[440px]">
                       <div className="p-4 md:p-6 border-b border-gray-100 flex-shrink-0">
                         <div className="flex items-center justify-between">
                           <h2 className="text-base md:text-lg font-semibold text-gray-900">
@@ -474,36 +380,90 @@ export default function DashboardPage() {
                           </ButtonPress>
                         </div>
                       </div>
-                      <div className="p-4 md:p-6 lg:flex-1 lg:overflow-y-auto">
-                        <div className="space-y-3">
-                          {recentBookings.length > 0 ? (
-                            recentBookings.map((booking, index) => (
-                              <BookingCard
-                                key={booking.id}
-                                booking={booking}
-                                index={index}
-                              />
-                            ))
-                          ) : (
-                            <div className="text-center py-8 text-gray-500">
-                              <CalendarIcon
-                                size={48}
-                                className="mx-auto mb-3 text-gray-300"
-                              />
-                              <p className="text-sm">
-                                No recent bookings found
-                              </p>
-                              <ButtonPress>
-                                <button
-                                  onClick={() => navigate("/venues")}
-                                  className="mt-3 text-sm text-[#0458A9] hover:text-[#03407a] font-medium transition-colors underline"
+                      <div className="p-4 md:p-6 flex-1">
+                        {recentBookings.length > 0 ? (
+                          <div className="flex flex-col gap-3">
+                            {recentBookings.slice(0, 4).map((booking) => {
+                              const status = (
+                                booking.status || ""
+                              ).toLowerCase();
+                              const statusStyles = {
+                                approved:
+                                  "bg-emerald-50 text-emerald-700 border border-emerald-200",
+                                pending:
+                                  "bg-amber-50 text-amber-700 border border-amber-200",
+                                rejected:
+                                  "bg-red-50 text-red-700 border border-red-200",
+                                cancelled:
+                                  "bg-gray-50 text-gray-600 border border-gray-200",
+                              };
+                              const badgeClass =
+                                statusStyles[status] ||
+                                "bg-gray-50 text-gray-600 border border-gray-200";
+
+                              const formattedDate = (() => {
+                                const parsed = new Date(booking.date);
+                                return Number.isNaN(parsed.getTime())
+                                  ? booking.date
+                                  : parsed.toLocaleDateString("en-US", {
+                                      weekday: "short",
+                                      month: "short",
+                                      day: "numeric",
+                                    });
+                              })();
+
+                              return (
+                                <div
+                                  key={booking.id}
+                                  className="flex items-center justify-between rounded-xl border border-gray-100 px-4 py-3 hover:bg-gray-50 transition-colors"
                                 >
-                                  Browse venues to get started
-                                </button>
-                              </ButtonPress>
-                            </div>
-                          )}
-                        </div>
+                                  <div className="flex flex-col gap-2">
+                                    <span className="text-sm font-semibold text-gray-900">
+                                      {booking.title}
+                                    </span>
+                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                      <CalendarIcon
+                                        size={14}
+                                        className="text-[#0458A9]"
+                                      />
+                                      <span>{formattedDate}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                      <MapPin
+                                        size={14}
+                                        className="text-[#0458A9]"
+                                      />
+                                      <span className="truncate max-w-[180px]">
+                                        {booking.venue}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <span
+                                    className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${badgeClass}`}
+                                  >
+                                    {booking.status || "Pending"}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            <CalendarIcon
+                              size={48}
+                              className="mx-auto mb-3 text-gray-300"
+                            />
+                            <p className="text-sm">No recent bookings found</p>
+                            <ButtonPress>
+                              <button
+                                onClick={() => navigate("/venues")}
+                                className="mt-3 text-sm text-[#0458A9] hover:text-[#03407a] font-medium transition-colors underline"
+                              >
+                                Browse venues to get started
+                              </button>
+                            </ButtonPress>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </FadeIn>

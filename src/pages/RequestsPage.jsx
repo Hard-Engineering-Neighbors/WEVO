@@ -5,6 +5,7 @@ import SearchBar from "../components/SearchBar/SearchBar";
 import RequestDetailsModal from "../components/RequestDetailsModal";
 import { Calendar, Users, Clock, FileText, MapPin } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useSidebar } from "../contexts/SidebarContext";
 import { fetchRequests } from "../api/requests";
 import { supabase } from "../supabase/supabaseClient";
 import { getVenueImage } from "../utils/venueMatching";
@@ -176,6 +177,7 @@ function useRealtimeRequests(userId, refetch) {
 
 export default function RequestsPage() {
   const { currentUser } = useAuth();
+  const { isRightSidebarCollapsed } = useSidebar();
   const [requests, setRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -289,7 +291,11 @@ export default function RequestsPage() {
       <div className="flex flex-col lg:flex-row flex-1">
         <LeftSidebar active="requests" />
         {/* Center Content */}
-        <main className="w-full lg:w-3/5 bg-gray-50 order-2 lg:order-none min-h-screen lg:h-screen lg:overflow-y-hidden overflow-x-hidden">
+        <main
+          className={`w-full bg-gray-50 order-2 lg:order-none min-h-screen lg:h-screen lg:overflow-y-hidden overflow-x-hidden transition-all duration-300 ${
+            isRightSidebarCollapsed ? "lg:w-4/5" : "lg:w-3/5"
+          }`}
+        >
           <div className="max-w-screen-xl mx-auto w-full flex flex-col lg:h-full overflow-x-hidden">
             <div className="p-3 md:p-6 space-y-4 flex-shrink-0">
               {/* Search Bar */}

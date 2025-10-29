@@ -11,10 +11,12 @@ import {
 import AdminVenueDetailsModal from "../components/AdminVenueDetailsModal";
 import AddVenueModal from "../components/AddVenueModal";
 import EditVenueModal from "../components/EditVenueModal";
+import { useSidebar } from "../contexts/SidebarContext";
 // import { useNavigate } from "react-router-dom"; // If navigation from details is needed later
 
 export default function AdminManagementPage() {
   // const navigate = useNavigate(); // If needed later
+  const { isRightSidebarCollapsed } = useSidebar();
   const [venues, setVenues] = useState([]);
   const [filteredVenues, setFilteredVenues] = useState([]);
   const [globalSearchTerm, setGlobalSearchTerm] = useState("");
@@ -169,7 +171,7 @@ export default function AdminManagementPage() {
       <div className="flex flex-col lg:flex-row flex-1">
         <AdminLeftSidebar active="Management" />
 
-        <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 flex flex-col h-screen order-2 lg:order-none">
+        <main className="w-full bg-gray-50 p-3 md:p-6 flex flex-col h-screen order-2 lg:order-none transition-all duration-300 flex-1 min-h-0">
           {/* Search Results Summary */}
           {globalSearchTerm && (
             <div className="bg-white rounded-lg p-4 shadow-sm flex-shrink-0">
@@ -197,13 +199,13 @@ export default function AdminManagementPage() {
                       }`}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-row">
                 <button
                   onClick={handleAddVenue}
-                  className="p-2 bg-[#56708A] text-white border border-[#56708A] rounded-lg hover:bg-[#455b74] transition-colors"
+                  className="p-2 bg-[#56708A] text-white border border-[#56708A] rounded-lg hover:bg-[#455b74] transition-colors flex-row gap-2"
                   title="Add New Venue"
                 >
-                  <PlusSquare size={20} />
+                  <p>Add Venue</p>
                 </button>
               </div>
             </div>

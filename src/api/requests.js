@@ -416,6 +416,8 @@ export async function fetchAdminRequests() {
         eventName: ev.title || "",
         date: formatDateStr(ev.start_time),
         time: `${formatTimeStr(ev.start_time)} - ${formatTimeStr(ev.end_time)}`,
+        startDate: ev.start_time || null,
+        endDate: ev.end_time || null,
         // normalize status to Title Case e.g. 'pending' -> 'Pending'
         status: (() => {
           const s = (req.status || '').toString().toLowerCase();
@@ -433,7 +435,7 @@ export async function fetchAdminRequests() {
     })
   );
   // Optionally sort by date descending
-  return results.sort((a, b) => new Date(b.date) - new Date(a.date));
+  return results.sort((a, b) => new Date(b.startDate || b.date) - new Date(a.startDate || a.date));
 }
 
 // Update booking request status (Approve or Reject)

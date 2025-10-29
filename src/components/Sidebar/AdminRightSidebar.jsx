@@ -1,7 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { User, Menu, LogOut, X, Search } from "lucide-react";
+import {
+  User,
+  LogOut,
+  X,
+  Search,
+  Bell,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { useSidebar } from "../../contexts/SidebarContext";
 import {
   fetchNotifications,
   markNotificationAsRead,
@@ -102,6 +111,7 @@ function useRealtimeAdminNotifications(setNotifications, setHighlightedId) {
 export default function AdminRightSidebar({ onNotificationClick }) {
   const navigate = useNavigate();
   const { currentUser, logout } = useAuth();
+  const { isRightSidebarCollapsed, setIsRightSidebarCollapsed } = useSidebar();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [selectedNotif, setSelectedNotif] = useState(null);
@@ -149,6 +159,10 @@ export default function AdminRightSidebar({ onNotificationClick }) {
     (notif) => notif.role === "admin"
   );
 
+  const unreadCount = adminNotifications.filter(
+    (notif) => notif.status === "unread"
+  ).length;
+
   // Filter notifications based on searchTerm
   const filteredAdminNotifications = adminNotifications.filter((notif) => {
     if (!searchTerm.trim()) return true;
@@ -188,7 +202,76 @@ export default function AdminRightSidebar({ onNotificationClick }) {
 
   return (
     <>
-      <aside className="w-full lg:w-1/5 bg-white lg:border-t-0 lg:border-l p-4 md:p-6 order-1 lg:order-none flex flex-col gap-4 border-gray-200 h-auto max-h-screen overflow-y-auto lg:sticky lg:top-0 lg:h-screen">
+      {/* Floating notification pill when sidebar collapsed */}
+      {isRightSidebarCollapsed && (
+        <div className="hidden lg:flex fixed top-4 right-4 z-[60] items-center gap-2">
+          <div className="bg-white border border-gray-200 rounded-full px-4 py-2 shadow-lg flex items-center gap-2">
+            <Bell size={16} className="text-[#56708A]" />
+            <span className="text-sm font-semibold text-gray-700">
+              Notifications
+            </span>
+            <span
+              className={`${
+                unreadCount > 0 ? "bg-red-500" : "bg-gray-400"
+              } text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center`}
+            >
+              {unreadCount}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Toggle Button */}
+      <div
+        className={`hidden lg:block fixed top-1/2 -translate-y-1/2 z-50 group transition-all duration-300 ${
+          isRightSidebarCollapsed ? "right-0" : "right-[20%]"
+        }`}
+      >
+        <button
+          onClick={() => setIsRightSidebarCollapsed(!isRightSidebarCollapsed)}
+          className="relative bg-[#56708A] text-white p-2 rounded-l-lg shadow-lg hover:bg-[#455b74] transition-colors"
+          title={
+            isRightSidebarCollapsed
+              ? "Show Notifications"
+              : "Hide Notifications"
+          }
+        >
+          {isRightSidebarCollapsed ? (
+            <ChevronLeft size={20} />
+          ) : (
+            <ChevronRight size={20} />
+          )}
+          {isRightSidebarCollapsed && unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+          )}
+        </button>
+
+        {isRightSidebarCollapsed && (
+          <div className="absolute right-full mr-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+            <div className="bg-gray-900 text-white px-3 py-2 rounded-lg shadow-lg whitespace-nowrap text-sm">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">Notifications</span>
+                <span
+                  className={`${
+                    unreadCount > 0 ? "bg-red-500" : "bg-gray-400"
+                  } text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center`}
+                >
+                  {unreadCount}
+                </span>
+              </div>
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 rotate-45 w-2 h-2 bg-gray-900"></div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <aside
+        className={`w-full bg-white lg:border-t-0 lg:border-l p-4 md:p-6 order-1 lg:order-none flex flex-col gap-4 border-gray-200 h-auto max-h-screen overflow-y-auto lg:sticky lg:top-0 lg:h-screen transition-all duration-300 ease-in-out ${
+          isRightSidebarCollapsed
+            ? "lg:w-0 lg:p-0 lg:border-0 lg:overflow-hidden"
+            : "lg:w-1/5"
+        }`}
+      >
         <div className="flex items-center justify-between mb-2 gap-2 min-h-[40px]">
           <div className="text-sm lg:text-base font-medium text-gray-700 truncate flex-1 min-w-0 pr-2">
             {currentUser?.email || "Admin Portal"}

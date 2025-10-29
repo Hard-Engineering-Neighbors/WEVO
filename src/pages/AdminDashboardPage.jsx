@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import AdminLeftSidebar from "../components/Sidebar/AdminLeftSidebar";
 import AdminRightSidebar from "../components/Sidebar/AdminRightSidebar";
 import Calendar from "../components/Calendar/Calendar"; // Assuming a generic calendar can be used or adapted
-import { User } from "lucide-react";
+import { User, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AdminReservationReviewModal from "../components/AdminReservationReviewModal";
 import {
@@ -11,6 +11,7 @@ import {
   fetchStatistics,
 } from "../api/requests";
 import { supabase } from "../supabase/supabaseClient";
+import { useSidebar } from "../contexts/SidebarContext";
 
 // Helper function to truncate text
 const truncateText = (text, maxLength) => {
@@ -22,6 +23,7 @@ const truncateText = (text, maxLength) => {
 
 export default function AdminDashboardPage() {
   const navigate = useNavigate();
+  const { isRightSidebarCollapsed } = useSidebar();
   const [requests, setRequests] = useState([]);
   const [stats, setStats] = useState({
     totalRequests: 0,
@@ -33,7 +35,9 @@ export default function AdminDashboardPage() {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(13);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortOption, setSortOption] = useState("date-desc");
 
   // Lock navigation to admin dashboard if authenticated
   useEffect(() => {
@@ -137,14 +141,32 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const processedRequests = useMemo(() => {
+    let data = [...requests];
+
+    if (statusFilter !== "all") {
+      data = data.filter(
+        (req) => req.status && req.status.toLowerCase() === statusFilter
+      );
+    }
+
+    data.sort((a, b) => {
+      const dateA = new Date(a.startDate || a.date);
+      const dateB = new Date(b.startDate || b.date);
+      return sortOption === "date-asc" ? dateA - dateB : dateB - dateA;
+    });
+
+    return data;
+  }, [requests, statusFilter, sortOption]);
+
   // Calculate paginated requests
   const indexOfLastRequest = currentPage * itemsPerPage;
   const indexOfFirstRequest = indexOfLastRequest - itemsPerPage;
-  const currentRequests = requests.slice(
+  const currentRequests = processedRequests.slice(
     indexOfFirstRequest,
     indexOfLastRequest
   );
-  const totalPages = Math.ceil(requests.length / itemsPerPage);
+  const totalPages = Math.ceil(processedRequests.length / itemsPerPage);
 
   const handleNextPage = () => {
     setCurrentPage((prev) => Math.min(prev + 1, totalPages));
@@ -160,109 +182,138 @@ export default function AdminDashboardPage() {
         <AdminLeftSidebar active="Dashboard" />
 
         {/* Center Content */}
-        <main className="w-full lg:w-3/5 bg-gray-50 p-3 md:p-6 space-y-4 order-2 lg:order-none">
+        <main className="w-full bg-gray-50 p-3 md:p-6 order-2 lg:order-none transition-all duration-300 flex flex-col flex-1 min-h-0 overflow-hidden lg:flex-1">
           {/* Main content grid: Requests on left, Stats/Calendar on right */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1 min-h-0">
             {/* Requests Table Section (occupies 2/3 on md screens) */}
-            <div className="md:col-span-2 bg-white rounded-xl shadow p-4">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-[#56708A] mb-3 md:mb-0">
-                  Requests
-                </h2>
+            <div className="md:col-span-2 bg-white rounded-xl shadow p-4 flex flex-col h-full min-h-0">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-3">
+                <h2 className="text-2xl font-bold text-[#56708A]">Requests</h2>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="relative">
+                    <select
+                      value={sortOption}
+                      onChange={(e) => {
+                        setSortOption(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="appearance-none bg-white border border-gray-300 rounded-full px-4 py-2 pr-8 text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-[#56708A] transition"
+                    >
+                      <option value="date-desc">Sort: Newest</option>
+                      <option value="date-asc">Sort: Oldest</option>
+                    </select>
+                    <ChevronDown
+                      size={14}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                    />
+                  </div>
+                  <div className="relative">
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => {
+                        setStatusFilter(e.target.value);
+                        setCurrentPage(1);
+                      }}
+                      className="appearance-none bg-white border border-gray-300 rounded-full px-4 py-2 pr-8 text-sm text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-1 focus:ring-[#56708A] transition"
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="pending">Pending</option>
+                      <option value="approved">Approved</option>
+                      <option value="rejected">Rejected</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    <ChevronDown
+                      size={14}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Table */}
-              <div className="">
-                <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                    <tr>
-                      <th scope="col" className="px-3 py-3">
-                        Organization Name
-                      </th>
-                      <th scope="col" className="px-3 py-3">
-                        Location
-                      </th>
-                      <th scope="col" className="px-3 py-3">
-                        Type
-                      </th>
-                      <th scope="col" className="px-3 py-3">
-                        Event Name
-                      </th>
-                      <th scope="col" className="px-3 py-3 min-w-[8rem]">
-                        Date and Time
-                      </th>
-                      <th scope="col" className="px-3 py-3">
-                        Status
-                      </th>
-                      <th scope="col" className="px-3 py-3 text-center">
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentRequests.length > 0 ? (
-                      currentRequests.map((req) => (
-                        <tr
-                          key={req.id}
-                          className="bg-white border-b hover:bg-gray-50"
-                        >
-                          <td className="px-3 py-3">
-                            {truncateText(req.orgName, 25)}
-                          </td>
-                          <td className="px-3 py-3">
-                            {truncateText(req.location, 25)}
-                          </td>
-                          <td className="px-3 py-3">
-                            {truncateText(req.type, 25)}
-                          </td>
-                          <td className="px-3 py-3">
-                            {truncateText(req.eventName, 25)}
-                          </td>
-                          <td className="px-3 py-3 min-w-[8rem]">
-                            <div>{req.date}</div>
-                            <div className="text-xs text-gray-500">
-                              {req.time}
-                            </div>
-                          </td>
-                          <td className="px-3 py-3">
-                            <span
-                              className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                req.status === "Pending"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : req.status === "Approved"
-                                  ? "bg-green-100 text-green-800"
-                                  : req.status === "Rejected"
-                                  ? "bg-red-100 text-red-800"
-                                  : req.status === "Cancelled"
-                                  ? "bg-gray-300 text-gray-700 border border-gray-400"
-                                  : "bg-gray-100 text-gray-800"
-                              }`}
-                            >
-                              {req.status}
-                            </span>
-                          </td>
-                          <td className="px-3 py-3 text-center">
-                            <button
-                              className="bg-[#56708A] text-white px-4 py-1.5 rounded-md text-xs font-medium hover:bg-[#455b74] transition-colors"
-                              onClick={() => handleOpenReviewModal(req)}
-                            >
-                              Details
-                            </button>
+              <div className="flex-1 min-h-0 overflow-hidden">
+                <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+                  <table className="w-full text-sm text-left">
+                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-3 py-3">
+                          Organization Name
+                        </th>
+                        <th scope="col" className="px-3 py-3">
+                          Location
+                        </th>
+                        <th scope="col" className="px-3 py-3">
+                          Type
+                        </th>
+                        <th scope="col" className="px-3 py-3">
+                          Event Name
+                        </th>
+                        <th scope="col" className="px-3 py-3 min-w-[8rem]">
+                          Date and Time
+                        </th>
+                        <th scope="col" className="px-3 py-3">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentRequests.length > 0 ? (
+                        currentRequests.map((req) => (
+                          <tr
+                            key={req.id}
+                            className="bg-white border-b hover:bg-gray-50 cursor-pointer"
+                            onClick={() => handleOpenReviewModal(req)}
+                          >
+                            <td className="px-3 py-3">
+                              {truncateText(req.orgName, 25)}
+                            </td>
+                            <td className="px-3 py-3">
+                              {truncateText(req.location, 25)}
+                            </td>
+                            <td className="px-3 py-3">
+                              {truncateText(req.type, 25)}
+                            </td>
+                            <td className="px-3 py-3">
+                              {truncateText(req.eventName, 25)}
+                            </td>
+                            <td className="px-3 py-3 min-w-[8rem]">
+                              <div>{req.date}</div>
+                              <div className="text-xs text-gray-500">
+                                {req.time}
+                              </div>
+                            </td>
+                            <td className="px-3 py-3">
+                              <span
+                                className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                  req.status === "Pending"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : req.status === "Approved"
+                                    ? "bg-green-100 text-green-800"
+                                    : req.status === "Rejected"
+                                    ? "bg-red-100 text-red-800"
+                                    : req.status === "Cancelled"
+                                    ? "bg-gray-300 text-gray-700 border border-gray-400"
+                                    : "bg-gray-100 text-gray-800"
+                                }`}
+                              >
+                                {req.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan="6"
+                            className="text-center py-10 text-gray-500"
+                          >
+                            No requests found.
                           </td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan="7"
-                          className="text-center py-10 text-gray-500"
-                        >
-                          No requests found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
               {/* Pagination Controls */}
               <div className="flex flex-col sm:flex-row justify-between items-center mt-4 pt-2 border-t border-gray-200">
@@ -289,7 +340,7 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Right Column: Statistics and Calendar */}
-            <div className="space-y-4">
+            <div className="flex flex-col h-full gap-4 min-h-0">
               {/* Statistics Section */}
               <div className="bg-white rounded-xl shadow p-4">
                 <h3 className="text-xl font-bold text-[#56708A] mb-4">
@@ -381,14 +432,15 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Calendar Section */}
-              <div className="bg-white rounded-xl shadow p-4">
+              <div className="bg-white rounded-xl shadow p-4 flex flex-col flex-1 min-h-0">
                 {/* Minimal Calendar - details inside Calendar component */}
-                <Calendar
-                  primaryColor="#56708A"
-                  layout="admin"
-                  showReserveButton={false}
-                />
-                {/* Optional: Add a "Full View" for calendar if needed, similar to mockup */}
+                <div className="min-h-[360px] rounded-xl">
+                  <Calendar
+                    primaryColor="#56708A"
+                    layout="admin"
+                    showReserveButton={false}
+                  />
+                </div>
                 <div className="flex justify-end mt-2"></div>
               </div>
             </div>
